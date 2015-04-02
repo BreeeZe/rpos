@@ -1,0 +1,13 @@
+{
+  "name": "PiOnvifService.Node.js",
+  "version": "0.0.0",
+  "description": "PiOnvifService.Node.js",
+  "main": "server.js",
+  "author": {
+    "name": "BreeeZe",
+    "email": ""
+  },
+  "dependencies": {
+
+  }
+}

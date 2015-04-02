@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xsd:schema xmlns:wsrf-bf="http://docs.oasis-open.org/wsrf/bf-2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:wsa="http://www.w3.org/2005/08/addressing" xmlns="http://www.w3.org/2001/XMLSchema" xmlns:xsd="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://docs.oasis-open.org/wsrf/bf-2">
+  <import schemaLocation="http://www.w3.org/2005/08/addressing/ws-addr.xsd" namespace="http://www.w3.org/2005/08/addressing" />
+  <import schemaLocation="http://www.w3.org/2001/xml.xsd" namespace="http://www.w3.org/XML/1998/namespace">
+    <annotation>
+      <documentation>
+        Get access to the xml: attribute groups for xml:lang as declared on 'schema'
+        and 'documentation' below
+      </documentation>
+    </annotation>
+  </import>
+  <element name="BaseFault" type="wsrf-bf:BaseFaultType" />
+  <complexType name="BaseFaultType">
+    <sequence>
+      <any minOccurs="0" maxOccurs="unbounded" namespace="##other" processContents="lax" />
+      <element minOccurs="1" maxOccurs="1" name="Timestamp" type="dateTime" />
+      <element minOccurs="0" maxOccurs="1" name="Originator" type="wsa:EndpointReferenceType" />
+      <element minOccurs="0" maxOccurs="1" name="ErrorCode">
+        <complexType>
+          <complexContent mixed="true">
+            <extension base="anyType">
+              <attribute name="dialect" type="anyURI" use="required" />
+            </extension>
+          </complexContent>
+        </complexType>
+      </element>
+      <element minOccurs="0" maxOccurs="unbounded" name="Description">
+        <complexType>
+          <simpleContent>
+            <extension base="string">
+              <attribute ref="xml:lang" use="optional" />
+            </extension>
+          </simpleContent>
+        </complexType>
+      </element>
+      <element minOccurs="0" maxOccurs="1" name="FaultCause">
+        <complexType>
+          <sequence>
+            <any minOccurs="1" maxOccurs="1" namespace="##other" processContents="lax" />
+          </sequence>
+        </complexType>
+      </element>
+    </sequence>
+    <anyAttribute namespace="##other" processContents="lax" />
+  </complexType>
+</xsd:schema>
