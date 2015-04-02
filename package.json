@@ -1,13 +1,13 @@
 {
-  "name": "PiOnvifService.Node.js",
+  "name": "rpos",
   "version": "0.0.0",
-  "description": "PiOnvifService.Node.js",
+  "description": "rpos",
   "main": "server.js",
   "author": {
-    "name": "BreeeZe",
-    "email": ""
+    "name": "Jeroen Versteege",
+    "email": "jeroen@versteege.com"
   },
   "dependencies": {
-
+      "soap" : "BreeeZe/node-soap"
   }
 }

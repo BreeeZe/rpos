@@ -33,26 +33,8 @@
   <ItemGroup>
     <Compile Include="config.js" />
     <Compile Include="DeviceService.js" />
-    <Compile Include="lib\soap\index.js" />
-    <Compile Include="lib\soap\lib\client.js" />
-    <Compile Include="lib\soap\lib\http.js" />
-    <Compile Include="lib\soap\lib\security\BasicAuthSecurity.js" />
-    <Compile Include="lib\soap\lib\security\BearerSecurity.js" />
-    <Compile Include="lib\soap\lib\security\ClientSSLSecurity.js" />
-    <Compile Include="lib\soap\lib\security\index.js" />
-    <Compile Include="lib\soap\lib\security\WSSecurity.js" />
-    <Compile Include="lib\soap\lib\server.js" />
-    <Compile Include="lib\soap\lib\soap.js" />
-    <Compile Include="lib\soap\lib\utils.js" />
-    <Compile Include="lib\soap\lib\wsdl.js" />
     <Compile Include="MediaService.js" />
     <Compile Include="server.js" />
-    <Content Include="lib\soap\CONTRIBUTING.md" />
-    <Content Include="lib\soap\History.md" />
-    <Content Include="lib\soap\LICENSE" />
-    <Content Include="lib\soap\package.json" />
-    <Content Include="lib\soap\PUBLISHING.md" />
-    <Content Include="lib\soap\Readme.md" />
     <Content Include="LICENSE" />
     <Content Include="package.json" />
     <None Include="wsdl\device_service.wsdl" />
@@ -72,10 +54,6 @@
     <None Include="wsdl\docs.oasis-open.org.wsn.b-2.xsd" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="lib\" />
-    <Folder Include="lib\soap\" />
-    <Folder Include="lib\soap\lib\" />
-    <Folder Include="lib\soap\lib\security\" />
     <Folder Include="web\" />
     <Folder Include="wsdl\" />
   </ItemGroup>

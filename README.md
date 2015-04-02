@@ -7,8 +7,7 @@ Initial goal is to provide a Onvif Media service which is compatible with Synolo
 This allows the Pi to be used as a surveillance camera without the need for adding any custom camera files to your Synology NAS.
 First demo video @ https://youtu.be/ZcZbF4XOH7E
 
-This version contains a modified version of the "node-soap" v0.80 library (https://github.com/vpulim/node-soap/releases/tag/v0.8.0)
-run "npm update" in the "\lib\soap" directory to download the node-soap dependecies
+This version uses a modified version of the "node-soap" v0.80 library (https://github.com/vpulim/node-soap/releases/tag/v0.8.0) located @ https://github.com/BreeeZe/node-soap
 
 to stream h264 video [ source http://forum.synology.com/enu/viewtopic.php?f=82&t=69224&start=15#p289293 ] :
 

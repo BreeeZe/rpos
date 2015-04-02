@@ -23,7 +23,7 @@ THE SOFTWARE.
 */
 
 var fs = require("fs");
-var soap = require('./lib/soap');
+var soap = require('soap');
 var http = require('http');
 var url = require('url');
 
@@ -56,12 +56,11 @@ console.log("Starting webserver on port:" + Config.ServicePort);
 server.listen(Config.ServicePort);
 
 console.log("Binding device_service to '/onvif/device_service'");
-soap.listen(server, { path : '/onvif/device_service', services : DeviceService, xml : DeviceService.wsdl, ignoredNamespaces : { namespaces : ignoreNamespaces } }).log = function (type, data) {
+soap.listen(server, { path : '/onvif/device_service', services : DeviceService, xml : DeviceService.wsdl, ignoredNamespaces : { namespaces : ignoreNamespaces }, onReady : function () { console.log('device_service started'); } }).log = function (type, data) {
     debugLog('device_service - Calltype : %s, Data : %s', type, data);
 };
 
 console.log("Binding media_service to '/onvif/media_service'");
-soap.listen(server, { path : '/onvif/media_service', services : MediaService, xml : MediaService.wsdl, ignoredNamespaces : { namespaces : ignoreNamespaces } }).log = function (type, data) {
+soap.listen(server, { path : '/onvif/media_service', services : MediaService, xml : MediaService.wsdl, ignoredNamespaces : { namespaces : ignoreNamespaces }, onReady : function () { console.log('media_service started'); } }).log = function (type, data) {
     debugLog('media_service - Calltype : %s, Data : %s', type, data);
 };
-console.log("Running.");
