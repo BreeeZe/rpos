@@ -1,7 +1,7 @@
 # rpos
 Raspberry Pi Onvif Server
 
-Node.js Onvif (http://www.onvif.org) based Soap service.
+Node.js based Onvif Soap service. (http://www.onvif.org) 
 
 Initial goal is to provide a Onvif Media service which is compatible with Synology Surveillance Station.
 This allows the Pi to be used as a surveillance camera without the need for adding any custom camera files to your Synology NAS.
@@ -11,9 +11,10 @@ This version uses a patched version of the "node-soap" v0.80 library (https://gi
 
 #How to:
 
-Download the code on your machine (which has nodejs installed) and restore the dependencies using the "npm update" command.
+Download the code on your machine (one which has nodejs installed) and restore the dependencies using the "npm update" command.
+Or if you have MS Visual Studio 2013, open the solution and build it.
 
-Copy the code to your Pi
+Copy the code to your Pi.
 
 to stream h264 video [ source http://forum.synology.com/enu/viewtopic.php?f=82&t=69224&start=15#p289293 ] :
 
