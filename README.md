@@ -1,5 +1,5 @@
 # rpos
-Raspberry Pi Onvif Service
+Raspberry Pi Onvif Server
 
 Node.js Onvif (http://www.onvif.org) based Soap service.
 
