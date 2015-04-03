@@ -40,7 +40,8 @@ to stream h264 video [ source http://forum.synology.com/enu/viewtopic.php?f=82&t
 	*start the stream by running :
 	raspivid -o - -fps 25 -t 0 -b 10000000 -g 2 -ih -drc high -ex auto -w 1920 -h 1080  | ~/live/raspi/testRaspi
 
-install nodejs on your pi (http://weworkweplay.com/play/raspberry-pi-nodejs/)
+install nodejs on your pi (http://weworkweplay.com/play/raspberry-pi-nodejs/):
+
 	wget http://node-arm.herokuapp.com/node_latest_armhf.deb
 	sudo dpkg -i node_latest_armhf.deb
 	
