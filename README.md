@@ -11,12 +11,11 @@ This version uses a patched version of the "node-soap" v0.80 library (https://gi
 
 #How to:
 
-Download the code on your machine (one which has nodejs installed) and restore the dependencies using the "npm update" command.
-Or if you have MS Visual Studio 2013, open the solution and build it.
+Download the code on your machine (one which has nodejs installed) and restore the dependencies using the "npm update" command or if you have Visual Studio 2013 and Nodejs tools, open the solution and build it. (https://nodejstools.codeplex.com)
 
 Copy the code to your Pi.
 
-to stream h264 video [ source http://forum.synology.com/enu/viewtopic.php?f=82&t=69224&start=15#p289293 ] :
+Do the following to stream h264 video over rtsp [ source http://forum.synology.com/enu/viewtopic.php?f=82&t=69224&start=15#p289293 ] :
 
 	*login to your pi via ssh
 	cd /home/pi/
@@ -41,14 +40,14 @@ to stream h264 video [ source http://forum.synology.com/enu/viewtopic.php?f=82&t
 	*start the stream by running :
 	raspivid -o - -fps 25 -t 0 -b 10000000 -g 2 -ih -drc high -ex auto -w 1920 -h 1080  | ~/live/raspi/testRaspi
 
-install nodejs on your pi (http://weworkweplay.com/play/raspberry-pi-nodejs/):
+And to install nodejs on your pi (http://weworkweplay.com/play/raspberry-pi-nodejs/):
 
 	wget http://node-arm.herokuapp.com/node_latest_armhf.deb
 	sudo dpkg -i node_latest_armhf.deb
-	
-configure the ipaddress, service port, rtsp stream name and rtsp port in "config.js"
 
-start rpos by running "sudo node server.js" (or "sudo nodejs server.js" depending on your installed nodejs version.)
+Be sure to configure the ipaddress, service port, rtsp stream name and rtsp port in "config.js"
+
+Then you start rpos by running "sudo node server.js" (or "sudo nodejs server.js" depending on your installed nodejs version.)
 
 
 #ToDo's
