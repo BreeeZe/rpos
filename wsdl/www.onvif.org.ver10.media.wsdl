@@ -2,7 +2,7 @@
 <wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:trt="http://www.onvif.org/ver10/media/wsdl" targetNamespace="http://www.onvif.org/ver10/media/wsdl" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
   <wsdl:types>
     <xs:schema xmlns:tt="http://www.onvif.org/ver10/schema" elementFormDefault="qualified" targetNamespace="http://www.onvif.org/ver10/media/wsdl" version="2.4.1">
-      <xs:import schemaLocation="http://www.onvif.org/onvif/ver10/schema/onvif.xsd" namespace="http://www.onvif.org/ver10/schema" />
+      <xs:import schemaLocation="./www.onvif.org.ver10.schema.xsd" namespace="http://www.onvif.org/ver10/schema" />
       <xs:element name="GetServiceCapabilities">
         <xs:complexType>
           <xs:sequence />

@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <xsd:schema xmlns:wsrf-bf="http://docs.oasis-open.org/wsrf/bf-2" xmlns:wsnt="http://docs.oasis-open.org/wsn/b-2" xmlns:wstop="http://docs.oasis-open.org/wsn/t-1" xmlns:wsa="http://www.w3.org/2005/08/addressing" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://docs.oasis-open.org/wsn/b-2" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:import schemaLocation="http://www.w3.org/2005/08/addressing/ws-addr.xsd" namespace="http://www.w3.org/2005/08/addressing" />
-  <xsd:import schemaLocation="http://docs.oasis-open.org/wsrf/bf-2.xsd" namespace="http://docs.oasis-open.org/wsrf/bf-2" />
-  <xsd:import schemaLocation="http://docs.oasis-open.org/wsn/t-1.xsd" namespace="http://docs.oasis-open.org/wsn/t-1" />
+  <xsd:import schemaLocation="./www.w3.org.2005.08.addressing.ws-addr.xsd" namespace="http://www.w3.org/2005/08/addressing" />
+  <xsd:import schemaLocation="./docs.oasis-open.org.wsrf.bf-2.xsd" namespace="http://docs.oasis-open.org/wsrf/bf-2" />
+  <xsd:import schemaLocation="./docs.oasis-open.org.wsn.t-1.xsd" namespace="http://docs.oasis-open.org/wsn/t-1" />
   <xsd:complexType name="QueryExpressionType" mixed="true">
     <xsd:sequence>
       <xsd:any minOccurs="0" maxOccurs="1" processContents="lax" />

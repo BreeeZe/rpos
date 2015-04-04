@@ -37,12 +37,11 @@
     <Compile Include="server.js" />
     <Content Include="LICENSE" />
     <Content Include="package.json" />
+    <None Include="wsdl\www.w3.org.2005.08.addressing.ws-addr.xsd" />
     <None Include="wsdl\device_service.wsdl" />
     <None Include="wsdl\media_service.wsdl" />
     <Content Include="web\snapshot.jpg" />
-    <Content Include="wsdl\www.w3.org.2004.08.xop.include.cs" />
-    <None Include="wsdl\www.w3.org.XML.1998.namespace.xsd" />
-    <None Include="wsdl\www.w3.org.2005.08.addressing.xsd" />
+    <None Include="wsdl\www.w3.org.2001.xml.xsd" />
     <None Include="wsdl\www.w3.org.2005.05.xmlmime.xsd" />
     <None Include="wsdl\www.w3.org.2004.08.xop.include.xsd" />
     <None Include="wsdl\www.w3.org.2003.05.soap-envelope.xsd" />

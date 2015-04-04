@@ -1,13 +1,17 @@
 {
-  "name": "rpos",
-  "version": "0.0.0",
-  "description": "rpos",
-  "main": "server.js",
-  "author": {
-    "name": "Jeroen Versteege",
-    "email": "jeroen@versteege.com"
-  },
-  "dependencies": {
-      "soap" : "BreeeZe/node-soap"
-  }
+    "name": "rpos",
+    "version": "0.0.1",
+    "description": "rpos",
+    "main": "server.js",
+    "author": {
+        "name": "Jeroen Versteege",
+        "email": "jeroen@versteege.com"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/BreeeZe/rpos.git"
+    },
+    "dependencies": {
+        "soap": "BreeeZe/node-soap"
+    }
 }

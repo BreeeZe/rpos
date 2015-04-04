@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <xsd:schema xmlns:wsrf-bf="http://docs.oasis-open.org/wsrf/bf-2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:wsa="http://www.w3.org/2005/08/addressing" xmlns="http://www.w3.org/2001/XMLSchema" xmlns:xsd="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://docs.oasis-open.org/wsrf/bf-2">
-  <import schemaLocation="http://www.w3.org/2005/08/addressing/ws-addr.xsd" namespace="http://www.w3.org/2005/08/addressing" />
-  <import schemaLocation="http://www.w3.org/2001/xml.xsd" namespace="http://www.w3.org/XML/1998/namespace">
+  <import schemaLocation="./www.w3.org.2005.08.addressing.ws-addr.xsd" namespace="http://www.w3.org/2005/08/addressing" />
+  <import schemaLocation="./www.w3.org.2001.xml.xsd" namespace="http://www.w3.org/XML/1998/namespace">
     <annotation>
       <documentation>
         Get access to the xml: attribute groups for xml:lang as declared on 'schema'

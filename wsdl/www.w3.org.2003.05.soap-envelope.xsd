@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <xs:schema xmlns:tns="http://www.w3.org/2003/05/soap-envelope" elementFormDefault="qualified" targetNamespace="http://www.w3.org/2003/05/soap-envelope" xmlns:xs="http://www.w3.org/2001/XMLSchema">
-  <xs:import schemaLocation="http://www.w3.org/2001/xml.xsd" namespace="http://www.w3.org/XML/1998/namespace" />
+  <xs:import schemaLocation="./www.w3.org.2001.xml.xsd" namespace="http://www.w3.org/XML/1998/namespace" />
   <xs:element name="Envelope" type="tns:Envelope" />
   <xs:complexType name="Envelope">
     <xs:sequence>
