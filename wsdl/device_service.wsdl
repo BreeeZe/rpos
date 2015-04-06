@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <wsdl:definitions xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:i0="http://www.onvif.org/ver10/device/wsdl" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://tempuri.org/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" targetNamespace="http://tempuri.org/">
-  <wsdl:import namespace="http://www.onvif.org/ver10/device/wsdl" location="./www.onvif.org.ver10.device.wsdl"/>
+  <wsdl:import namespace="http://www.onvif.org/ver10/device/wsdl" location="http://www.onvif.org/onvif/ver10/device/wsdl/devicemgmt.wsdl"/>
   <wsdl:types>
-    <s:schema targetNamespace="http://versteege.com/rpos">
-      <s:import schemaLocation="./www.onvif.org.ver10.device.wsdl" namespace="http://www.onvif.org/ver10/device/wsdl"/>
+    <s:schema targetNamespace="http://tempuri.org/">
+      <s:import schemaLocation="http://www.onvif.org/onvif/ver10/device/wsdl/devicemgmt.wsdl" namespace="http://www.onvif.org/ver10/device/wsdl"/>
     </s:schema>
   </wsdl:types>
   <wsdl:service name="DeviceService">
