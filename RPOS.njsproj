@@ -32,9 +32,21 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="config.js" />
-    <Compile Include="DeviceService.js" />
-    <Compile Include="MediaService.js" />
+    <Compile Include="lib\camera.js" />
+    <Compile Include="lib\service.js" />
+    <Compile Include="lib\utils.js" />
+    <Compile Include="services\DeviceService.js" />
+    <Compile Include="services\MediaService.js" />
     <Compile Include="server.js" />
+    <Compile Include="services\device_service.js" />
+    <Compile Include="services\media_service.js" />
+    <Compile Include="services\stubs\device_service.js" />
+    <Compile Include="services\stubs\media_service.js" />
+    <Content Include="bin\rtspServer" />
+    <Content Include="cpp\Makefile" />
+    <Content Include="cpp\rtspServer" />
+    <Content Include="cpp\rtspServer.cpp" />
+    <Content Include="cpp\rtspServer.o" />
     <Content Include="LICENSE" />
     <Content Include="package.json" />
     <None Include="wsdl\www.w3.org.2005.08.addressing.ws-addr.xsd" />
@@ -53,6 +65,11 @@
     <None Include="wsdl\docs.oasis-open.org.wsn.b-2.xsd" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="bin\" />
+    <Folder Include="cpp\" />
+    <Folder Include="lib\" />
+    <Folder Include="services\" />
+    <Folder Include="services\stubs\" />
     <Folder Include="web\" />
     <Folder Include="wsdl\" />
   </ItemGroup>

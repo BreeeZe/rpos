@@ -1,33 +1,25 @@
-﻿var fs = require("fs");
-var Config = require('./config').Config;
+﻿require("../lib/utils");
+var fs = require("fs");
 
-Date.prototype.stdTimezoneOffset = function () {
-    var jan = new Date(this.getFullYear(), 0, 1);
-    var jul = new Date(this.getFullYear(), 6, 1);
-    return Math.max(jan.getTimezoneOffset(), jul.getTimezoneOffset());
-}
-
-Date.prototype.dst = function () {
-    return this.getTimezoneOffset() < this.stdTimezoneOffset();
-}
-
-var DeviceService = {
+var config = require('../config');
+var exports = module.exports= {
+ DeviceService : {
     DeviceService: {
         Device: {
             GetCapabilities: function (args) {
                 return {
                     Capabilities : {
                         Media : {
-                            XAddr : "http://" + Config.IpAddress + ":" + Config.ServicePort + "/onvif/media_service"
+                            XAddr : "http://" + config.IpAddress + ":" + config.ServicePort + "/onvif/media_service"
                         },
                         Device : {
-                            XAddr : "http://" + Config.IpAddress + ":" + Config.ServicePort + "/onvif/device_service"
+                            XAddr : "http://" + config.IpAddress + ":" + config.ServicePort + "/onvif/device_service"
                         }
                     }
                 };
             },
             GetDeviceInformation: function (args) {
-                return Config.DeviceInformation;
+                return config.DeviceInformation;
             },
             
             GetSystemDateAndTime : function () {
@@ -73,7 +65,7 @@ var DeviceService = {
             GetNetworkProtocols : function () {
                 return {
                     NetworkProtocols : [{
-                            Name : "RTSP", Enabled : true, Port : [Config.RTSPPort]
+                            Name : "RTSP", Enabled : true, Port : [config.RTSPPort]
                         }]
                 };
             },
@@ -85,4 +77,4 @@ var DeviceService = {
     wsdl : fs.readFileSync('wsdl/device_service.wsdl', 'utf8')
 };
 
-exports.DeviceService = DeviceService;
+}

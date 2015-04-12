@@ -22,45 +22,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-var fs = require("fs");
-var soap = require('soap');
-var http = require('http');
-var url = require('url');
+var utils = require('./lib/utils');
+var pjson = require('./package.json');
+var config = require('./config');
 
-var Config = require('./config').Config;
-var DeviceService = require('./DeviceService').DeviceService;
-var MediaService = require('./MediaService').MediaService;
+utils.log.level = config.logLevel;
 
-var DEBUG = Config.Debug;
-var debugLog = function (){
-    if (DEBUG)
-        console.log.apply(this, arguments);
+config.DeviceInformation.SerialNumber = utils.getSerial();
+config.DeviceInformation.FirmwareVersion = pjson.version;
+
+for (var i in config.DeviceInformation) {
+  utils.log.debug("%s : %s", i , config.DeviceInformation[i]);
 }
 
-var ignoreNamespaces = [];
+var service = new (require('./lib/service'))(config);
+var camera = new (require('./lib/camera'))(config);
 
-server = http.createServer(function (request, response) {
-    debugLog('web request received : %s', request.url);
-    var request = url.parse(request.url, true);
-    var action = request.pathname;
-    if (action == '/web/snapshot.jpg') {
-        var img = fs.readFileSync('./web/snapshot.jpg');
-        response.writeHead(200, { 'Content-Type': 'image/jpg' });
-        response.end(img, 'binary');
-    } else {
-        response.end("404: Not Found: " + request);
-    }
-});
-
-console.log("Starting webserver on port:" + Config.ServicePort);
-server.listen(Config.ServicePort);
-
-console.log("Binding device_service to '/onvif/device_service'");
-soap.listen(server, { path : '/onvif/device_service', services : DeviceService, xml : DeviceService.wsdl, ignoredNamespaces : { namespaces : ignoreNamespaces }, onReady : function () { console.log('device_service started'); } }).log = function (type, data) {
-    debugLog('device_service - Calltype : %s, Data : %s', type, data);
-};
-
-console.log("Binding media_service to '/onvif/media_service'");
-soap.listen(server, { path : '/onvif/media_service', services : MediaService, xml : MediaService.wsdl, ignoredNamespaces : { namespaces : ignoreNamespaces }, onReady : function () { console.log('media_service started'); } }).log = function (type, data) {
-    debugLog('media_service - Calltype : %s, Data : %s', type, data);
-};
+service.camera = camera;
+service.start();

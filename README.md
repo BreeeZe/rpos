@@ -15,7 +15,7 @@ Download the code on your machine (one which has nodejs installed) and restore t
 
 Copy the code to your Pi.
 
-Do the following to stream h264 video over rtsp [ source http://forum.synology.com/enu/viewtopic.php?f=82&t=69224&start=15#p289293 ] :
+Install the live555 library to stream h264 video over rtsp [ source http://forum.synology.com/enu/viewtopic.php?f=82&t=69224&start=15#p289293 ] :
 
 	*login to your pi via ssh
 	cd /home/pi/
@@ -25,20 +25,9 @@ Do the following to stream h264 video over rtsp [ source http://forum.synology.c
 	./genMakefiles linux
 	make
 
-	wget http://www.raspberrypi.org/phpBB3/download/file.php?id=4285
-	tar xvzf testRaspi.tar.gz
-	cd raspi
+Install GStreamer 1.0 (needed for snapshots) :
 
-	*To increase OutPacketBuffer::maxSize which is require for large resolutions, modify testRaspi.cpp and add
-		OutPacketBuffer::maxSize = 1024000;
-	*before the following line in testRaspi.cpp
-		// Create the RTSP server:
-		RTSPServer* rtspServer = RTSPServer::createNew(*env, 8554, authDB);
-	*then run
-	make
-
-	*start the stream by running :
-	raspivid -o - -fps 25 -t 0 -b 10000000 -g 2 -ih -drc high -ex auto -w 1920 -h 1080  | ~/live/raspi/testRaspi
+	sudo apt-get install gstreamer1.0
 
 And to install nodejs on your pi (http://weworkweplay.com/play/raspberry-pi-nodejs/):
 
@@ -51,10 +40,8 @@ Then you start rpos by running "sudo node server.js" (or "sudo nodejs server.js"
 
 
 #ToDo's
-- Start stream from rpos
 - Configure stream from rpos
 - Add authentication
-- Add snapshots
 - Add MJPEG
 - Implement more ONVIF calls
 - and more...
