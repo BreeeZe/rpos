@@ -40,7 +40,6 @@ Then you start rpos by running "sudo node server.js" (or "sudo nodejs server.js"
 
 
 #ToDo's
-- Configure stream from rpos
 - Add authentication
 - Add MJPEG
 - Implement more ONVIF calls
