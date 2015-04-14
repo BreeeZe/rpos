@@ -4,7 +4,9 @@ var os = require('os');
 var config = require('../config');
 
 var service = require('./stubs/device_service.js').DeviceService;
-var exports = module.exports = service;
+var exports = module.exports= {
+  service : service
+};
 var port = service.DeviceService.Device;
 
 port.GetDeviceInformation = function (args /*, cb, headers*/) {

@@ -35,8 +35,6 @@
     <Compile Include="lib\camera.js" />
     <Compile Include="lib\service.js" />
     <Compile Include="lib\utils.js" />
-    <Compile Include="services\DeviceService.js" />
-    <Compile Include="services\MediaService.js" />
     <Compile Include="server.js" />
     <Compile Include="services\device_service.js" />
     <Compile Include="services\media_service.js" />
