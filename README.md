@@ -9,6 +9,11 @@ First demo video @ https://youtu.be/ZcZbF4XOH7E
 
 This version uses a patched version of the "node-soap" v0.80 library (https://github.com/vpulim/node-soap/releases/tag/v0.8.0) located @ https://github.com/BreeeZe/node-soap
 
+#Features:
+
+- Streams H264 video over rtsp
+- Camera control (resolution and framerate) through Onvif
+
 #How to:
 
 Download the code on your machine (one which has nodejs installed) and restore the dependencies using the "npm update" command or if you have Visual Studio 2013 and Nodejs tools, open the solution and build it. (https://nodejstools.codeplex.com)
@@ -24,10 +29,6 @@ Install the live555 library to stream h264 video over rtsp [ source http://forum
 	cd live
 	./genMakefiles linux
 	make
-
-Install GStreamer 1.0 (needed for snapshots) :
-
-	sudo apt-get install gstreamer1.0
 
 And to install nodejs on your pi (http://weworkweplay.com/play/raspberry-pi-nodejs/):
 

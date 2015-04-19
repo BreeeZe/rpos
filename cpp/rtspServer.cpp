@@ -51,9 +51,9 @@ int main(int argc, char** argv) {
   // access to the server.
 #endif
 
-  OutPacketBuffer::maxSize = strtol(argv[1],NULL,0);//1024000;
+  OutPacketBuffer::maxSize = strtol(argv[2],NULL,0);//1024000;
   // Create the RTSP server:
-  RTSPServer* rtspServer = RTSPServer::createNew(*env, strtol(argv[2],NULL,0), authDB);
+  RTSPServer* rtspServer = RTSPServer::createNew(*env, strtol(argv[3],NULL,0), authDB);
   if (rtspServer == NULL) {
     *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
     exit(1);
@@ -68,10 +68,10 @@ int main(int argc, char** argv) {
 
   // A H.264 video elementary stream:
   {
-    char const* streamName = argc > 3 ? argv[4] : ""; 
+    char const* streamName = argc > 4 ? argv[5] : ""; 
 	if(streamName == NULL)
 		streamName = "";
-    char const* inputFileName = "stdin";
+    char const* inputFileName = argv[1];
 
     ServerMediaSession* sms = ServerMediaSession::createNew(*env, streamName, streamName, descriptionString);
 
@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
   }
 
   // Also, attempt to create a HTTP server for RTSP-over-HTTP tunneling.
-  if (argc > 2 && argv[3] != NULL && strtol(argv[3],NULL,0) > 0 && rtspServer->setUpTunnelingOverHTTP(strtol(argv[3],NULL,0))) {
+  if (argc > 3 && argv[4] != NULL && strtol(argv[4],NULL,0) > 0 && rtspServer->setUpTunnelingOverHTTP(strtol(argv[4],NULL,0))) {
     *env << "\n(Using port " << rtspServer->httpServerPortNum() << " for optional RTSP-over-HTTP tunneling.)\n";
   } else {
     *env << "\n(RTSP-over-HTTP tunneling is not available.)\n";

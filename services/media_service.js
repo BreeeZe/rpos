@@ -1,16 +1,71 @@
 var fs = require("fs");
+var util = require("util");
 var config = require('../config');
+var Service = require('../lib/service');
+var utils = require('../lib/utils');
+var url = require('url');
 
-var service = require('./stubs/media_service.js').MediaService;
-var exports = module.exports = {
-  service : service,
-  camera : null
+var MediaService = function (config, server, camera) {
+  Service.apply(this, [config, server]);
+  
+  this.media_service = require('./stubs/media_service.js').MediaService;
+  
+  this.camera = camera;
+  this.serviceOptions = {
+    path : '/onvif/media_service', 
+    services : this.media_service, 
+    xml : fs.readFileSync('./wsdl/media_service.wsdl', 'utf8'),
+    wsdlPath : 'wsdl/media_service.wsdl',
+    onReady : function () {
+      console.log('media_service started');
+    }
+  };
+  
+  this.extendService();
 };
-var port = service.MediaService.Media;
+util.inherits(MediaService, Service);
 
-var videoConfigurationOptions = function () {
-  var cameraOptions = exports.camera.options;
-  var o = {
+MediaService.prototype.starting = function () {
+  var listeners = this.webserver.listeners('request').slice();
+  this.webserver.removeAllListeners('request');
+  this.webserver.addListener('request', function (request, response) {
+    utils.log.debug('web request received : %s', request.url);
+    
+    var request = url.parse(request.url, true);
+    var action = request.pathname;
+    if (action == '/web/snapshot.jpg') {
+      try {
+        var img = fs.readFileSync('/dev/shm/snapshot.jpg');
+        response.writeHead(200, { 'Content-Type': 'image/jpg' });
+        response.end(img, 'binary');
+      } catch (err) {
+        utils.log.error("Error opening snapshot : %s", err);
+        response.end("404: Not Found: " + request);
+      }
+    } else {
+      for (var i = 0, len = listeners.length; i < len; i++) {
+        listeners[i].call(this, request, response);
+      }
+    }
+  });
+};
+
+MediaService.prototype.started = function () {
+  if (!utils.isWin()) {
+    this.camera.startRtsp("/dev/video0");
+  } else {
+    utils.log.debug("Would start rtsp server");
+  }
+};
+
+MediaService.prototype.extendService = function () {
+  var port = this.media_service.MediaService.Media;
+  
+  var cameraOptions = this.camera.options;
+  var cameraSettings = this.camera.settings;
+  var camera = this.camera;
+  
+  var videoConfigurationOptions = {
     QualityRange : {
       Min : cameraOptions.quality[0], 
       Max : cameraOptions.quality[cameraOptions.quality.length - 1]
@@ -41,15 +96,9 @@ var videoConfigurationOptions = function () {
         }
       }
     }
-  }
-  return o;
-};
-
-
-
-var videoEncoderConfiguration = function () {
-  var cameraSettings = exports.camera.settings;
-  var Configuration = {
+  };
+  
+  var videoEncoderConfiguration = {
     attributes : {
       token : "token"
     },
@@ -72,157 +121,156 @@ var videoEncoderConfiguration = function () {
     },
     SessionTimeout : "1000"
   };
-  return Configuration;
-};
-
-
-var videoSourceConfiguration = {
-  Name : "Primary Source",
-  UseCount : 0,
-  attributes : {
-    token : "token"
-  },
-  SourceToken : [],
-  Bounds : { attributes : { x : 0, y : 0, width : 1920, height : 1080 } }
-};
-
-var audioEncoderConfigurationOptions = {
-  Options : []
-};
-
-var profile = function () {
-  return {
-    Name : "SynoTestProfile",
+  
+  var videoSourceConfiguration = {
+    Name : "Primary Source",
+    UseCount : 0,
+    attributes : {
+      token : "token"
+    },
+    SourceToken : [],
+    Bounds : { attributes : { x : 0, y : 0, width : 1920, height : 1080 } }
+  };
+  
+  var audioEncoderConfigurationOptions = {
+    Options : []
+  };
+  
+  var profile = {
+    Name : "CurrentProfile",
     attributes : {
       token : "token"
     },
     VideoSourceConfiguration : videoSourceConfiguration,
-    VideoEncoderConfiguration : videoEncoderConfiguration()
+    VideoEncoderConfiguration : videoEncoderConfiguration
   };
-};
-
-port.GetServiceCapabilities = function (args /*, cb, headers*/) {
-  var GetServiceCapabilitiesResponse = {
-    Capabilities : {
-      attributes : {
-        SnapshotUri : true,
-        Rotation : false,
-        VideoSourceMode : false,
-        OSD : false
-      },
-      ProfileCapabilities : {
+  
+  port.GetServiceCapabilities = function (args /*, cb, headers*/) {
+    var GetServiceCapabilitiesResponse = {
+      Capabilities : {
         attributes : {
-          MaximumNumberOfProfiles : 1
-        }
-      },
-      StreamingCapabilities : {
-        attributes : {
-          RTPMulticast : false,
-          RTP_TCP : true,
-          RTP_RTSP_TCP : true,
-          NonAggregateControl : false,
-          NoRTSPStreaming : false
+          SnapshotUri : false,
+          Rotation : false,
+          VideoSourceMode : true,
+          OSD : false
+        },
+        ProfileCapabilities : {
+          attributes : {
+            MaximumNumberOfProfiles : 1
+          }
+        },
+        StreamingCapabilities : {
+          attributes : {
+            RTPMulticast : false,
+            RTP_TCP : true,
+            RTP_RTSP_TCP : true,
+            NonAggregateControl : false,
+            NoRTSPStreaming : false
+          }
         }
       }
-    }
-        
+    };
+    return GetServiceCapabilitiesResponse;
   };
-  return GetServiceCapabilitiesResponse;
-};
-
-//var GetStreamUri = { 
-//StreamSetup : { 
-//Stream : { xs:string}
-//},
-//ProfileToken : { xs:string}
-//
-//};
-port.GetStreamUri = function (args /*, cb, headers*/) {
-  var GetStreamUriResponse = {
-    MediaUri : {
-      Uri : "rtsp://" + config.IpAddress + ":" + config.RTSPPort + "/" + config.RTSPName,
-      InvalidAfterConnect : false,
-      InvalidAfterReboot : false,
-      Timeout : "PT30S"
-    }
-  };
-  return GetStreamUriResponse;
-};
-
-port.GetProfile = function (args) {
-  var GetProfileResponse = { Profile : profile() };
-  return GetProfileResponse;
-};
-
-port.GetProfiles = function (args) {
-  var GetProfilesResponse = { Profiles : [profile()] };
-  return GetProfilesResponse;
-};
-
-port.CreateProfile = function (args) {
-  var CreateProfileResponse = { Profile : profile() };
-  return CreateProfileResponse;
-};
-
-port.DeleteProfile = function (args) {
-  var DeleteProfileResponse = {};
-  return DeleteProfileResponse;
-};
-
-port.GetVideoSourceConfigurations = function (args) {
-  var GetVideoSourceConfigurationsResponse = { Configurations : [videoSourceConfiguration] };
-  return GetVideoSourceConfigurationsResponse;
-};
-
-port.GetVideoEncoderConfigurations = function (args) {
-  var GetVideoEncoderConfigurationsResponse = { Configurations : [videoEncoderConfiguration()] };
-  return GetVideoEncoderConfigurationsResponse;
-};
-
-port.GetVideoEncoderConfiguration = function (args) {
-  var GetVideoEncoderConfigurationResponse = { Configuration : [videoEncoderConfiguration()] };
-  return GetVideoEncoderConfigurationResponse;
-};
-
-port.SetVideoEncoderConfiguration = function (args) {
-  var cameraSettings = exports.camera.settings;
-  cameraSettings.bitrate = args.Configuration.RateControl.BitrateLimit;
-  cameraSettings.framerate = args.Configuration.RateControl.FrameRateLimit;
-  cameraSettings.gop = args.Configuration.H264.GovLength;
-  cameraSettings.profile = args.Configuration.H264.H264Profile;
-  cameraSettings.quality = args.Configuration.Quality instanceof Object ? null : args.Configuration.Quality;
-  cameraSettings.resolution = args.Configuration.Resolution;
-  exports.camera.startAll();
   
-  var SetVideoEncoderConfigurationResponse = {};
-  return SetVideoEncoderConfigurationResponse;
-};
-
-port.GetVideoEncoderConfigurationOptions = function (args) {
-  var GetVideoEncoderConfigurationOptionsResponse = { Options : videoConfigurationOptions() };
-  return GetVideoEncoderConfigurationOptionsResponse;
-};
-
-port.GetGuaranteedNumberOfVideoEncoderInstances = function (args) {
-  var GetGuaranteedNumberOfVideoEncoderInstancesResponse = {
-    TotalNumber : 1,
-    H264 : 1
-  }
-  return GetGuaranteedNumberOfVideoEncoderInstancesResponse;
-};
-port.GetSnapshotUri = function (args) {
-  var GetSnapshotUriResponse = {
-    MediaUri : {
-      Uri : "http://" + config.IpAddress + ":" + config.ServicePort + "/web/snapshot.jpg",
-      Timeout : "PT30S",
-      InvalidAfterConnect : false,
-      InvalidAfterReboot : false
-    }
+  //var GetStreamUri = { 
+  //StreamSetup : { 
+  //Stream : { xs:string}
+  //},
+  //ProfileToken : { xs:string}
+  //
+  //};
+  port.GetStreamUri = function (args /*, cb, headers*/) {
+    var GetStreamUriResponse = {
+      MediaUri : {
+        Uri : "rtsp://" + config.IpAddress + ":" + config.RTSPPort + "/" + config.RTSPName,
+        InvalidAfterConnect : false,
+        InvalidAfterReboot : false,
+        Timeout : "PT30S"
+      }
+    };
+    return GetStreamUriResponse;
   };
-  return GetSnapshotUriResponse;
+  
+  port.GetProfile = function (args) {
+    var GetProfileResponse = { Profile : profile };
+    return GetProfileResponse;
+  };
+  
+  port.GetProfiles = function (args) {
+    var GetProfilesResponse = { Profiles : [profile] };
+    return GetProfilesResponse;
+  };
+  
+  port.CreateProfile = function (args) {
+    var CreateProfileResponse = { Profile : profile };
+    return CreateProfileResponse;
+  };
+  
+  port.DeleteProfile = function (args) {
+    var DeleteProfileResponse = {};
+    return DeleteProfileResponse;
+  };
+  
+  port.GetVideoSourceConfigurations = function (args) {
+    var GetVideoSourceConfigurationsResponse = { Configurations : [videoSourceConfiguration] };
+    return GetVideoSourceConfigurationsResponse;
+  };
+  
+  port.GetVideoEncoderConfigurations = function (args) {
+    var GetVideoEncoderConfigurationsResponse = { Configurations : [videoEncoderConfiguration] };
+    return GetVideoEncoderConfigurationsResponse;
+  };
+  
+  port.GetVideoEncoderConfiguration = function (args) {
+    var GetVideoEncoderConfigurationResponse = { Configuration : videoEncoderConfiguration };
+    return GetVideoEncoderConfigurationResponse;
+  };
+  
+  port.SetVideoEncoderConfiguration = function (args) {
+    var settings = {
+      bitrate : args.Configuration.RateControl.BitrateLimit,
+      frameRate : args.Configuration.RateControl.FrameRateLimit,
+      gop : args.Configuration.H264.GovLength,
+      profile : args.Configuration.H264.H264Profile,
+      quality : args.Configuration.Quality instanceof Object ? null : args.Configuration.Quality,
+      resolution : args.Configuration.Resolution
+    };
+    camera.setSettings(settings);
+    
+    var SetVideoEncoderConfigurationResponse = {};
+    return SetVideoEncoderConfigurationResponse;
+  };
+  
+  port.GetVideoEncoderConfigurationOptions = function (args) {
+    var GetVideoEncoderConfigurationOptionsResponse = { Options : videoConfigurationOptions };
+    return GetVideoEncoderConfigurationOptionsResponse;
+  };
+  
+  port.GetGuaranteedNumberOfVideoEncoderInstances = function (args) {
+    var GetGuaranteedNumberOfVideoEncoderInstancesResponse = {
+      TotalNumber : 1,
+      H264 : 1
+    }
+    return GetGuaranteedNumberOfVideoEncoderInstancesResponse;
+  };
+  
+  port.GetSnapshotUri = function (args) {
+    var GetSnapshotUriResponse = {};
+    //  MediaUri : {
+    //    Uri : "http://" + config.IpAddress + ":" + config.ServicePort + "/web/snapshot.jpg",
+    //    Timeout : "PT30S",
+    //    InvalidAfterConnect : false,
+    //    InvalidAfterReboot : false
+    //  }
+    //};
+    return GetSnapshotUriResponse;
+  };
+  
+  port.GetAudioEncoderConfigurationOptions = function (args) {
+    var GetAudioEncoderConfigurationOptionsResponse = { Options : [{}] };
+    return GetAudioEncoderConfigurationOptionsResponse;
+  };
 };
 
-port.GetAudioEncoderConfigurationOptions = function (args) {
-  var GetAudioEncoderConfigurationOptionsResponse = { Options : [{}] };
-  return GetAudioEncoderConfigurationOptionsResponse;
-};
+module.exports = MediaService;

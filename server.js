@@ -25,6 +25,7 @@ THE SOFTWARE.
 var utils = require('./lib/utils');
 var pjson = require('./package.json');
 var config = require('./config');
+var http = require('http');
 
 utils.log.level = config.logLevel;
 
@@ -32,11 +33,16 @@ config.DeviceInformation.SerialNumber = utils.getSerial();
 config.DeviceInformation.FirmwareVersion = pjson.version;
 
 for (var i in config.DeviceInformation) {
-  utils.log.debug("%s : %s", i , config.DeviceInformation[i]);
+  utils.log.info("%s : %s", i , config.DeviceInformation[i]);
 }
 
-var service = new (require('./lib/service'))(config);
-var camera = new (require('./lib/camera'))(config);
+var webserver = http.createServer(function (request, response) {
+  response.end("404: Not Found: " + request);
+});
 
-service.camera = camera;
-service.start();
+var camera = new (require('./lib/camera'))(config);
+var device_service = new (require('./services/device_service.js'))(config, webserver);
+var media_service = new (require('./services/media_service.js'))(config, webserver, camera);
+
+device_service.start();
+media_service.start();
