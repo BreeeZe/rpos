@@ -42,6 +42,14 @@ First demo video @ <a href="https://youtu.be/ZcZbF4XOH7E">https://youtu.be/ZcZbF
 <p>This version uses a patched version of the "node-soap" v0.80 library (<a href="https://github.com/vpulim/node-soap/releases/tag/v0.8.0">https://github.com/vpulim/node-soap/releases/tag/v0.8.0</a>) located @ <a href="https://github.com/BreeeZe/node-soap">https://github.com/BreeeZe/node-soap</a></p>
 
 <h1>
+<a id="features" class="anchor" href="#features" aria-hidden="true"><span class="octicon octicon-link"></span></a>Features:</h1>
+
+<ul>
+<li>Streams H264 video over rtsp</li>
+<li>Camera control (resolution and framerate) through Onvif</li>
+</ul>
+
+<h1>
 <a id="how-to" class="anchor" href="#how-to" aria-hidden="true"><span class="octicon octicon-link"></span></a>How to:</h1>
 
 <p>Download the code on your machine (one which has nodejs installed) and restore the dependencies using the "npm update" command or if you have Visual Studio 2013 and Nodejs tools, open the solution and build it. (<a href="https://nodejstools.codeplex.com">https://nodejstools.codeplex.com</a>)</p>
@@ -59,11 +67,6 @@ cd live
 make
 </code></pre>
 
-<p>Install GStreamer 1.0 (needed for snapshots) :</p>
-
-<pre><code>sudo apt-get install gstreamer1.0
-</code></pre>
-
 <p>And to install nodejs on your pi (<a href="http://weworkweplay.com/play/raspberry-pi-nodejs/">http://weworkweplay.com/play/raspberry-pi-nodejs/</a>):</p>
 
 <pre><code>wget http://node-arm.herokuapp.com/node_latest_armhf.deb
@@ -78,7 +81,6 @@ sudo dpkg -i node_latest_armhf.deb
 <a id="todos" class="anchor" href="#todos" aria-hidden="true"><span class="octicon octicon-link"></span></a>ToDo's</h1>
 
 <ul>
-<li>Configure stream from rpos</li>
 <li>Add authentication</li>
 <li>Add MJPEG</li>
 <li>Implement more ONVIF calls</li>
