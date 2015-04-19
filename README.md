@@ -39,6 +39,8 @@ Be sure to configure the ipaddress, service port, rtsp stream name and rtsp port
 
 Then you start rpos by running "sudo node server.js" (or "sudo nodejs server.js" depending on your installed nodejs version.)
 
+#Known Issues
+- 1920x1080 can cause hangs and crashes.
 
 #ToDo's
 - Add authentication
