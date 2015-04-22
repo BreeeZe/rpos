@@ -3,6 +3,7 @@ var util = require("util");
 var os = require('os');
 var config = require('../config');
 var Service = require('../lib/service');
+var utils = require('../lib/utils');
 
 var DeviceService = function (config, server) {
   Service.apply(this, [config, server]);
@@ -76,7 +77,7 @@ DeviceService.prototype.extendService = function () {
     
     if (category == "All" || category == "Device") {
       GetCapabilitiesResponse.Capabilities.Device = {
-        XAddr : "http://" + config.IpAddress + ":" + config.ServicePort + "/onvif/device_service",
+        XAddr : "http://" + (utils.getIpAddress(config.NetworkAdapter) || config.IpAddress) + ":" + config.ServicePort + "/onvif/device_service",
         Network : {
           IPFilter : false,
           ZeroConfiguration : false,
@@ -134,7 +135,7 @@ DeviceService.prototype.extendService = function () {
     }
     if (category == "All" || category == "Device") {
       GetCapabilitiesResponse.Capabilities.Media = {
-        XAddr : "http://" + config.IpAddress + ":" + config.ServicePort + "/onvif/media_service",
+        XAddr : "http://" + (utils.getIpAddress(config.NetworkAdapter) || config.IpAddress) + ":" + config.ServicePort + "/onvif/media_service",
         StreamingCapabilities : {
           RTPMulticast : false,
           RTP_TCP : true,

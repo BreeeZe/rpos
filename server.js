@@ -26,6 +26,7 @@ var utils = require('./lib/utils');
 var pjson = require('./package.json');
 var config = require('./config');
 var http = require('http');
+var express = require('express');
 
 utils.log.level = config.logLevel;
 
@@ -36,13 +37,12 @@ for (var i in config.DeviceInformation) {
   utils.log.info("%s : %s", i , config.DeviceInformation[i]);
 }
 
-var webserver = http.createServer(function (request, response) {
-  response.end("404: Not Found: " + request);
-});
+var webserver = express();
+var httpserver = http.createServer(webserver);
 
-var camera = new (require('./lib/camera'))(config);
-var device_service = new (require('./services/device_service.js'))(config, webserver);
-var media_service = new (require('./services/media_service.js'))(config, webserver, camera);
+var camera = new (require('./lib/camera'))(config, webserver);
+var device_service = new (require('./services/device_service.js'))(config, httpserver);
+var media_service = new (require('./services/media_service.js'))(config, httpserver, camera);
 
 device_service.start();
 media_service.start();

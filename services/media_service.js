@@ -28,11 +28,11 @@ util.inherits(MediaService, Service);
 MediaService.prototype.starting = function () {
   var listeners = this.webserver.listeners('request').slice();
   this.webserver.removeAllListeners('request');
-  this.webserver.addListener('request', function (request, response) {
+  this.webserver.addListener('request', function (request, response, next) {
     utils.log.debug('web request received : %s', request.url);
     
-    var request = url.parse(request.url, true);
-    var action = request.pathname;
+    var uri = url.parse(request.url, true);
+    var action = uri.pathname;
     if (action == '/web/snapshot.jpg') {
       try {
         var img = fs.readFileSync('/dev/shm/snapshot.jpg');
@@ -44,7 +44,7 @@ MediaService.prototype.starting = function () {
       }
     } else {
       for (var i = 0, len = listeners.length; i < len; i++) {
-        listeners[i].call(this, request, response);
+        listeners[i].call(this, request, response, next);
       }
     }
   });
@@ -183,7 +183,7 @@ MediaService.prototype.extendService = function () {
   port.GetStreamUri = function (args /*, cb, headers*/) {
     var GetStreamUriResponse = {
       MediaUri : {
-        Uri : "rtsp://" + config.IpAddress + ":" + config.RTSPPort + "/" + config.RTSPName,
+        Uri : "rtsp://" + (utils.getIpAddress(config.NetworkAdapter) || config.IpAddress) + ":" + config.RTSPPort + "/" + config.RTSPName,
         InvalidAfterConnect : false,
         InvalidAfterReboot : false,
         Timeout : "PT30S"

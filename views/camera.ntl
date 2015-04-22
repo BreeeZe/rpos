@@ -1,0 +1,17 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>Camera settings</title>
+</head>
+<body>
+<form method="post">
+    <table>
+        <tbody>
+                {{row}}
+        </tbody>
+    </table>
+    <button type="submit">SET</button>
+</form>
+</body>
+</html>
