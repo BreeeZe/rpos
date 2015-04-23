@@ -7,8 +7,6 @@
   DeviceInformation : {
     Manufacturer : "Raspberry Pi",
     Model : "2 B",
-    FirmwareVersion : "",
-    SerialNumber : "",
     HardwareId : ""
   },
   logLevel : 4, // 0 : none, 1 : Error, 2 : Warn, 3 : Info, 4 : Debug
