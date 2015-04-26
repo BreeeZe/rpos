@@ -51,11 +51,7 @@ MediaService.prototype.starting = function () {
 };
 
 MediaService.prototype.started = function () {
-  if (!utils.isWin()) {
-    this.camera.startRtsp("/dev/video0");
-  } else {
-    utils.log.debug("Would start rtsp server");
-  }
+  this.camera.startRtsp("/dev/video0");
 };
 
 MediaService.prototype.extendService = function () {
