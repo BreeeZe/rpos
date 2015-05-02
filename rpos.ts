@@ -1,4 +1,7 @@
-﻿/*
+﻿/// <reference path="typings/rpos/rpos.d.ts"/>
+/// <reference path="typings/tsd.d.ts"/>
+
+/*
 The MIT License(MIT)
 
 Copyright(c) 2015 Jeroen Versteege
@@ -21,14 +24,19 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+require("./lib/extension");
 
-var utils = require('./lib/utils');
-var pjson = require('./package.json');
-var config = require('./config');
-var http = require('http');
-var express = require('express');
+import http = require("http");
+import express = require("express");
+import { utils, logLevel} from "./lib/utils";
+import Camera = require('./lib/camera');
+import DeviceService = require('./services/device_service');
+import MediaService = require('./services/media_service')
 
-utils.log.level = config.logLevel;
+let pjson = require("./package.json");
+let config = <rposConfig>require("./rposConfig.json");
+
+utils.log.level = <any>config.logLevel;
 
 config.DeviceInformation.SerialNumber = utils.getSerial();
 config.DeviceInformation.FirmwareVersion = pjson.version;
@@ -37,12 +45,12 @@ for (var i in config.DeviceInformation) {
   utils.log.info("%s : %s", i , config.DeviceInformation[i]);
 }
 
-var webserver = express();
-var httpserver = http.createServer(webserver);
+let webserver = express();
+let httpserver = http.createServer(webserver);
 
-var camera = new (require('./lib/camera'))(config, webserver);
-var device_service = new (require('./services/device_service.js'))(config, httpserver);
-var media_service = new (require('./services/media_service.js'))(config, httpserver, camera);
+let camera = new Camera(config, webserver);
+let device_service = new DeviceService(config, httpserver);
+let media_service = new MediaService(config, httpserver, camera);
 
 device_service.start();
 media_service.start();
