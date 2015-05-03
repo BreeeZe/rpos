@@ -25,6 +25,9 @@ Install the live555 library to stream h264 video over rtsp [ source http://forum
 	cd live
 	./genMakefiles linux
 	make
+	#delete sources
+	cd ..
+	rm live -r -f
 
 Install nodejs on your pi (http://weworkweplay.com/play/raspberry-pi-nodejs/):
 
@@ -40,6 +43,21 @@ Download rpos master from github to your pi
 	sudo chmod -R a+rwx ./bin/rtspServer
 	
 Be sure to configure the ipaddress, service port, rtsp stream name and rtsp port in "config.js" ("nano config.js")
+For now you can set V-flip or H-flip in the file "./lib/camera.js"
+
+	Camera.prototype.settings = {
+  	  hf : false, //horizontal flip
+	  vf : true, //vertical flip
+	  drc : 2, //0=OFF, 1=LOW, 2=MEDIUM, 3=HIGH
+	  gop : 2, //keyframe every X sec.
+	  forceGop : true,
+	  resolution : { Width : 1280, Height: 720 },
+	  framerate : 30,
+	  bitrate : 7500,
+	  profile : "Baseline",
+	  quality : null,
+	  exposure : "auto"
+	};
 
 Then you start rpos by running "sudo node server.js" (or "sudo nodejs server.js" depending on your installed nodejs version.)
 
