@@ -52,10 +52,6 @@ First demo video @ <a href="https://youtu.be/ZcZbF4XOH7E">https://youtu.be/ZcZbF
 <h1>
 <a id="how-to" class="anchor" href="#how-to" aria-hidden="true"><span class="octicon octicon-link"></span></a>How to:</h1>
 
-<p>Download the code on your machine (one which has nodejs installed) and restore the dependencies using the "npm update" command or if you have Visual Studio 2013 and Nodejs tools, open the solution and build it. (<a href="https://nodejstools.codeplex.com">https://nodejstools.codeplex.com</a>)</p>
-
-<p>Copy the code to your Pi.</p>
-
 <p>Install the live555 library to stream h264 video over rtsp [ source <a href="http://forum.synology.com/enu/viewtopic.php?f=82&amp;t=69224&amp;start=15#p289293">http://forum.synology.com/enu/viewtopic.php?f=82&amp;t=69224&amp;start=15#p289293</a> ] :</p>
 
 <pre><code>*login to your pi via ssh
@@ -65,17 +61,45 @@ tar xvzf live555-latest.tar.gz
 cd live
 ./genMakefiles linux
 make
+#delete sources
+cd ..
+rm live -r -f
 </code></pre>
 
-<p>And to install nodejs on your pi (<a href="http://weworkweplay.com/play/raspberry-pi-nodejs/">http://weworkweplay.com/play/raspberry-pi-nodejs/</a>):</p>
+<p>Install nodejs on your pi (<a href="http://weworkweplay.com/play/raspberry-pi-nodejs/">http://weworkweplay.com/play/raspberry-pi-nodejs/</a>):</p>
 
 <pre><code>wget http://node-arm.herokuapp.com/node_latest_armhf.deb
 sudo dpkg -i node_latest_armhf.deb
 </code></pre>
 
-<p>Be sure to configure the ipaddress, service port, rtsp stream name and rtsp port in "config.js"</p>
+<p>Download rpos master from github to your pi</p>
 
-<p>Then you start rpos by running "sudo node server.js" (or "sudo nodejs server.js" depending on your installed nodejs version.)</p>
+<pre><code>wget https://github.com/BreeeZe/rpos/archive/master.zip
+unzip master.zip
+cd rpos-master
+npm install
+sudo chmod -R a+rwx ./bin/rtspServer
+</code></pre>
+
+<p>Be sure to configure the ipaddress, service port, rtsp stream name and rtsp port in "config.js" ("nano config.js")
+For now you can set V-flip or H-flip in the file "./lib/camera.js"</p>
+
+<pre><code>Camera.prototype.settings = {
+  hf : false, //horizontal flip
+  vf : true, //vertical flip
+  drc : 2, //0=OFF, 1=LOW, 2=MEDIUM, 3=HIGH
+  gop : 2, //keyframe every X sec.
+  forceGop : true,
+  resolution : { Width : 1280, Height: 720 },
+  framerate : 30,
+  bitrate : 7500,
+  profile : "Baseline",
+  quality : null,
+  exposure : "auto"
+};
+</code></pre>
+
+<p>Then you start rpos by running "sudo node server.js"</p>
 
 <h1>
 <a id="known-issues" class="anchor" href="#known-issues" aria-hidden="true"><span class="octicon octicon-link"></span></a>Known Issues</h1>
