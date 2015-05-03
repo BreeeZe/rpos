@@ -59,7 +59,7 @@ For now you can set V-flip or H-flip in the file "./lib/camera.js"
 	  exposure : "auto"
 	};
 
-Then you start rpos by running "sudo node server.js" (or "sudo nodejs server.js" depending on your installed nodejs version.)
+Then you start rpos by running "sudo node server.js"
 
 #Known Issues
 - 1920x1080 can cause hangs and crashes.
