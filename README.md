@@ -16,10 +16,6 @@ This version uses a patched version of the "node-soap" v0.80 library (https://gi
 
 #How to:
 
-Download the code on your machine (one which has nodejs installed) and restore the dependencies using the "npm update" command or if you have Visual Studio 2013 and Nodejs tools, open the solution and build it. (https://nodejstools.codeplex.com)
-
-Copy the code to your Pi.
-
 Install the live555 library to stream h264 video over rtsp [ source http://forum.synology.com/enu/viewtopic.php?f=82&t=69224&start=15#p289293 ] :
 
 	*login to your pi via ssh
@@ -29,15 +25,41 @@ Install the live555 library to stream h264 video over rtsp [ source http://forum
 	cd live
 	./genMakefiles linux
 	make
+	#delete sources
+	cd ..
+	rm live -r -f
 
-And to install nodejs on your pi (http://weworkweplay.com/play/raspberry-pi-nodejs/):
+Install nodejs on your pi (http://weworkweplay.com/play/raspberry-pi-nodejs/):
 
 	wget http://node-arm.herokuapp.com/node_latest_armhf.deb
 	sudo dpkg -i node_latest_armhf.deb
 
-Be sure to configure the ipaddress, service port, rtsp stream name and rtsp port in "config.js"
+Download rpos master from github to your pi
+	
+	wget https://github.com/BreeeZe/rpos/archive/master.zip
+	unzip master.zip
+	cd rpos-master
+	npm install
+	sudo chmod -R a+rwx ./bin/rtspServer
+	
+Be sure to configure the ipaddress, service port, rtsp stream name and rtsp port in "config.js" ("nano config.js")
+For now you can set V-flip or H-flip in the file "./lib/camera.js"
 
-Then you start rpos by running "sudo node server.js" (or "sudo nodejs server.js" depending on your installed nodejs version.)
+	Camera.prototype.settings = {
+  	  hf : false, //horizontal flip
+	  vf : true, //vertical flip
+	  drc : 2, //0=OFF, 1=LOW, 2=MEDIUM, 3=HIGH
+	  gop : 2, //keyframe every X sec.
+	  forceGop : true,
+	  resolution : { Width : 1280, Height: 720 },
+	  framerate : 30,
+	  bitrate : 7500,
+	  profile : "Baseline",
+	  quality : null,
+	  exposure : "auto"
+	};
+
+Then you start rpos by running "sudo node server.js"
 
 #Known Issues
 - 1920x1080 can cause hangs and crashes.
