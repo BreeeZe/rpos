@@ -5,8 +5,9 @@ import fs = require("fs");
 import util = require("util");
 import os = require('os');
 import SoapService = require('../lib/SoapService');
-import { utils, logLevel }  from '../lib/utils';
+import { Utils }  from '../lib/utils';
 import { Server } from 'http';
+var utils = Utils.utils;
 
 class DeviceService extends SoapService {
   device_service: any;
@@ -80,7 +81,7 @@ class DeviceService extends SoapService {
       if (category == "All" || category == "Device") {
         GetCapabilitiesResponse.Capabilities = {
           Device: {
-            XAddr: `http://${(utils.getIpAddress(this.config.NetworkAdapter) || this.config.IpAddress) }:${this.config.ServicePort}/onvif/device_service`,
+            XAddr: `http://${utils.getIpAddress()}:${this.config.ServicePort}/onvif/device_service`,
             Network: {
               IPFilter: false,
               ZeroConfiguration: false,
@@ -140,7 +141,7 @@ class DeviceService extends SoapService {
       if (category == "All" || category == "Device") {
         GetCapabilitiesResponse.Capabilities = {
           Media: {
-            XAddr: `http://${(utils.getIpAddress(this.config.NetworkAdapter) || this.config.IpAddress) }:${this.config.ServicePort}/onvif/media_service`,
+            XAddr: `http://${utils.getIpAddress()}:${this.config.ServicePort}/onvif/media_service`,
             StreamingCapabilities: {
               RTPMulticast: false,
               RTP_TCP: true,

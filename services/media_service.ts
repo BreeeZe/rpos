@@ -3,18 +3,18 @@
 import fs = require("fs");
 import util = require("util");
 import SoapService = require('../lib/SoapService');
-import { utils, logLevel }  from '../lib/utils';
+import { Utils }  from '../lib/utils';
 import url = require('url');
 import { Server } from 'http';
-import camera = require('../lib/camera');
+import Camera = require('../lib/camera');
+var utils = Utils.utils;
 
 class MediaService extends SoapService {
   media_service: any;
-  camera: camera;
+  camera: Camera;
 
-  constructor(config: rposConfig, server: Server, camera: camera) {
+  constructor(config: rposConfig, server: Server, camera: Camera) {
     super(config, server);
-
     this.media_service = require('./stubs/media_service.js').MediaService;
 
     this.camera = camera;
@@ -24,7 +24,7 @@ class MediaService extends SoapService {
       xml: fs.readFileSync('./wsdl/media_service.wsdl', 'utf8'),
       wsdlPath: 'wsdl/media_service.wsdl',
       onReady: function() {
-        console.log('media_service started');
+        utils.log.info('media_service started');
       }
     };
   }
@@ -55,7 +55,7 @@ class MediaService extends SoapService {
   };
 
   started() {
-    this.camera.startRtsp("/dev/video0");
+    this.camera.startRtsp();
   };
 
   extendService() {
@@ -183,7 +183,7 @@ class MediaService extends SoapService {
     port.GetStreamUri = (args /*, cb, headers*/)=> {
       var GetStreamUriResponse = {
         MediaUri: {
-          Uri: `rtsp://${(utils.getIpAddress(this.config.NetworkAdapter) || this.config.IpAddress)}:${this.config.RTSPPort}/${this.config.RTSPName}`,
+          Uri: `rtsp://${utils.getIpAddress()}:${this.config.RTSPPort}/${this.config.RTSPName}`,
           InvalidAfterConnect: false,
           InvalidAfterReboot: false,
           Timeout: "PT30S"
@@ -230,7 +230,7 @@ class MediaService extends SoapService {
     port.SetVideoEncoderConfiguration = (args)=> {
       var settings = {
         bitrate: args.Configuration.RateControl.BitrateLimit,
-        frameRate: args.Configuration.RateControl.FrameRateLimit,
+        framerate: args.Configuration.RateControl.FrameRateLimit,
         gop: args.Configuration.H264.GovLength,
         profile: args.Configuration.H264.H264Profile,
         quality: args.Configuration.Quality instanceof Object ? null : args.Configuration.Quality,

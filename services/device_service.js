@@ -10,6 +10,7 @@ var fs = require("fs");
 var os = require('os');
 var SoapService = require('../lib/SoapService');
 var utils_1 = require('../lib/utils');
+var utils = utils_1.Utils.utils;
 var DeviceService = (function (_super) {
     __extends(DeviceService, _super);
     function DeviceService(config, server) {
@@ -61,7 +62,7 @@ var DeviceService = (function (_super) {
         };
         port.SystemReboot = function (args) {
             var SystemRebootResponse = {
-                Message: utils_1.utils.execSync("sudo reboot")
+                Message: utils.execSync("sudo reboot")
             };
             return SystemRebootResponse;
         };
@@ -73,7 +74,7 @@ var DeviceService = (function (_super) {
             if (category == "All" || category == "Device") {
                 GetCapabilitiesResponse.Capabilities = {
                     Device: {
-                        XAddr: "http://" + (utils_1.utils.getIpAddress(_this.config.NetworkAdapter) || _this.config.IpAddress) + ":" + _this.config.ServicePort + "/onvif/device_service",
+                        XAddr: "http://" + utils.getIpAddress() + ":" + _this.config.ServicePort + "/onvif/device_service",
                         Network: {
                             IPFilter: false,
                             ZeroConfiguration: false,
@@ -133,7 +134,7 @@ var DeviceService = (function (_super) {
             if (category == "All" || category == "Device") {
                 GetCapabilitiesResponse.Capabilities = {
                     Media: {
-                        XAddr: "http://" + (utils_1.utils.getIpAddress(_this.config.NetworkAdapter) || _this.config.IpAddress) + ":" + _this.config.ServicePort + "/onvif/media_service",
+                        XAddr: "http://" + utils.getIpAddress() + ":" + _this.config.ServicePort + "/onvif/media_service",
                         StreamingCapabilities: {
                             RTPMulticast: false,
                             RTP_TCP: true,

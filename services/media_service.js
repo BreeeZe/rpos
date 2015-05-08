@@ -10,6 +10,7 @@ var fs = require("fs");
 var SoapService = require('../lib/SoapService');
 var utils_1 = require('../lib/utils');
 var url = require('url');
+var utils = utils_1.Utils.utils;
 var MediaService = (function (_super) {
     __extends(MediaService, _super);
     function MediaService(config, server, camera) {
@@ -22,7 +23,7 @@ var MediaService = (function (_super) {
             xml: fs.readFileSync('./wsdl/media_service.wsdl', 'utf8'),
             wsdlPath: 'wsdl/media_service.wsdl',
             onReady: function () {
-                console.log('media_service started');
+                utils.log.info('media_service started');
             }
         };
     }
@@ -31,7 +32,7 @@ var MediaService = (function (_super) {
         var listeners = this.webserver.listeners('request').slice();
         this.webserver.removeAllListeners('request');
         this.webserver.addListener('request', function (request, response, next) {
-            utils_1.utils.log.debug('web request received : %s', request.url);
+            utils.log.debug('web request received : %s', request.url);
             var uri = url.parse(request.url, true);
             var action = uri.pathname;
             if (action == '/web/snapshot.jpg') {
@@ -41,7 +42,7 @@ var MediaService = (function (_super) {
                     response.end(img, 'binary');
                 }
                 catch (err) {
-                    utils_1.utils.log.error("Error opening snapshot : %s", err);
+                    utils.log.error("Error opening snapshot : %s", err);
                     response.end("404: Not Found: " + request);
                 }
             }
@@ -54,7 +55,7 @@ var MediaService = (function (_super) {
     };
     ;
     MediaService.prototype.started = function () {
-        this.camera.startRtsp("/dev/video0");
+        this.camera.startRtsp();
     };
     ;
     MediaService.prototype.extendService = function () {
@@ -168,7 +169,7 @@ var MediaService = (function (_super) {
         port.GetStreamUri = function (args) {
             var GetStreamUriResponse = {
                 MediaUri: {
-                    Uri: "rtsp://" + (utils_1.utils.getIpAddress(_this.config.NetworkAdapter) || _this.config.IpAddress) + ":" + _this.config.RTSPPort + "/" + _this.config.RTSPName,
+                    Uri: "rtsp://" + utils.getIpAddress() + ":" + _this.config.RTSPPort + "/" + _this.config.RTSPName,
                     InvalidAfterConnect: false,
                     InvalidAfterReboot: false,
                     Timeout: "PT30S"
@@ -207,7 +208,7 @@ var MediaService = (function (_super) {
         port.SetVideoEncoderConfiguration = function (args) {
             var settings = {
                 bitrate: args.Configuration.RateControl.BitrateLimit,
-                frameRate: args.Configuration.RateControl.FrameRateLimit,
+                framerate: args.Configuration.RateControl.FrameRateLimit,
                 gop: args.Configuration.H264.GovLength,
                 profile: args.Configuration.H264.H264Profile,
                 quality: args.Configuration.Quality instanceof Object ? null : args.Configuration.Quality,

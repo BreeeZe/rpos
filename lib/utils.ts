@@ -6,7 +6,7 @@ import { Writable, Readable } from "stream";
 
 var clc = require('cli-color');
 
-module Utils {
+export module Utils {
   export enum logLevel {
     None = 0,
     Error = 1,
@@ -23,17 +23,23 @@ module Utils {
     constructor() {
       this.stdin = new Writable();
       this.stderr = this.stdout = new DummyReadable();
+      super();
     }
     kill(signal?: string) { };
     send(message: any, sendHandle?: any) { };
     disconnect() { };
   }
-  
+
   class DummyReadable extends Readable {
-    read(){return null;}
+    read() { return null; }
   }
 
-  export static class utils {
+  export class utils {
+    private static config: rposConfig;
+    static setConfig(config: rposConfig) {
+      this.config = config;
+    }
+
     static getSerial() {
       // Extract serial from cpuinfo file
       var cpuserial = "0000000000000000";
@@ -47,41 +53,63 @@ module Utils {
       return cpuserial;
     }
 
-    static getIpAddress(interfaceName: string, type?: string) {
-      var address = null;
-      type = type || "IPv4";
-      var ni = networkInterfaces()[interfaceName] || [];
-      for (var i = 0; i < ni.length; i++) {
-        var nif = ni[i];
+    static testIpAddress() {
+      var ip, interfaces = networkInterfaces();
+      for (var inf of this.config.NetworkAdapters) {
+        ip = this.getAddress(interfaces[inf], "IPv4");
+        if (!ip)
+          utils.log.debug("Read IP address from %s failed", inf);
+        else {
+          utils.log.info("Read IP address %s from %s", ip, inf);
+          return;
+        }
+      }
+      utils.log.info("Using IP address from config: %s", this.config.IpAddress);
+    }
+    private static getAddress = (ni: any[], type) => {
+      ni = ni || [];
+      var address = "";
+      for (var nif of ni) {
         if (nif.family == type)
           address = nif.address;
       }
       return address;
+    };
+
+    static getIpAddress(type?: string) {
+      type = type || "IPv4";
+      var interfaces = networkInterfaces();
+      for (var inf of this.config.NetworkAdapters) {
+        var ip = this.getAddress(interfaces[inf], type);
+        if (ip)
+          return ip;
+      }
+      return this.config.IpAddress;
     }
-    
+
     static notPi() {
       return /^win/.test(process.platform) || /^darwin/.test(process.platform);
     }
-    
+
     static log = {
       level: logLevel.Error,
-      error: function(message: string, ...args) {
+      error(message: string, ...args) {
         if (utils.log.level > logLevel.None) {
           message = clc.red(message);
           console.log.apply(this, [message, ...args]);
         }
       },
-      warn: function(message: string, ...args) {
+      warn(message: string, ...args) {
         if (utils.log.level > logLevel.Error) {
           message = clc.yellow(message);
           console.log.apply(this, [message, ...args]);
         }
       },
-      info: function(message: string, ...args) {
+      info(message: string, ...args) {
         if (utils.log.level > logLevel.Warn)
           console.log.apply(this, [message, ...args]);
       },
-      debug: function(message: string, ...args) {
+      debug(message: string, ...args) {
         if (utils.log.level > logLevel.Info) {
           message = clc.green(message);
           console.log.apply(this, [message, ...args]);
@@ -128,5 +156,3 @@ module Utils {
     }
   };
 }
-var utils = Utils.utils;
-export { utils, Utils.logLevel };

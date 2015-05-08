@@ -2,9 +2,10 @@
 ///<reference path="../typings/rpos/rpos.d.ts"/>
 
 import fs = require("fs");
-import { utils, logLevel }  from './utils';
+import { Utils }  from './utils';
 import { Server } from 'http';
-var soap = require('soap');
+var soap = <any>require('soap');
+var utils = Utils.utils;
 
 class SoapService {
   webserver: Server;
@@ -50,17 +51,17 @@ class SoapService {
     this.serviceInstance = soap.listen(this.webserver, this.serviceOptions);
 
 
-    this.serviceInstance.on("request", (request, methodName) => {
+    this.serviceInstance.on("request", (request:any, methodName:string) => {
       utils.log.debug('%s received request %s', (<TypeConstructor>this.constructor).name, methodName);
     });
 
-    this.serviceInstance.log = (type, data) => {
+    this.serviceInstance.log = (type:string, data:any) => {
       if (this.config.logSoapCalls)
         utils.log.debug('%s - Calltype : %s, Data : %s', (<TypeConstructor>this.constructor).name, type, data);
     };
   }
 
-  onStarted(callback) {
+  onStarted(callback:()=>{}) {
     if (this.isStarted)
       callback();
     else

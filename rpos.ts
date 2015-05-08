@@ -28,21 +28,23 @@ require("./lib/extension");
 
 import http = require("http");
 import express = require("express");
-import { utils, logLevel} from "./lib/utils";
-import Camera = require('./lib/camera');
-import DeviceService = require('./services/device_service');
-import MediaService = require('./services/media_service')
-
+import { Utils } from "./lib/utils";
+import Camera = require("./lib/camera");
+import DeviceService = require("./services/device_service");
+import MediaService = require("./services/media_service");
+var utils = Utils.utils;
 let pjson = require("./package.json");
 let config = <rposConfig>require("./rposConfig.json");
 
-utils.log.level = <any>config.logLevel;
+utils.log.level = <Utils.logLevel>config.logLevel;
 
 config.DeviceInformation.SerialNumber = utils.getSerial();
 config.DeviceInformation.FirmwareVersion = pjson.version;
+utils.setConfig(config);
+utils.testIpAddress();
 
 for (var i in config.DeviceInformation) {
-  utils.log.info("%s : %s", i , config.DeviceInformation[i]);
+  utils.log.info("%s : %s", i, config.DeviceInformation[i]);
 }
 
 let webserver = express();
