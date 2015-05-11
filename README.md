@@ -13,6 +13,7 @@ This version uses a patched version of the "node-soap" v0.80 library (https://gi
 
 - Streams H264 video over rtsp
 - Camera control (resolution and framerate) through Onvif
+- Set other camera options through a web interface.
 
 #How to:
 
@@ -34,32 +35,19 @@ Install nodejs on your pi (http://weworkweplay.com/play/raspberry-pi-nodejs/):
 	wget http://node-arm.herokuapp.com/node_latest_armhf.deb
 	sudo dpkg -i node_latest_armhf.deb
 
-Download rpos master from github to your pi
+Download rpos release from github to your pi
 	
-	wget https://github.com/BreeeZe/rpos/archive/master.zip
-	unzip master.zip
-	cd rpos-master
-	npm install
-	sudo chmod -R a+rwx ./bin/rtspServer
-	
-Be sure to configure the ipaddress, service port, rtsp stream name and rtsp port in "config.js" ("nano config.js")
-For now you can set V-flip or H-flip in the file "./lib/camera.js"
+	wget https://github.com/BreeeZe/rpos/[release]
+	unzip [release].zip
+	cd rpos-[release]
 
-	Camera.prototype.settings = {
-  	  hf : false, //horizontal flip
-	  vf : true, //vertical flip
-	  drc : 2, //0=OFF, 1=LOW, 2=MEDIUM, 3=HIGH
-	  gop : 2, //keyframe every X sec.
-	  forceGop : true,
-	  resolution : { Width : 1280, Height: 720 },
-	  framerate : 30,
-	  bitrate : 7500,
-	  profile : "Baseline",
-	  quality : null,
-	  exposure : "auto"
-	};
+Optionaly set the service port or other options in rposConfig.json
 
-Then you start rpos by running "sudo node server.js"
+Then you start rpos by running "sudo node rpos.js"
+
+#Camera settings
+You can set camera settings by browsing to : http://CameraIP:Port/
+These settings are then saved in a file called v4l2ctl.json and are persisted on rpos restart.
 
 #Known Issues
 - 1920x1080 can cause hangs and crashes.

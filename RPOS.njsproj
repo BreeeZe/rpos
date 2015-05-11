@@ -46,6 +46,7 @@
     <Content Include="cpp\rtspServer" />
     <Content Include="cpp\rtspServer.cpp" />
     <Content Include="cpp\rtspServer.o" />
+    <Content Include="views\camera.ntl" />
     <Content Include="LICENSE" />
     <Content Include="package.json" />
     <None Include="wsdl\www.w3.org.2005.08.addressing.ws-addr.xsd" />
@@ -67,6 +68,7 @@
     <Folder Include="bin\" />
     <Folder Include="cpp\" />
     <Folder Include="lib\" />
+    <Folder Include="views\" />
     <Folder Include="services\" />
     <Folder Include="services\stubs\" />
     <Folder Include="web\" />

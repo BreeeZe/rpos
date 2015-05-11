@@ -1,6 +1,6 @@
 {
   "name": "rpos",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "rpos",
   "main": "server.js",
   "author": {
@@ -13,6 +13,8 @@
   },
   "dependencies": {
     "soap": "git://github.com/BreeeZe/node-soap.git",
-    "cli-color" : ""
+    "cli-color": "1.0.0",
+    "express": "4.12.3",
+    "body-parser": "1.12.3"
   }
 }

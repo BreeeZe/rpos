@@ -1,0 +1,14 @@
+﻿{
+  "NetworkAdapters" : ["awdl0","eth0", "en0"], 
+  "IpAddress" : "192.168.1.15",
+  "ServicePort" : 8081,
+  "RTSPPort" : 8554,
+  "RTSPName" : "h264",
+  "DeviceInformation" : {
+    "Manufacturer" : "Raspberry Pi",
+    "Model" : "2 B",
+    "HardwareId" : ""
+  },
+  "logLevel" : 4, "logLevelComment": "## LogLevels are > 1:Error 2:Warning 3:Info 4:Debug",
+  "logSoapCalls" : false
+}
