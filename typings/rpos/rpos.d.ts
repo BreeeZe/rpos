@@ -66,10 +66,8 @@ interface CameraSettingsParameter {
   profile: string;
   quality: number;
 }
-interface CameraSettings extends CameraSettingsParameter {
-  drc: number; //0=OFF, 1=LOW, 2=MEDIUM, 3=HIGH
-  hf: boolean; //horizontal flip
-  vf: boolean; //vertical flip
-  forceGop: boolean;
-  exposure: string;
+interface CameraSettingsBase {
+  forceGop: boolean; // Use iframe interval setting from v4l2ctl.json instead of Onvif
+  resolution: Resolution;
+  framerate: number;
 }

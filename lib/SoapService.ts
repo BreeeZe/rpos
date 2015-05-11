@@ -15,7 +15,7 @@ class SoapService {
   startedCallbacks: (() => void)[];
   isStarted: boolean;
 
-  constructor(config:rposConfig, server:Server) {
+  constructor(config: rposConfig, server: Server) {
     this.webserver = server;
     this.config = config;
     this.serviceInstance = null;
@@ -39,10 +39,8 @@ class SoapService {
   start() {
     this.starting();
 
-    utils.log.info("Starting webserver on port: %s", this.config.ServicePort);
+    utils.log.info("Binding %s to http://%s:%s%s", (<TypeConstructor>this.constructor).name, utils.getIpAddress(), this.config.ServicePort, this.serviceOptions.path);
     this.webserver.listen(this.config.ServicePort);
-
-    utils.log.info("Binding %s to %s", (<TypeConstructor>this.constructor).name, this.serviceOptions.path);
     var onReady = this.serviceOptions.onReady;
     this.serviceOptions.onReady = () => {
       this._started();
@@ -51,17 +49,17 @@ class SoapService {
     this.serviceInstance = soap.listen(this.webserver, this.serviceOptions);
 
 
-    this.serviceInstance.on("request", (request:any, methodName:string) => {
+    this.serviceInstance.on("request", (request: any, methodName: string) => {
       utils.log.debug('%s received request %s', (<TypeConstructor>this.constructor).name, methodName);
     });
 
-    this.serviceInstance.log = (type:string, data:any) => {
+    this.serviceInstance.log = (type: string, data: any) => {
       if (this.config.logSoapCalls)
         utils.log.debug('%s - Calltype : %s, Data : %s', (<TypeConstructor>this.constructor).name, type, data);
     };
   }
 
-  onStarted(callback:()=>{}) {
+  onStarted(callback: () => {}) {
     if (this.isStarted)
       callback();
     else

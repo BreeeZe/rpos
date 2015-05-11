@@ -10,6 +10,7 @@ var fs = require("fs");
 var SoapService = require('../lib/SoapService');
 var utils_1 = require('../lib/utils');
 var url = require('url');
+var v4l2ctl_1 = require('../lib/v4l2ctl');
 var utils = utils_1.Utils.utils;
 var MediaService = (function (_super) {
     __extends(MediaService, _super);
@@ -26,6 +27,7 @@ var MediaService = (function (_super) {
                 utils.log.info('media_service started');
             }
         };
+        this.extendService();
     }
     MediaService.prototype.starting = function () {
         var _this = this;
@@ -64,31 +66,39 @@ var MediaService = (function (_super) {
         var cameraOptions = this.camera.options;
         var cameraSettings = this.camera.settings;
         var camera = this.camera;
+        var h264Profiles = v4l2ctl_1.v4l2ctl.Controls.CodecControls.h264_profile.getLookupSet().map(function (ls) { return ls.desc; });
+        h264Profiles.splice(1, 1);
         var videoConfigurationOptions = {
             QualityRange: {
-                Min: cameraOptions.quality[0],
-                Max: cameraOptions.quality[cameraOptions.quality.length - 1]
+                Min: 1,
+                Max: 1
             },
             H264: {
                 ResolutionsAvailable: cameraOptions.resolutions,
-                GovLengthRange: { Min: 1, Max: 10 },
+                GovLengthRange: {
+                    Min: v4l2ctl_1.v4l2ctl.Controls.CodecControls.h264_i_frame_period.getRange().min,
+                    Max: v4l2ctl_1.v4l2ctl.Controls.CodecControls.h264_i_frame_period.getRange().max
+                },
                 FrameRateRange: {
                     Min: cameraOptions.framerates[0],
                     Max: cameraOptions.framerates[cameraOptions.framerates.length - 1]
                 },
                 EncodingIntervalRange: { Min: 1, Max: 1 },
-                H264ProfilesSupported: cameraOptions.profiles
+                H264ProfilesSupported: h264Profiles
             },
             Extension: {
                 H264: {
                     ResolutionsAvailable: cameraOptions.resolutions,
-                    GovLengthRange: { Min: 1, Max: 10 },
+                    GovLengthRange: {
+                        Min: v4l2ctl_1.v4l2ctl.Controls.CodecControls.h264_i_frame_period.getRange().min,
+                        Max: v4l2ctl_1.v4l2ctl.Controls.CodecControls.h264_i_frame_period.getRange().max
+                    },
                     FrameRateRange: {
                         Min: cameraOptions.framerates[0],
                         Max: cameraOptions.framerates[cameraOptions.framerates.length - 1]
                     },
                     EncodingIntervalRange: { Min: 1, Max: 1 },
-                    H264ProfilesSupported: cameraOptions.profiles,
+                    H264ProfilesSupported: h264Profiles,
                     BitrateRange: {
                         Min: cameraOptions.bitrates[0],
                         Max: cameraOptions.bitrates[cameraOptions.bitrates.length - 1]
@@ -107,15 +117,15 @@ var MediaService = (function (_super) {
                 Width: cameraSettings.resolution.Width,
                 Height: cameraSettings.resolution.Height
             },
-            Quality: cameraSettings.bitrate ? null : cameraSettings.quality,
+            Quality: v4l2ctl_1.v4l2ctl.Controls.CodecControls.video_bitrate.value ? null : 1,
             RateControl: {
                 FrameRateLimit: cameraSettings.framerate,
                 EncodingInterval: 1,
-                BitrateLimit: cameraSettings.bitrate
+                BitrateLimit: v4l2ctl_1.v4l2ctl.Controls.CodecControls.video_bitrate.value / 1000
             },
             H264: {
-                GovLength: cameraSettings.gop,
-                H264Profile: cameraSettings.profile
+                GovLength: v4l2ctl_1.v4l2ctl.Controls.CodecControls.h264_i_frame_period.value,
+                H264Profile: v4l2ctl_1.v4l2ctl.Controls.CodecControls.h264_profile.desc
             },
             SessionTimeout: "1000"
         };

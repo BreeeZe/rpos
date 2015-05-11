@@ -9,6 +9,6 @@
     "Model" : "2 B",
     "HardwareId" : ""
   },
-  "logLevel" : 4,
+  "logLevel" : 4, "logLevelComment": "## LogLevels are > 1:Error 2:Warning 3:Info 4:Debug",
   "logSoapCalls" : false
 }

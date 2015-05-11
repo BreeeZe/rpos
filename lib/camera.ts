@@ -9,6 +9,36 @@ import { v4l2ctl } from './v4l2ctl';
 var utils = Utils.utils;
 
 class Camera {
+  options = {
+    resolutions: <Resolution[]>[
+      { Width: 640, Height: 480 },
+      { Width: 800, Height: 600 },
+      { Width: 1024, Height: 768 },
+      { Width: 1280, Height: 1024 },
+      { Width: 1280, Height: 720 },
+      { Width: 1920, Height: 1080 }
+    ],
+    framerates: [2, 5, 10, 15, 25, 30],
+    bitrates: [
+      250,
+      500,
+      1000,
+      2500,
+      5000,
+      7500,
+      10000,
+      12500,
+      15000,
+      17500
+    ]
+  };
+
+  settings: CameraSettingsBase = {
+    forceGop: true,
+    resolution: <Resolution>{ Width: 1280, Height: 720 },
+    framerate: 25,
+  };
+  
   config: rposConfig;
   rtspServer: ChildProcess;
   webserver: any;
@@ -37,6 +67,7 @@ class Camera {
     fs.chmodSync("./bin/rtspServer", "0755");
   }
   setupWebserver() {
+    utils.log.info("Starting camera settings webserver on http://%s:%s/", utils.getIpAddress(), this.config.ServicePort);
     this.webserver.use(parser.urlencoded({ extended: true }));
     this.webserver.engine('ntl', (filePath, options, callback) => {
       this.getSettingsPage(filePath, callback);
@@ -87,13 +118,13 @@ class Camera {
           } else if (p.type == "Boolean") {
             html += `<tr><td><span class="label">${uc}</span></td>
               <td><input type="hidden" name="${propname}.${uc}" value="false" />
-              <input type="checkbox" name="${propname}.${uc}" value="true" ${!!p.value ? 'checked="checked"' : ''}/></td><tr>`;
+              <input type="checkbox" name="${propname}.${uc}" value="true" ${p.value ? 'checked="checked"' : ''}/></td><tr>`;
           } else {
             html += `<tr><td><span class="label">${uc}</span></td>
               <td><input type="text" name="${propname}.${uc}" value="${p.value}" />`
-            if(p.hasRange)
-              html+=`<span>( min: ${p.getRange().min} max: ${p.getRange().max} )</span>`  
-            html+=`</td><tr>`;
+            if (p.hasRange)
+              html += `<span>( min: ${p.getRange().min} max: ${p.getRange().max} )</span>`
+            html += `</td><tr>`;
           }
         }
         return html;
@@ -117,20 +148,18 @@ class Camera {
     v4l2ctl.SetPixelFormat(v4l2ctl.Pixelformat.H264)
     v4l2ctl.SetResolution(this.settings.resolution);
     v4l2ctl.SetFrameRate(this.settings.framerate);
-    v4l2ctl.Controls.UserControls.horizontal_flip.value = this.settings.hf;
-    v4l2ctl.Controls.UserControls.vertical_flip.value = this.settings.vf;
+    v4l2ctl.SetPriority(v4l2ctl.ProcessPriority.record);
+    v4l2ctl.ReadFromFile();
     v4l2ctl.ApplyControls();
   }
 
-  setSettings(newsettings:CameraSettingsParameter) {
+  setSettings(newsettings: CameraSettingsParameter) {
     v4l2ctl.SetResolution(newsettings.resolution);
     v4l2ctl.SetFrameRate(newsettings.framerate);
-    
+
     v4l2ctl.Controls.CodecControls.video_bitrate.value = newsettings.bitrate * 1000;
     v4l2ctl.Controls.CodecControls.video_bitrate_mode.value = newsettings.quality > 0 ? 0 : 1;
-    v4l2ctl.Controls.CodecControls.h264_i_frame_period.value = this.settings.forceGop ? this.settings.gop : newsettings.gop;
-    v4l2ctl.Controls.UserControls.horizontal_flip.value = !!this.settings.hf;
-    v4l2ctl.Controls.UserControls.vertical_flip.value = !!this.settings.vf;
+    v4l2ctl.Controls.CodecControls.h264_i_frame_period.value = this.settings.forceGop ? v4l2ctl.Controls.CodecControls.h264_i_frame_period.value : newsettings.gop;
     v4l2ctl.ApplyControls();
   }
 
@@ -161,46 +190,6 @@ class Camera {
       this.rtspServer = null;
     }
   }
-
-  options = {
-    resolutions: <Resolution[]>[
-      { Width: 640, Height: 480 },
-      { Width: 800, Height: 600 },
-      { Width: 1024, Height: 768 },
-      { Width: 1280, Height: 1024 },
-      { Width: 1280, Height: 720 },
-      { Width: 1920, Height: 1080 }
-    ],
-    framerates: [2, 5, 10, 15, 25, 30],
-    bitrates: [
-      250,
-      500,
-      1000,
-      2500,
-      5000,
-      7500,
-      10000,
-      12500,
-      15000,
-      17500
-    ],
-    quality: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-    profiles: ["Baseline", "Main", "High"]
-  };
-
-  settings:CameraSettings = {
-    hf: false, //horizontal flip
-    vf: true, //vertical flip
-    drc: 2, //0=OFF, 1=LOW, 2=MEDIUM, 3=HIGH
-    gop: 2, //keyframe every X sec.
-    forceGop: true,
-    resolution: <Resolution>{ Width: 1280, Height: 720 },
-    framerate: 25,
-    bitrate: 7500,
-    profile: "Baseline",
-    quality: null,
-    exposure: "auto"
-  };
 }
 
 export = Camera;

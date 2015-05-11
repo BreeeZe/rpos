@@ -72,79 +72,75 @@ var DeviceService = (function (_super) {
                 Capabilities: {}
             };
             if (category == "All" || category == "Device") {
-                GetCapabilitiesResponse.Capabilities = {
-                    Device: {
-                        XAddr: "http://" + utils.getIpAddress() + ":" + _this.config.ServicePort + "/onvif/device_service",
-                        Network: {
-                            IPFilter: false,
-                            ZeroConfiguration: false,
-                            IPVersion6: false,
-                            DynDNS: false,
-                            Extension: {
-                                Dot11Configuration: false,
-                                Extension: {}
-                            }
-                        },
-                        System: {
-                            DiscoveryResolve: false,
-                            DiscoveryBye: false,
-                            RemoteDiscovery: false,
-                            SystemBackup: false,
-                            SystemLogging: false,
-                            FirmwareUpgrade: false,
-                            SupportedVersions: {
-                                Major: 2,
-                                Minor: 5
-                            },
-                            Extension: {
-                                HttpFirmwareUpgrade: false,
-                                HttpSystemBackup: false,
-                                HttpSystemLogging: false,
-                                HttpSupportInformation: false,
-                                Extension: {}
-                            }
-                        },
-                        IO: {
-                            InputConnectors: 0,
-                            RelayOutputs: 0,
-                            Extension: {
-                                Auxiliary: false,
-                                AuxiliaryCommands: "",
-                                Extension: {}
-                            }
-                        },
-                        Security: {
-                            "TLS1.1": false,
-                            "TLS1.2": false,
-                            OnboardKeyGeneration: false,
-                            AccessPolicyConfig: false,
-                            "X.509Token": false,
-                            SAMLToken: false,
-                            KerberosToken: false,
-                            RELToken: false,
-                            Extension: {
-                                "TLS1.0": false,
-                                Extension: {}
-                            }
-                        },
-                        Extension: {}
-                    }
-                };
-            }
-            if (category == "All" || category == "Device") {
-                GetCapabilitiesResponse.Capabilities = {
-                    Media: {
-                        XAddr: "http://" + utils.getIpAddress() + ":" + _this.config.ServicePort + "/onvif/media_service",
-                        StreamingCapabilities: {
-                            RTPMulticast: false,
-                            RTP_TCP: true,
-                            RTP_RTSP_TCP: true,
+                GetCapabilitiesResponse.Capabilities["Device"] = {
+                    XAddr: "http://" + utils.getIpAddress() + ":" + _this.config.ServicePort + "/onvif/device_service",
+                    Network: {
+                        IPFilter: false,
+                        ZeroConfiguration: false,
+                        IPVersion6: false,
+                        DynDNS: false,
+                        Extension: {
+                            Dot11Configuration: false,
                             Extension: {}
+                        }
+                    },
+                    System: {
+                        DiscoveryResolve: false,
+                        DiscoveryBye: false,
+                        RemoteDiscovery: false,
+                        SystemBackup: false,
+                        SystemLogging: false,
+                        FirmwareUpgrade: false,
+                        SupportedVersions: {
+                            Major: 2,
+                            Minor: 5
                         },
                         Extension: {
-                            ProfileCapabilities: {
-                                MaximumNumberOfProfiles: 1
-                            }
+                            HttpFirmwareUpgrade: false,
+                            HttpSystemBackup: false,
+                            HttpSystemLogging: false,
+                            HttpSupportInformation: false,
+                            Extension: {}
+                        }
+                    },
+                    IO: {
+                        InputConnectors: 0,
+                        RelayOutputs: 0,
+                        Extension: {
+                            Auxiliary: false,
+                            AuxiliaryCommands: "",
+                            Extension: {}
+                        }
+                    },
+                    Security: {
+                        "TLS1.1": false,
+                        "TLS1.2": false,
+                        OnboardKeyGeneration: false,
+                        AccessPolicyConfig: false,
+                        "X.509Token": false,
+                        SAMLToken: false,
+                        KerberosToken: false,
+                        RELToken: false,
+                        Extension: {
+                            "TLS1.0": false,
+                            Extension: {}
+                        }
+                    },
+                    Extension: {}
+                };
+            }
+            if (category == "All" || category == "Media") {
+                GetCapabilitiesResponse.Capabilities["Media"] = {
+                    XAddr: "http://" + utils.getIpAddress() + ":" + _this.config.ServicePort + "/onvif/media_service",
+                    StreamingCapabilities: {
+                        RTPMulticast: false,
+                        RTP_TCP: true,
+                        RTP_RTSP_TCP: true,
+                        Extension: {}
+                    },
+                    Extension: {
+                        ProfileCapabilities: {
+                            MaximumNumberOfProfiles: 1
                         }
                     }
                 };
