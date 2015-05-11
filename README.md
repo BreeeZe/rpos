@@ -37,9 +37,9 @@ Install nodejs on your pi (http://weworkweplay.com/play/raspberry-pi-nodejs/):
 
 Download rpos release from github to your pi
 	
-	wget https://github.com/BreeeZe/rpos/[release]
-	unzip [release].zip
-	cd rpos-[release]
+	wget https://github.com/BreeeZe/rpos/releases/download/0.1.0/rpos-0.1.0.zip
+	unzip rpos-0.1.0.zip
+	cd rpos-0.1.0
 
 Optionaly set the service port or other options in rposConfig.json
 
