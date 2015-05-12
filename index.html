@@ -47,6 +47,7 @@ First demo video @ <a href="https://youtu.be/ZcZbF4XOH7E">https://youtu.be/ZcZbF
 <ul>
 <li>Streams H264 video over rtsp</li>
 <li>Camera control (resolution and framerate) through Onvif</li>
+<li>Set other camera options through a web interface.</li>
 </ul>
 
 <h1>
@@ -72,34 +73,22 @@ rm live -r -f
 sudo dpkg -i node_latest_armhf.deb
 </code></pre>
 
-<p>Download rpos master from github to your pi</p>
+<p>Download rpos release from github to your pi</p>
 
-<pre><code>wget https://github.com/BreeeZe/rpos/archive/master.zip
-unzip master.zip
-cd rpos-master
-npm install
-sudo chmod -R a+rwx ./bin/rtspServer
+<pre><code>wget https://github.com/BreeeZe/rpos/releases/download/0.1.0/rpos-0.1.0.zip
+unzip rpos-0.1.0.zip
+cd rpos-0.1.0
 </code></pre>
 
-<p>Be sure to configure the ipaddress, service port, rtsp stream name and rtsp port in "config.js" ("nano config.js")
-For now you can set V-flip or H-flip in the file "./lib/camera.js"</p>
+<p>Optionaly set the service port or other options in rposConfig.json</p>
 
-<pre><code>Camera.prototype.settings = {
-  hf : false, //horizontal flip
-  vf : true, //vertical flip
-  drc : 2, //0=OFF, 1=LOW, 2=MEDIUM, 3=HIGH
-  gop : 2, //keyframe every X sec.
-  forceGop : true,
-  resolution : { Width : 1280, Height: 720 },
-  framerate : 30,
-  bitrate : 7500,
-  profile : "Baseline",
-  quality : null,
-  exposure : "auto"
-};
-</code></pre>
+<p>Then you start rpos by running "sudo node rpos.js"</p>
 
-<p>Then you start rpos by running "sudo node server.js"</p>
+<h1>
+<a id="camera-settings" class="anchor" href="#camera-settings" aria-hidden="true"><span class="octicon octicon-link"></span></a>Camera settings</h1>
+
+<p>You can set camera settings by browsing to : http://CameraIP:Port/
+These settings are then saved in a file called v4l2ctl.json and are persisted on rpos restart.</p>
 
 <h1>
 <a id="known-issues" class="anchor" href="#known-issues" aria-hidden="true"><span class="octicon octicon-link"></span></a>Known Issues</h1>
