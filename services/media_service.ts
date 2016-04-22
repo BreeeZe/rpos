@@ -143,6 +143,14 @@ class MediaService extends SoapService {
       SessionTimeout: "PT1000S"
     };
 
+    var videoSource = {
+      attributes: {
+        token: "token"
+      },
+      Framerate: 25,
+      Resolution: { Width: 1920, Height: 1280 }
+    };
+
     var videoSourceConfiguration = {
       Name: "Primary Source",
       UseCount: 0,
@@ -233,9 +241,19 @@ class MediaService extends SoapService {
       return DeleteProfileResponse;
     };
 
+    port.GetVideoSources = (args) => {
+        var GetVideoSourcesResponse = { VideoSources: [videoSource] };
+        return GetVideoSourcesResponse;
+    }
+
     port.GetVideoSourceConfigurations = (args) => {
       var GetVideoSourceConfigurationsResponse = { Configurations: [videoSourceConfiguration] };
       return GetVideoSourceConfigurationsResponse;
+    };
+
+    port.GetVideoSourceConfiguration = (args) => {
+        var GetVideoSourceConfigurationResponse = { Configurations: videoSourceConfiguration };
+        return GetVideoSourceConfigurationResponse;
     };
 
     port.GetVideoEncoderConfigurations = (args) => {
@@ -254,7 +272,7 @@ class MediaService extends SoapService {
         framerate: args.Configuration.RateControl.FrameRateLimit,
         gop: args.Configuration.H264.GovLength,
         profile: args.Configuration.H264.H264Profile,
-        quality: args.Configuration.Quality instanceof Object ? null : args.Configuration.Quality,
+        quality: args.Configuration.Quality instanceof Object ? 1 : args.Configuration.Quality,
         resolution: args.Configuration.Resolution
       };
       camera.setSettings(settings);
