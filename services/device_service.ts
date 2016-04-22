@@ -43,12 +43,22 @@ class DeviceService extends SoapService {
 
     port.GetSystemDateAndTime = (args /*, cb, headers*/) => {
       var now = new Date();
+
+      // Ideally this code would compute a full POSIX TZ string with daylight saving
+      // For now we will compute the current time zone as a UTC offset
+      // Note that what we call UTC+ 1 in called UTC-1 in Posix TZ format
+      var offset = now.getTimezoneOffset();
+      var abs_offset = Math.abs(offset);
+      var hrs_offset = Math.floor(abs_offset / 60);
+      var mins_offset = (abs_offset % 60);
+      var tz = "UTC" + (offset < 0 ? '-' : '+') + hrs_offset + (mins_offset === 0 ? '' : ':' + mins_offset);
+
       var GetSystemDateAndTimeResponse = {
         SystemDateAndTime: {
           DateTimeType: "NTP",
           DaylightSavings: now.dst(),
           TimeZone: {
-            TZ: "CET-1CEST,M3.5.0,M10.5.0/3"
+            TZ: tz
           },
           UTCDateTime: {
             Time: { Hour: now.getUTCHours(), Minute: now.getUTCMinutes(), Second: now.getUTCSeconds() },
