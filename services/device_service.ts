@@ -181,6 +181,26 @@ class DeviceService extends SoapService {
       return SetHostnameFromDHCPResponse;
     };
 
+    port.GetScopes = (args) => {
+      var GetScopesResponse = { Scopes: [] };
+      GetScopesResponse.Scopes.push({
+          ScopeDef: "Fixed",
+          ScopeItem: "onvif://www.onvif.org/location/unknow"
+      });
+
+      GetScopesResponse.Scopes.push({
+        ScopeDef: "Fixed",
+        ScopeItem: ("onvif://www.onvif.org/hardware/" + this.config.DeviceInformation.Model)
+      });
+
+      GetScopesResponse.Scopes.push({
+        ScopeDef: "Fixed",
+        ScopeItem: ("onvif://www.onvif.org/name/" + this.config.DeviceInformation.Manufacturer)
+      });
+
+      return GetScopesResponse;
+    };
+
     port.GetServiceCapabilities = (args /*, cb, headers*/) => {
       var GetServiceCapabilitiesResponse = {
         Capabilities: {
