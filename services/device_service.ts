@@ -130,7 +130,10 @@ class DeviceService extends SoapService {
             RELToken: false,
             Extension: {
               "TLS1.0": false,
-              Extension: {}
+              Extension: {
+                Dot1X: false,
+                RemoteUserHandling: false
+              }
             }
           },
           Extension: {}
