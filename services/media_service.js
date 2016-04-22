@@ -1,7 +1,8 @@
-var __extends = (this && this.__extends) || function (d, b) {
+var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    __.prototype = b.prototype;
+    d.prototype = new __();
 };
 ///<reference path="../typings/tsd.d.ts" />
 ///<reference path="../typings/rpos/rpos.d.ts" />
@@ -116,7 +117,7 @@ var MediaService = (function (_super) {
                 Width: cameraSettings.resolution.Width,
                 Height: cameraSettings.resolution.Height
             },
-            Quality: v4l2ctl_1.v4l2ctl.Controls.CodecControls.video_bitrate.value ? 1 : 1,
+            Quality: v4l2ctl_1.v4l2ctl.Controls.CodecControls.video_bitrate.value ? null : 1,
             RateControl: {
                 FrameRateLimit: cameraSettings.framerate,
                 EncodingInterval: 1,
@@ -126,23 +127,7 @@ var MediaService = (function (_super) {
                 GovLength: v4l2ctl_1.v4l2ctl.Controls.CodecControls.h264_i_frame_period.value,
                 H264Profile: v4l2ctl_1.v4l2ctl.Controls.CodecControls.h264_profile.desc
             },
-            Multicast: {
-                Address: {
-                    Type: "IPv4",
-                    IPv4Address: "0.0.0.0"
-                },
-                Port: 0,
-                TTL: 1,
-                AutoStart: false
-            },
-            SessionTimeout: "PT1000S"
-        };
-        var videoSource = {
-            attributes: {
-                token: "token"
-            },
-            Framerate: 25,
-            Resolution: { Width: 1920, Height: 1280 }
+            SessionTimeout: "1000"
         };
         var videoSourceConfiguration = {
             Name: "Primary Source",
@@ -150,7 +135,7 @@ var MediaService = (function (_super) {
             attributes: {
                 token: "token"
             },
-            SourceToken: "token",
+            SourceToken: [],
             Bounds: { attributes: { x: 0, y: 0, width: 1920, height: 1080 } }
         };
         var audioEncoderConfigurationOptions = {
@@ -164,7 +149,7 @@ var MediaService = (function (_super) {
             VideoSourceConfiguration: videoSourceConfiguration,
             VideoEncoderConfiguration: videoEncoderConfiguration
         };
-        port.GetServiceCapabilities = function (args /*, cb, headers*/) {
+        port.GetServiceCapabilities = function (args) {
             var GetServiceCapabilitiesResponse = {
                 Capabilities: {
                     attributes: {
@@ -191,14 +176,7 @@ var MediaService = (function (_super) {
             };
             return GetServiceCapabilitiesResponse;
         };
-        //var GetStreamUri = { 
-        //StreamSetup : { 
-        //Stream : { xs:string}
-        //},
-        //ProfileToken : { xs:string}
-        //
-        //};
-        port.GetStreamUri = function (args /*, cb, headers*/) {
+        port.GetStreamUri = function (args) {
             var GetStreamUriResponse = {
                 MediaUri: {
                     Uri: "rtsp://" + utils.getIpAddress() + ":" + _this.config.RTSPPort + "/" + _this.config.RTSPName,
@@ -225,17 +203,9 @@ var MediaService = (function (_super) {
             var DeleteProfileResponse = {};
             return DeleteProfileResponse;
         };
-        port.GetVideoSources = function (args) {
-            var GetVideoSourcesResponse = { VideoSources: [videoSource] };
-            return GetVideoSourcesResponse;
-        };
         port.GetVideoSourceConfigurations = function (args) {
             var GetVideoSourceConfigurationsResponse = { Configurations: [videoSourceConfiguration] };
             return GetVideoSourceConfigurationsResponse;
-        };
-        port.GetVideoSourceConfiguration = function (args) {
-            var GetVideoSourceConfigurationResponse = { Configuration: videoSourceConfiguration };
-            return GetVideoSourceConfigurationResponse;
         };
         port.GetVideoEncoderConfigurations = function (args) {
             var GetVideoEncoderConfigurationsResponse = { Configurations: [videoEncoderConfiguration] };
@@ -271,13 +241,6 @@ var MediaService = (function (_super) {
         };
         port.GetSnapshotUri = function (args) {
             var GetSnapshotUriResponse = {};
-            //  MediaUri : {
-            //    Uri : "http://" + config.IpAddress + ":" + config.ServicePort + "/web/snapshot.jpg",
-            //    Timeout : "PT30S",
-            //    InvalidAfterConnect : false,
-            //    InvalidAfterReboot : false
-            //  }
-            //};
             return GetSnapshotUriResponse;
         };
         port.GetAudioEncoderConfigurationOptions = function (args) {
@@ -288,3 +251,4 @@ var MediaService = (function (_super) {
     return MediaService;
 })(SoapService);
 module.exports = MediaService;
+//# sourceMappingURL=media_service.js.map
