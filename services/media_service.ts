@@ -68,7 +68,7 @@ class MediaService extends SoapService {
     var cameraSettings = this.camera.settings;
     var camera = this.camera;
 
-    var h264Profiles = v4l2ctl.Controls.CodecControls.h264_profile.getLookupSet().map(ls=> ls.desc);
+    var h264Profiles = v4l2ctl.Controls.CodecControls.h264_profile.getLookupSet().map(ls=>ls.desc);
     h264Profiles.splice(1, 1);
 
     var videoConfigurationOptions = {
@@ -121,7 +121,7 @@ class MediaService extends SoapService {
         Width: cameraSettings.resolution.Width,
         Height: cameraSettings.resolution.Height
       },
-      Quality: v4l2ctl.Controls.CodecControls.video_bitrate.value ? null : 1,
+      Quality: v4l2ctl.Controls.CodecControls.video_bitrate.value ? 1 : 1,
       RateControl: {
         FrameRateLimit: cameraSettings.framerate,
         EncodingInterval: 1,
@@ -131,7 +131,16 @@ class MediaService extends SoapService {
         GovLength: v4l2ctl.Controls.CodecControls.h264_i_frame_period.value,
         H264Profile: v4l2ctl.Controls.CodecControls.h264_profile.desc
       },
-      SessionTimeout: "1000"
+      Multicast: {
+        Address: {
+          Type: "IPv4",
+          IPv4Address: "0.0.0.0"
+        },
+        Port: 0,
+        TTL:  1,
+        AutoStart: false
+      },
+      SessionTimeout: "PT1000S"
     };
 
     var videoSourceConfiguration = {
@@ -140,7 +149,7 @@ class MediaService extends SoapService {
       attributes: {
         token: "token"
       },
-      SourceToken: [],
+      SourceToken: "token",
       Bounds: { attributes: { x: 0, y: 0, width: 1920, height: 1080 } }
     };
 
