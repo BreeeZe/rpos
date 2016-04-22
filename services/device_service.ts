@@ -51,12 +51,12 @@ class DeviceService extends SoapService {
             TZ: "CET-1CEST,M3.5.0,M10.5.0/3"
           },
           UTCDateTime: {
-            Date: { Day: now.getUTCDate(), Month: now.getUTCMonth() + 1, Year: now.getUTCFullYear() },
-            Time: { Hour: now.getUTCHours(), Minute: now.getUTCMinutes(), Second: now.getUTCSeconds() }
+            Time: { Hour: now.getUTCHours(), Minute: now.getUTCMinutes(), Second: now.getUTCSeconds() },
+            Date: { Year: now.getUTCFullYear(), Month: now.getUTCMonth() + 1, Day: now.getUTCDate() }
           },
           LocalDateTime: {
-            Date: { Day: now.getDate(), Month: now.getMonth() + 1, Year: now.getFullYear() },
-            Time: { Hour: now.getHours(), Minute: now.getMinutes(), Second: now.getSeconds() }
+            Time: { Hour: now.getHours(), Minute: now.getMinutes(), Second: now.getSeconds() },
+            Date: { Year: now.getFullYear(), Month: now.getMonth() + 1, Day: now.getDate() }
           },
           Extension: {}
         }
