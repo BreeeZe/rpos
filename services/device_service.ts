@@ -43,20 +43,30 @@ class DeviceService extends SoapService {
 
     port.GetSystemDateAndTime = (args /*, cb, headers*/) => {
       var now = new Date();
+
+      // Ideally this code would compute a full POSIX TZ string with daylight saving
+      // For now we will compute the current time zone as a UTC offset
+      // Note that what we call UTC+ 1 in called UTC-1 in Posix TZ format
+      var offset = now.getTimezoneOffset();
+      var abs_offset = Math.abs(offset);
+      var hrs_offset = Math.floor(abs_offset / 60);
+      var mins_offset = (abs_offset % 60);
+      var tz = "UTC" + (offset < 0 ? '-' : '+') + hrs_offset + (mins_offset === 0 ? '' : ':' + mins_offset);
+
       var GetSystemDateAndTimeResponse = {
         SystemDateAndTime: {
           DateTimeType: "NTP",
           DaylightSavings: now.dst(),
           TimeZone: {
-            TZ: "CET-1CEST,M3.5.0,M10.5.0/3"
+            TZ: tz
           },
           UTCDateTime: {
-            Date: { Day: now.getUTCDate(), Month: now.getUTCMonth() + 1, Year: now.getUTCFullYear() },
-            Time: { Hour: now.getUTCHours(), Minute: now.getUTCMinutes(), Second: now.getUTCSeconds() }
+            Time: { Hour: now.getUTCHours(), Minute: now.getUTCMinutes(), Second: now.getUTCSeconds() },
+            Date: { Year: now.getUTCFullYear(), Month: now.getUTCMonth() + 1, Day: now.getUTCDate() }
           },
           LocalDateTime: {
-            Date: { Day: now.getDate(), Month: now.getMonth() + 1, Year: now.getFullYear() },
-            Time: { Hour: now.getHours(), Minute: now.getMinutes(), Second: now.getSeconds() }
+            Time: { Hour: now.getHours(), Minute: now.getMinutes(), Second: now.getSeconds() },
+            Date: { Year: now.getFullYear(), Month: now.getMonth() + 1, Day: now.getDate() }
           },
           Extension: {}
         }
@@ -130,7 +140,10 @@ class DeviceService extends SoapService {
             RELToken: false,
             Extension: {
               "TLS1.0": false,
-              Extension: {}
+              Extension: {
+                Dot1X: false,
+                RemoteUserHandling: false
+              }
             }
           },
           Extension: {}
@@ -176,6 +189,26 @@ class DeviceService extends SoapService {
         RebootNeeded: false
       };
       return SetHostnameFromDHCPResponse;
+    };
+
+    port.GetScopes = (args) => {
+      var GetScopesResponse = { Scopes: [] };
+      GetScopesResponse.Scopes.push({
+          ScopeDef: "Fixed",
+          ScopeItem: "onvif://www.onvif.org/location/unknow"
+      });
+
+      GetScopesResponse.Scopes.push({
+        ScopeDef: "Fixed",
+        ScopeItem: ("onvif://www.onvif.org/hardware/" + this.config.DeviceInformation.Model)
+      });
+
+      GetScopesResponse.Scopes.push({
+        ScopeDef: "Fixed",
+        ScopeItem: ("onvif://www.onvif.org/name/" + this.config.DeviceInformation.Manufacturer)
+      });
+
+      return GetScopesResponse;
     };
 
     port.GetServiceCapabilities = (args /*, cb, headers*/) => {

@@ -72,9 +72,12 @@ export module v4l2ctl {
         }
         
         get desc():string{
-            if(this.hasSet)
-                return this.getLookupSet().map(ls=>ls.desc)[<number>(<any>this.value)];
-            return this.toString();
+            if (this.hasSet)
+                // search the lookup set for this.value and return desc
+                for (var l of this.options.lookupSet) {
+                    if (l.value === this.value) return l.desc;
+                }
+            throw "'lookup value' not in lookup set";
         }
 
         get type(): string {
