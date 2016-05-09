@@ -295,14 +295,14 @@ class MediaService extends SoapService {
     };
 
     port.GetSnapshotUri = (args) => {
-      var GetSnapshotUriResponse = {};
-      //  MediaUri : {
-      //    Uri : "http://" + config.IpAddress + ":" + config.ServicePort + "/web/snapshot.jpg",
-      //    Timeout : "PT30S",
-      //    InvalidAfterConnect : false,
-      //    InvalidAfterReboot : false
-      //  }
-      //};
+      var GetSnapshotUriResponse = {
+        MediaUri : {
+          Uri : "http://" + this.config.IpAddress + ":" + this.config.ServicePort + "/web/snapshot.jpg",
+          InvalidAfterConnect : false,
+          InvalidAfterReboot : false,
+          Timeout : "PT30S"
+        }
+      };
       return GetSnapshotUriResponse;
     };
 
