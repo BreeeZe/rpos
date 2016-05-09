@@ -46,8 +46,12 @@ class MediaService extends SoapService {
           response.writeHead(200, { 'Content-Type': 'image/jpg' });
           response.end(img, 'binary');
         } catch (err) {
-          utils.log.error("Error opening snapshot : %s", err);
-          response.end("404: Not Found: " + request);
+          //utils.log.error("Error opening snapshot : %s", err);
+          //response.end("404: Not Found: " + request);
+          var img = fs.readFileSync('web/snapshot.jpg');
+          response.writeHead(200, { 'Content-Type': 'image/jpg' });
+          response.end(img, 'binary');
+
         }
       } else {
         for (var i = 0, len = listeners.length; i < len; i++) {
