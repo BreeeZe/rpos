@@ -32,6 +32,8 @@ import { Utils } from "./lib/utils";
 import Camera = require("./lib/camera");
 import DeviceService = require("./services/device_service");
 import MediaService = require("./services/media_service");
+import DiscoveryService = require("./services/discovery_service");
+
 var utils = Utils.utils;
 let pjson = require("./package.json");
 let config = <rposConfig>require("./rposConfig.json");
@@ -53,6 +55,8 @@ let httpserver = http.createServer(webserver);
 let camera = new Camera(config, webserver);
 let device_service = new DeviceService(config, httpserver);
 let media_service = new MediaService(config, httpserver, camera);
+let discovery_service = new DiscoveryService(config);
 
 device_service.start();
 media_service.start();
+discovery_service.start();
