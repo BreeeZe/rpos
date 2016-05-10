@@ -11,7 +11,7 @@
     "isShellCommand": true,
     "tasks": [
         {
-            "taskName": "default",
+            "taskName": "compile",
             "isBuildCommand": true
         }/*,
         {

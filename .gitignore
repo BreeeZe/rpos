@@ -200,3 +200,9 @@ typings/
 v4l2ctl.json
 release/
 release.zip
+rpos.js
+rpos.js.map
+lib/**/*.js
+lib/**/*.js.map
+services/*.js
+services/*.js.map
