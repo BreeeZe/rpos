@@ -3,6 +3,7 @@ import { networkInterfaces } from 'os';
 import { spawn, ChildProcess } from 'child_process';
 import { EventEmitter} from "events";
 import { Writable, Readable } from "stream";
+import * as crypto from "crypto";
 
 var clc = require('cli-color');
 
@@ -19,15 +20,17 @@ export module Utils {
     stdin: Writable;
     stdout: Readable;
     stderr: Readable;
+    stdio: [Writable, Readable, Readable];
     pid: number;
     constructor() {
+      super();
       this.stdin = new Writable();
       this.stderr = this.stdout = new DummyReadable();
-      super();
     }
     kill(signal?: string) { };
     send(message: any, sendHandle?: any) { };
     disconnect() { };
+    unref() { };
   }
 
   class DummyReadable extends Readable {
@@ -121,7 +124,7 @@ export module Utils {
       return utils.notPi() ? "" : require('child_process').execSync(cmd);
     }
     static spawn(cmd: string, args?: string[], options?: {}): ChildProcess {
-      utils.log.debug(`spawn('${ cmd }', [${ args.join() }], ${ options })`);
+      utils.log.debug(`spawn('${cmd}', [${args.join()}], ${options})`);
       if (utils.notPi()) {
         return new DummyProcess();
       }
@@ -131,28 +134,45 @@ export module Utils {
     }
 
     static cleanup(callback: () => void) {
-    
+
       // attach user callback to the process event emitter
       // if no callback, it will still exit gracefully on Ctrl-C
       callback = callback || (() => { });
       process.on('cleanup', callback);
-    
+
       // do app specific cleaning before exiting
       process.on('exit', () => {
         process.emit('cleanup');
       });
-    
+
       // catch ctrl+c event and exit normally
       process.on('SIGINT', () => {
         console.log('Ctrl-C...');
         process.exit(2);
       });
-    
+
       //catch uncaught exceptions, trace, then exit normally
       process.on('uncaughtException', (e) => {
         utils.log.error('Uncaught Exception... : %s', e.stack);
         process.exit(99);
       });
     }
+
+    static uuid5(str: string) {
+      var out = crypto.createHash("sha1").update(str).digest();
+
+      out[8] = out[8] & 0x3f | 0xa0; // set variant
+      out[6] = out[6] & 0x0f | 0x50; // set version
+
+      let hex = out.toString("hex", 0, 16);
+
+      return [
+        hex.substring(0, 8),
+        hex.substring(8, 12),
+        hex.substring(12, 16),
+        hex.substring(16, 20),
+        hex.substring(20, 32)
+      ].join("-");
+    };
   };
 }

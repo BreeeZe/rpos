@@ -9,10 +9,22 @@
       "commit": "1400e07731048ae841bcebed658cb68539cbfb99"
     },
     "node/node.d.ts": {
-      "commit": "1400e07731048ae841bcebed658cb68539cbfb99"
+      "commit": "6d0e826824da52204c1c93f92cecbc961ac84fa9"
     },
     "express/express.d.ts": {
       "commit": "1400e07731048ae841bcebed658cb68539cbfb99"
+    },
+    "node-uuid/node-uuid.d.ts": {
+      "commit": "6d0e826824da52204c1c93f92cecbc961ac84fa9"
+    },
+    "node-uuid/node-uuid-base.d.ts": {
+      "commit": "6d0e826824da52204c1c93f92cecbc961ac84fa9"
+    },
+    "node-uuid/node-uuid-cjs.d.ts": {
+      "commit": "6d0e826824da52204c1c93f92cecbc961ac84fa9"
+    },
+    "xml2js/xml2js.d.ts": {
+      "commit": "6d0e826824da52204c1c93f92cecbc961ac84fa9"
     }
   }
 }

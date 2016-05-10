@@ -28,10 +28,9 @@ THE SOFTWARE.
 /* WS-Discovery */
 /* Listens on Port 3702 on 239.255.255.0 for UDP WS-Discovery Messages */
 
-
 import dgram = require('dgram');
-import uuid  = require('node-uuid');
-import uuid5 = require('uuid5'); 
+import uuid = require('node-uuid');
+import xml2js = require('xml2js');
 import { Utils } from '../lib/utils';
 var utils = Utils.utils;
 
@@ -56,20 +55,20 @@ class DiscoveryService {
       utils.log.debug("Discovery received");
 
       // Filter xmlns namespaces from XML before calling XML2JS
-      let filtered_msg = received_msg.toString().replace(/xmlns(.*?)=(".*?")/g,'');
+      let filtered_msg = received_msg.toString().replace(/xmlns(.*?)=(".*?")/g, '');
 
-      var parseString = require('xml2js').parseString;
-      var strip = require('xml2js').processors.stripPrefix;
-      parseString(filtered_msg, {tagNameProcessors: [strip]}, (err,result) => {
+      var parseString = xml2js.parseString;
+      var strip = xml2js['processors'].stripPrefix;
+      parseString(filtered_msg, { tagNameProcessors: [strip] }, (err, result) => {
         let probe_uuid = result['Envelope']['Header'][0]['MessageID'][0];
         let probe_type = "";
         try {
           probe_type = result['Envelope']['Body'][0]['Probe'][0]['Types'][0];
-        } catch(err) {
+        } catch (err) {
           probe_type = ""; // For a VMS that does not send Types
-      }
+        }
 
-        if (probe_type === "" || probe_type.indexOf("NetworkVideoTransmitter") > -1 ) {
+        if (probe_type === "" || probe_type.indexOf("NetworkVideoTransmitter") > -1) {
 
           let reply = 
 	'<?xml version="1.0" encoding="UTF-8"?>' +
@@ -104,10 +103,10 @@ class DiscoveryService {
         reply = reply.replace("REPLACE_XADDR_SERVICE","http://"+this.config.IpAddress + ":" + this.config.ServicePort + "/onvif/device_service");
         reply = reply.replace("REPLACE_SCOPES","onvif://www.onvif.org/type/video_encoder onvif://www.onvif.org/type/ptz   onvif://www.onvif.org/hardware/RaspberryPI onvif://www.onvif.org/name/PI onvif://www.onvif.org/location/" );
 
-        let reply_bytes = new Buffer(reply);
-        return discover_socket.send(reply_bytes, 0, reply_bytes.length, rinfo.port, rinfo.address);
-      }
-    });
+          let reply_bytes = new Buffer(reply);
+          return discover_socket.send(reply_bytes, 0, reply_bytes.length, rinfo.port, rinfo.address);
+        }
+      });
     });
 
     discover_socket.bind(3702, '239.255.255.250', () => {
