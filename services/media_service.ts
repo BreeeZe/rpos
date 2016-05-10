@@ -58,11 +58,11 @@ class MediaService extends SoapService {
         }
       }
     });
-  };
+  }
 
   started() {
     this.camera.startRtsp();
-  };
+  }
 
   extendService() {
     var port = this.media_service.MediaService.Media;

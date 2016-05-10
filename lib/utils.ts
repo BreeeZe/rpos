@@ -77,7 +77,7 @@ export module Utils {
           address = nif.address;
       }
       return address;
-    };
+    }
 
     static getIpAddress(type?: string) {
       type = type || "IPv4";
@@ -157,7 +157,7 @@ export module Utils {
         process.exit(99);
       });
     }
-
+    
     static uuid5(str: string) {
       var out = crypto.createHash("sha1").update(str).digest();
 
@@ -173,6 +173,6 @@ export module Utils {
         hex.substring(16, 20),
         hex.substring(20, 32)
       ].join("-");
-    };
-  };
+    }
+  }
 }

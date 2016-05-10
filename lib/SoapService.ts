@@ -32,9 +32,9 @@ class SoapService {
 
   }
 
-  starting() { };
+  starting() { }
 
-  started() { };
+  started() { }
 
   start() {
     this.starting();
@@ -64,7 +64,7 @@ class SoapService {
       callback();
     else
       this.startedCallbacks.push(callback);
-  };
+  }
 
   _started() {
     this.isStarted = true;
@@ -72,6 +72,6 @@ class SoapService {
       callback();
     this.startedCallbacks = [];
     this.started();
-  };
+  }
 }
 export = SoapService;

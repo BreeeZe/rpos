@@ -31,13 +31,13 @@ class Camera {
       15000,
       17500
     ]
-  };
+  }
 
   settings: CameraSettingsBase = {
     forceGop: true,
     resolution: <Resolution>{ Width: 1280, Height: 720 },
     framerate: 25,
-  };
+  }
   
   config: rposConfig;
   rtspServer: ChildProcess;
@@ -61,7 +61,7 @@ class Camera {
         //wait for rtsp server to stop
         ;
       }
-      utils.execSync("sudo modprobe -r bcm2835-v4l2");
+      this.unloadDriver();
     });
 
     fs.chmodSync("./bin/rtspServer", "0755");
@@ -142,6 +142,10 @@ class Camera {
 
   loadDriver() {
     utils.execSync("sudo modprobe bcm2835-v4l2");
+  }
+  
+  unloadDriver(){
+    utils.execSync("sudo modprobe -r bcm2835-v4l2");
   }
 
   setupCamera() {
