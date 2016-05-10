@@ -1,5 +1,5 @@
-﻿///<reference path="../typings/rpos/rpos.d.ts"/>
-///<reference path="../typings/tsd.d.ts"/>
+﻿///<reference path="../rpos.d.ts"/>
+///<reference path="../typings/main.d.ts"/>
 import { Utils } from './utils';
 import { writeFileSync, readFileSync } from 'fs';
 var stringifyBool = (v: boolean) => { return v ? "1" : "0"; }

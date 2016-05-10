@@ -26,11 +26,10 @@
     "gulp": "^3.9.1",
     "typescript": "^1.8.10",
     "gulp-typescript": "^2.13.4",
-    "tsd":"^0.6.5",
-    "gulp-tsd":"^0.1.1",
     "run-sequence":"^1.1.5",
     "gulp-sourcemaps": "^1.6.0",
     "gulp-rename": "^1.2.2",
-    "gulp-zip": "^3.0.2"
+    "gulp-zip": "^3.0.2",
+    "typings": "0.8.1"
   }
 }

@@ -1,4 +1,4 @@
-﻿/// <reference path="../typings/node/node.d.ts"/>
+﻿/// <reference path="../typings/main.d.ts"/>
 import { networkInterfaces } from 'os';
 import { spawn, ChildProcess } from 'child_process';
 import { EventEmitter} from "events";

@@ -3,7 +3,7 @@ var gulp = require('gulp'),
 	zip = require('gulp-zip'),
  	pkg = require('./package.json'),
 	ts = require('gulp-typescript'),
-    tsd = require('gulp-tsd'),
+    typings = require('typings'),
     runSequence = require('run-sequence'),
     sourcemaps = require('gulp-sourcemaps')
 
@@ -23,11 +23,10 @@ gulp.task('compile', function () {
         .pipe(gulp.dest("./"));
 });
 
-gulp.task('typings', function(cb){
-    tsd({
-        command:"reinstall",
-        config:"./tsd.json"
-    },cb);
+gulp.task('typings', function (done) {
+    var cwd = process.cwd();
+    typings.install({ cwd: cwd, production: false });
+    done();
 });
 
 gulp.task('copy-release-js', function () {

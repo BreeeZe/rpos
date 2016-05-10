@@ -1,4 +1,4 @@
-///<reference path="../../lib/extension.ts"/>
+///<reference path="./lib/extension.ts"/>
 interface rposConfig {
   NetworkAdapters: string[];
   IpAddress: string;

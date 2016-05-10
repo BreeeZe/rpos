@@ -1,5 +1,5 @@
-﻿///<reference path="../typings/tsd.d.ts"/>
-///<reference path="../typings/rpos/rpos.d.ts"/>
+﻿///<reference path="../typings/main.d.ts"/>
+///<reference path="../rpos.d.ts"/>
 import { Utils }  from './utils';
 import fs = require('fs');
 import parser = require('body-parser');
