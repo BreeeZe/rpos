@@ -1,5 +1,5 @@
-﻿///<reference path="../typings/rpos/rpos.d.ts"/>
-///<reference path="../typings/tsd.d.ts"/>
+﻿///<reference path="../rpos.d.ts"/>
+///<reference path="../typings/main.d.ts"/>
 import { Utils } from './utils';
 import { writeFileSync, readFileSync } from 'fs';
 var stringifyBool = (v: boolean) => { return v ? "1" : "0"; }
@@ -199,7 +199,7 @@ export module v4l2ctl {
     };
 
     function execV4l2(cmd: string): string {
-        return utils.execSync(`sudo v4l2-ctl ${cmd}`).toString();;
+        return utils.execSync(`sudo v4l2-ctl ${cmd}`).toString();
     }
 
     export function ApplyControls() {
@@ -230,7 +230,7 @@ export module v4l2ctl {
             execV4l2(`--set-ctrl ${changedcontrols.join(',') }`);
             WriteToFile();
         }
-    };
+    }
 
     export function WriteToFile() {
         var data = {};
@@ -294,7 +294,7 @@ export module v4l2ctl {
         getControls(jpgcontrols);
 
         WriteToFile();
-    };
+    }
 
     export function SetFrameRate(framerate: number) {
         execV4l2(`--set-parm=${framerate}`);

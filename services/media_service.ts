@@ -1,5 +1,5 @@
-///<reference path="../typings/tsd.d.ts" />
-///<reference path="../typings/rpos/rpos.d.ts" />
+///<reference path="../typings/main.d.ts" />
+///<reference path="../rpos.d.ts" />
 import fs = require("fs");
 import util = require("util");
 import SoapService = require('../lib/SoapService');
@@ -58,11 +58,11 @@ class MediaService extends SoapService {
         }
       }
     });
-  };
+  }
 
   started() {
     this.camera.startRtsp();
-  };
+  }
 
   extendService() {
     var port = this.media_service.MediaService.Media;

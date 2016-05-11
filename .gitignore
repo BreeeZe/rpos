@@ -195,6 +195,14 @@ FakesAssemblies/
 # Visual Studio 6 workspace options file
 *.opt
 
+typings/
+!typings/rpos/rpos.d.ts
 v4l2ctl.json
 release/
 release.zip
+rpos.js
+rpos.js.map
+lib/**/*.js
+lib/**/*.js.map
+services/*.js
+services/*.js.map
