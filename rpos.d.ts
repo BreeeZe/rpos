@@ -5,6 +5,7 @@ interface rposConfig {
   ServicePort: number;
   RTSPPort: number;
   RTSPName: string;
+  RTSPServer: number;
   DeviceInformation: DeviceInformation;
   logLevel: number;
   logSoapCalls: Boolean;
