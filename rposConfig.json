@@ -4,7 +4,11 @@
   "ServicePort" : 8081,
   "RTSPPort" : 8554,
   "RTSPName" : "h264",
-  "RTSPServer" : 1, "RtspServerComment" : "## Select RTSP Server > 1:RPOS RTSP Server 2:V4L2 RTSP Server by mpromonet",
+  "MulticastEnabled"  : false,
+  "RTSPMulticastName" : "h264m",
+  "MulticastAddress"  : "224.0.0.1",
+  "MulticastPort"     : "10001",
+  "RTSPServer" : 1, "RtspServerComment" : "## Select RTSP Server > 1:RPOS RTSP Server 2:V4L2 RTSP Server by mpromonet (auto selected if MulticastEnabled=true)",
   "DeviceInformation" : {
     "Manufacturer" : "Raspberry Pi",
     "Model" : "2 B",

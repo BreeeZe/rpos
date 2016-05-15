@@ -174,8 +174,12 @@ class Camera {
     }
     utils.log.info("Starting Live555 rtsp server");
 
-    if (this.config.RTSPServer == 1) this.rtspServer = utils.spawn("./bin/rtspServer", ["/dev/video0", "2088960", this.config.RTSPPort.toString(), "0", this.config.RTSPName.toString()]);
-    if (this.config.RTSPServer == 2) this.rtspServer = utils.spawn("h264_v4l2_rtspserver", ["-P",this.config.RTSPPort.toString(), "-u" , this.config.RTSPName.toString(),"-W",this.settings.resolution.Width.toString(),"-H",this.settings.resolution.Height.toString(),"/dev/video0"]);
+    if (this.config.MulticastEnabled) {
+        this.rtspServer = utils.spawn("h264_v4l2_rtspserver", ["-P", this.config.RTSPPort.toString(), "-u" , this.config.RTSPName.toString(), "-m", this.config.RTSPMulticastName, "-M", this.config.MulticastAddress.toString() + ":" + this.config.MulticastPort.toString(), "-W",this.settings.resolution.Width.toString(), "-H", this.settings.resolution.Height.toString(), "/dev/video0"]);
+    } else {
+        if (this.config.RTSPServer == 1) this.rtspServer = utils.spawn("./bin/rtspServer", ["/dev/video0", "2088960", this.config.RTSPPort.toString(), "0", this.config.RTSPName.toString()]);
+        if (this.config.RTSPServer == 2) this.rtspServer = utils.spawn("h264_v4l2_rtspserver", ["-P",this.config.RTSPPort.toString(), "-u" , this.config.RTSPName.toString(),"-W",this.settings.resolution.Width.toString(),"-H",this.settings.resolution.Height.toString(),"/dev/video0"]);
+    }
 
     this.rtspServer.stdout.on('data', data => utils.log.debug("rtspServer: %s", data));
     this.rtspServer.stderr.on('data', data => utils.log.error("rtspServer: %s", data));

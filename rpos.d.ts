@@ -6,6 +6,10 @@ interface rposConfig {
   RTSPPort: number;
   RTSPName: string;
   RTSPServer: number;
+  MulticastEnabled: boolean;
+  RTSPMulticastName : string;
+  MulticastAddress: string;
+  MulticastPort: number;
   DeviceInformation: DeviceInformation;
   logLevel: number;
   logSoapCalls: Boolean;
