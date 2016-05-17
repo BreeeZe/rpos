@@ -193,7 +193,7 @@ class MediaService extends SoapService {
           },
           StreamingCapabilities: {
             attributes: {
-              RTPMulticast: false,
+              RTPMulticast: this.config.MulticastEnabled,
               RTP_TCP: true,
               RTP_RTSP_TCP: true,
               NonAggregateControl: false,
@@ -204,7 +204,7 @@ class MediaService extends SoapService {
       };
       return GetServiceCapabilitiesResponse;
     };
-  
+
     //var GetStreamUri = { 
     //StreamSetup : { 
     //Stream : { xs:string}
@@ -213,9 +213,14 @@ class MediaService extends SoapService {
     //
     //};
     port.GetStreamUri = (args /*, cb, headers*/) => {
+
+     let stream = args.StreamSetup.Stream;
+
       var GetStreamUriResponse = {
         MediaUri: {
-          Uri: `rtsp://${utils.getIpAddress() }:${this.config.RTSPPort}/${this.config.RTSPName}`,
+          streamUri: (args.StreamSetup.Stream == "RTP-Multicast" && this.config.MulticastEnabled ? 
+            `rtsp://${utils.getIpAddress() }:${this.config.RTSPPort}/${this.config.RTSPMulticastName}` :
+            `rtsp://${utils.getIpAddress() }:${this.config.RTSPPort}/${this.config.RTSPName}`),
           InvalidAfterConnect: false,
           InvalidAfterReboot: false,
           Timeout: "PT30S"

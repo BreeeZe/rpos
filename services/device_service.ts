@@ -153,7 +153,7 @@ class DeviceService extends SoapService {
         GetCapabilitiesResponse.Capabilities["Media"] = {
           XAddr: `http://${utils.getIpAddress() }:${this.config.ServicePort}/onvif/media_service`,
           StreamingCapabilities: {
-            RTPMulticast: false,
+            RTPMulticast: this.config.MulticastEnabled,
             RTP_TCP: true,
             RTP_RTSP_TCP: true,
             Extension: {}
