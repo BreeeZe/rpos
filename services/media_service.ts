@@ -218,7 +218,7 @@ class MediaService extends SoapService {
 
       var GetStreamUriResponse = {
         MediaUri: {
-          streamUri: (args.StreamSetup.Stream == "RTP-Multicast" && this.config.MulticastEnabled ? 
+          Uri: (args.StreamSetup.Stream == "RTP-Multicast" && this.config.MulticastEnabled ? 
             `rtsp://${utils.getIpAddress() }:${this.config.RTSPPort}/${this.config.RTSPMulticastName}` :
             `rtsp://${utils.getIpAddress() }:${this.config.RTSPPort}/${this.config.RTSPName}`),
           InvalidAfterConnect: false,
