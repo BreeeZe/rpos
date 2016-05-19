@@ -1,6 +1,25 @@
 version: 0.2.0.{build}
 branches:
   only:
-  - master
+  - dev
+
+# Test against this version of Node.js
+environment:
+  nodejs_version: "0.10"
+
+# Install scripts. (runs after repo cloning)
+install:
+  # Get the latest stable version of Node.js or io.js
+  - ps: Install-Product node $env:nodejs_version
+  # install modules
+  - npm install
+
+# Post-install test scripts.
+test_script:
+  # Output useful info for debugging.
+  - node --version
+  - npm --version
+
+# Don't actually build.
 build_script:
-- ps: gulp release
+  - gulp release
