@@ -34,7 +34,11 @@ gulp.task('typings', function (done) {
 });
 
 //Release task: generates a release package.
-gulp.task('release', ['copy-release-js', 'copy-release-bin', 'copy-release-modules', 'copy-release-views',
+gulp.task('release', function (cb) {
+    runSequence('default', 'publish', cb);
+})
+
+gulp.task('publish', ['copy-release-js', 'copy-release-bin', 'copy-release-modules', 'copy-release-views',
     'copy-release-web', 'copy-release-wsdl', 'copy-release-config'], function () {
         return gulp.src([releaseDir + '/**/*', releaseDir + '/*.zip'])
             .pipe(zip(version + '.zip'))
