@@ -5,7 +5,7 @@ branches:
 
 # Test against this version of Node.js
 environment:
-  nodejs_version: "0.10"
+  nodejs_version: "4.4"
 
 # Install scripts. (runs after repo cloning)
 install:
