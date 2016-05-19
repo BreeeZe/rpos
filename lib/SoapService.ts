@@ -1,13 +1,13 @@
 ﻿///<reference path="../typings/main.d.ts"/>
 ///<reference path="../rpos.d.ts"/>
 
-import fs = require("fs");
+import * as fs from "fs";
 import { Utils }  from './utils';
 import { Server } from 'http';
-var soap = <any>require('soap');
-var utils = Utils.utils;
 
-class SoapService {
+var soap = <any>require('soap');
+
+export class SoapService {
   webserver: Server;
   config: rposConfig;
   serviceInstance: any;
@@ -29,7 +29,6 @@ class SoapService {
       wsdlPath: '',
       onReady: () => { }
     };
-
   }
 
   starting() { }
@@ -39,7 +38,7 @@ class SoapService {
   start() {
     this.starting();
 
-    utils.log.info("Binding %s to http://%s:%s%s", (<TypeConstructor>this.constructor).name, utils.getIpAddress(), this.config.ServicePort, this.serviceOptions.path);
+    Utils.log.info("Binding %s to http://%s:%s%s", (<TypeConstructor>this.constructor).name, Utils.getIpAddress(), this.config.ServicePort, this.serviceOptions.path);
     this.webserver.listen(this.config.ServicePort);
     var onReady = this.serviceOptions.onReady;
     this.serviceOptions.onReady = () => {
@@ -50,12 +49,12 @@ class SoapService {
 
 
     this.serviceInstance.on("request", (request: any, methodName: string) => {
-      utils.log.debug('%s received request %s', (<TypeConstructor>this.constructor).name, methodName);
+      Utils.log.debug('%s received request %s', (<TypeConstructor>this.constructor).name, methodName);
     });
 
     this.serviceInstance.log = (type: string, data: any) => {
       if (this.config.logSoapCalls)
-        utils.log.debug('%s - Calltype : %s, Data : %s', (<TypeConstructor>this.constructor).name, type, data);
+        Utils.log.debug('%s - Calltype : %s, Data : %s', (<TypeConstructor>this.constructor).name, type, data);
     };
   }
 
@@ -74,4 +73,3 @@ class SoapService {
     this.started();
   }
 }
-export = SoapService;

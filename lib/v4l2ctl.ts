@@ -3,7 +3,6 @@
 import { Utils } from './utils';
 import { writeFileSync, readFileSync } from 'fs';
 var stringifyBool = (v: boolean) => { return v ? "1" : "0"; }
-var utils = Utils.utils;
 
 export module v4l2ctl {
     export enum Pixelformat {
@@ -199,7 +198,7 @@ export module v4l2ctl {
     };
 
     function execV4l2(cmd: string): string {
-        return utils.execSync(`sudo v4l2-ctl ${cmd}`).toString();
+        return Utils.execSync(`sudo v4l2-ctl ${cmd}`).toString();
     }
 
     export function ApplyControls() {
@@ -256,7 +255,7 @@ export module v4l2ctl {
                 }
             }
         } catch (ex) {
-            utils.log.error("v4l2ctl.json does not exist yet or invalid.")
+            Utils.log.error("v4l2ctl.json does not exist yet or invalid.")
         }
     }
 
@@ -271,15 +270,15 @@ export module v4l2ctl {
                 if (!value || (value.length > 1 && value[1] === "" && c == "auto_exposure")) //-- fix for typo in camera driver!
                     value = settings.match(new RegExp([c.substr(0, c.length - 1), regexPart].join('')));
                 if (value && value.length > 1) {
-                    utils.log.debug("Controlvalue '%s' : %s", c, value[1]);
+                    Utils.log.debug("Controlvalue '%s' : %s", c, value[1]);
                     try {
                         control.value = value[1];
                         control.reset();
                     } catch (ex) {
-                        utils.log.error(ex);
+                        Utils.log.error(ex);
                     }
                 } else {
-                    utils.log.error("Could not retrieve Controlvalue '%s'", c);
+                    Utils.log.error("Could not retrieve Controlvalue '%s'", c);
                 }
             }
         };

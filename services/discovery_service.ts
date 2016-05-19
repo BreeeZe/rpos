@@ -28,13 +28,12 @@ THE SOFTWARE.
 /* WS-Discovery */
 /* Listens on Port 3702 on 239.255.255.0 for UDP WS-Discovery Messages */
 
-import dgram = require('dgram');
-import uuid = require('node-uuid');
-import xml2js = require('xml2js');
+import * as dgram from 'dgram';
+import * as uuid from 'node-uuid';
+import * as xml2js from 'xml2js';
 import { Utils } from '../lib/utils';
-var utils = Utils.utils;
 
-class DiscoveryService {
+export class DiscoveryService {
 
   config: rposConfig;
 
@@ -52,7 +51,7 @@ class DiscoveryService {
 
     discover_socket.on('message', (received_msg, rinfo) => {
 
-      utils.log.debug("Discovery received");
+      Utils.log.debug("Discovery received");
 
       // Filter xmlns namespaces from XML before calling XML2JS
       let filtered_msg = received_msg.toString().replace(/xmlns(.*?)=(".*?")/g, '');
@@ -83,7 +82,7 @@ class DiscoveryService {
               <d:ProbeMatches>
                 <d:ProbeMatch>
                   <wsa:EndpointReference>
-                    <wsa:Address>urn:uuid:${utils.uuid5(utils.getIpAddress() + this.config.ServicePort + this.config.RTSPPort)}</wsa:Address>
+                    <wsa:Address>urn:uuid:${Utils.uuid5(Utils.getIpAddress() + this.config.ServicePort + this.config.RTSPPort)}</wsa:Address>
                   </wsa:EndpointReference>
                   <d:Types>dn:NetworkVideoTransmitter</d:Types>
                   <d:Scopes>
@@ -93,7 +92,7 @@ class DiscoveryService {
                     onvif://www.onvif.org/name/PI
                     onvif://www.onvif.org/location/
                   </d:Scopes>
-                  <d:XAddrs>http://${utils.getIpAddress()}:${this.config.ServicePort}/onvif/device_service</d:XAddrs>
+                  <d:XAddrs>http://${Utils.getIpAddress()}:${this.config.ServicePort}/onvif/device_service</d:XAddrs>
                   <d:MetadataVersion>1</d:MetadataVersion>
               </d:ProbeMatch>
               </d:ProbeMatches>
@@ -110,10 +109,8 @@ class DiscoveryService {
       discover_socket.addMembership('239.255.255.250');
     });
 
-    utils.log.info("discovery_service started");
+    Utils.log.info("discovery_service started");
 
   };
 
 } // end class Discovery
-
-export = DiscoveryService;

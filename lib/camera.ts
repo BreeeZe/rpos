@@ -1,14 +1,12 @@
 ﻿///<reference path="../typings/main.d.ts"/>
 ///<reference path="../rpos.d.ts"/>
+import * as fs from 'fs';
+import * as parser from 'body-parser';
 import { Utils }  from './utils';
-import fs = require('fs');
-import parser = require('body-parser');
 import { ChildProcess } from 'child_process';
 import { v4l2ctl } from './v4l2ctl';
 
-var utils = Utils.utils;
-
-class Camera {
+export class Camera {
   options = {
     resolutions: <Resolution[]>[
       { Width: 640, Height: 480 },
@@ -38,7 +36,7 @@ class Camera {
     resolution: <Resolution>{ Width: 1280, Height: 720 },
     framerate: 25,
   }
-  
+
   config: rposConfig;
   rtspServer: ChildProcess;
   webserver: any;
@@ -54,7 +52,7 @@ class Camera {
 
     v4l2ctl.ReadControls();
 
-    utils.cleanup(() => {
+    Utils.cleanup(() => {
       this.stopRtsp();
       var stop = new Date().getTime() + 2000;
       while (new Date().getTime() < stop) {
@@ -64,10 +62,10 @@ class Camera {
       this.unloadDriver();
     });
 
-    if (this.config.RTSPServer == 1 )fs.chmodSync("./bin/rtspServer", "0755");
+    if (this.config.RTSPServer == 1) fs.chmodSync("./bin/rtspServer", "0755");
   }
   setupWebserver() {
-    utils.log.info("Starting camera settings webserver on http://%s:%s/", utils.getIpAddress(), this.config.ServicePort);
+    Utils.log.info("Starting camera settings webserver on http://%s:%s/", Utils.getIpAddress(), this.config.ServicePort);
     this.webserver.use(parser.urlencoded({ extended: true }));
     this.webserver.engine('ntl', (filePath, options, callback) => {
       this.getSettingsPage(filePath, callback);
@@ -88,7 +86,7 @@ class Camera {
             val = (<any[]>val).pop();
           prop.value = val;
           if (prop.isDirty) {
-            utils.log.debug("Property %s changed to %s", par, prop.value);
+            Utils.log.debug("Property %s changed to %s", par, prop.value);
           }
         }
       }
@@ -141,11 +139,11 @@ class Camera {
   }
 
   loadDriver() {
-    utils.execSync("sudo modprobe bcm2835-v4l2");
+    Utils.execSync("sudo modprobe bcm2835-v4l2");
   }
-  
-  unloadDriver(){
-    utils.execSync("sudo modprobe -r bcm2835-v4l2");
+
+  unloadDriver() {
+    Utils.execSync("sudo modprobe -r bcm2835-v4l2");
   }
 
   setupCamera() {
@@ -169,36 +167,34 @@ class Camera {
 
   startRtsp() {
     if (this.rtspServer) {
-      utils.log.warn("Cannot start rtspServer, already running");
+      Utils.log.warn("Cannot start rtspServer, already running");
       return;
     }
-    utils.log.info("Starting Live555 rtsp server");
+    Utils.log.info("Starting rtsp server");
 
     if (this.config.MulticastEnabled) {
-        this.rtspServer = utils.spawn("h264_v4l2_rtspserver", ["-P", this.config.RTSPPort.toString(), "-u" , this.config.RTSPName.toString(), "-m", this.config.RTSPMulticastName, "-M", this.config.MulticastAddress.toString() + ":" + this.config.MulticastPort.toString(), "-W",this.settings.resolution.Width.toString(), "-H", this.settings.resolution.Height.toString(), "/dev/video0"]);
+      this.rtspServer = Utils.spawn("h264_v4l2_rtspserver", ["-P", this.config.RTSPPort.toString(), "-u", this.config.RTSPName.toString(), "-m", this.config.RTSPMulticastName, "-M", this.config.MulticastAddress.toString() + ":" + this.config.MulticastPort.toString(), "-W", this.settings.resolution.Width.toString(), "-H", this.settings.resolution.Height.toString(), "/dev/video0"]);
     } else {
-        if (this.config.RTSPServer == 1) this.rtspServer = utils.spawn("./bin/rtspServer", ["/dev/video0", "2088960", this.config.RTSPPort.toString(), "0", this.config.RTSPName.toString()]);
-        if (this.config.RTSPServer == 2) this.rtspServer = utils.spawn("h264_v4l2_rtspserver", ["-P",this.config.RTSPPort.toString(), "-u" , this.config.RTSPName.toString(),"-W",this.settings.resolution.Width.toString(),"-H",this.settings.resolution.Height.toString(),"/dev/video0"]);
+      if (this.config.RTSPServer == 1) this.rtspServer = Utils.spawn("./bin/rtspServer", ["/dev/video0", "2088960", this.config.RTSPPort.toString(), "0", this.config.RTSPName.toString()]);
+      if (this.config.RTSPServer == 2) this.rtspServer = Utils.spawn("h264_v4l2_rtspserver", ["-P", this.config.RTSPPort.toString(), "-u", this.config.RTSPName.toString(), "-W", this.settings.resolution.Width.toString(), "-H", this.settings.resolution.Height.toString(), "/dev/video0"]);
     }
 
-    this.rtspServer.stdout.on('data', data => utils.log.debug("rtspServer: %s", data));
-    this.rtspServer.stderr.on('data', data => utils.log.error("rtspServer: %s", data));
-    this.rtspServer.on('error', err=> utils.log.error("rtspServer error: %s", err));
+    this.rtspServer.stdout.on('data', data => Utils.log.debug("rtspServer: %s", data));
+    this.rtspServer.stderr.on('data', data => Utils.log.error("rtspServer: %s", data));
+    this.rtspServer.on('error', err => Utils.log.error("rtspServer error: %s", err));
     this.rtspServer.on('exit', (code, signal) => {
       if (code)
-        utils.log.error("rtspServer exited with code: %s", code);
+        Utils.log.error("rtspServer exited with code: %s", code);
       else
-        utils.log.debug("rtspServer exited")
+        Utils.log.debug("rtspServer exited")
     });
   }
 
   stopRtsp() {
     if (this.rtspServer) {
-      utils.log.info("Stopping Live555 rtsp server");
+      Utils.log.info("Stopping rtsp server");
       this.rtspServer.kill();
       this.rtspServer = null;
     }
   }
 }
-
-export = Camera;

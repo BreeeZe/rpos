@@ -13,7 +13,7 @@ to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject tothe following conditions:
 
-    The above copyright notice and this permission notice shall be included in
+The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
@@ -24,29 +24,27 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-require("./lib/extension");
+import "./lib/extension";
+import * as http from "http";
+import * as express from "express";
+import { Utils, logLevel } from "./lib/utils";
+import { Camera } from "./lib/camera";
+import { DeviceService } from "./services/device_service";
+import { MediaService } from "./services/media_service";
+import { DiscoveryService } from "./services/discovery_service";
 
-import http = require("http");
-import express = require("express");
-import { Utils } from "./lib/utils";
-import Camera = require("./lib/camera");
-import DeviceService = require("./services/device_service");
-import MediaService = require("./services/media_service");
-import DiscoveryService = require("./services/discovery_service");
-
-var utils = Utils.utils;
 let pjson = require("./package.json");
 let config = <rposConfig>require("./rposConfig.json");
 
-utils.log.level = <Utils.logLevel>config.logLevel;
+Utils.log.level = <logLevel>config.logLevel;
 
-config.DeviceInformation.SerialNumber = utils.getSerial();
+config.DeviceInformation.SerialNumber = Utils.getSerial();
 config.DeviceInformation.FirmwareVersion = pjson.version;
-utils.setConfig(config);
-utils.testIpAddress();
+Utils.setConfig(config);
+Utils.testIpAddress();
 
 for (var i in config.DeviceInformation) {
-  utils.log.info("%s : %s", i, config.DeviceInformation[i]);
+  Utils.log.info("%s : %s", i, config.DeviceInformation[i]);
 }
 
 let webserver = express();

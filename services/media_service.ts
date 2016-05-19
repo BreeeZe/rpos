@@ -1,16 +1,15 @@
 ///<reference path="../typings/main.d.ts" />
 ///<reference path="../rpos.d.ts" />
-import fs = require("fs");
-import util = require("util");
-import SoapService = require('../lib/SoapService');
+import * as fs from "fs";
+import * as util from "util";
+import { SoapService } from '../lib/SoapService';
 import { Utils }  from '../lib/utils';
-import url = require('url');
+import * as url from 'url';
 import { Server } from 'http';
-import Camera = require('../lib/camera');
+import { Camera } from '../lib/camera';
 import { v4l2ctl } from '../lib/v4l2ctl';
-var utils = Utils.utils;
 
-class MediaService extends SoapService {
+export class MediaService extends SoapService {
   media_service: any;
   camera: Camera;
 
@@ -25,7 +24,7 @@ class MediaService extends SoapService {
       xml: fs.readFileSync('./wsdl/media_service.wsdl', 'utf8'),
       wsdlPath: 'wsdl/media_service.wsdl',
       onReady: function() {
-        utils.log.info('media_service started');
+        Utils.log.info('media_service started');
       }
     };
     
@@ -36,7 +35,7 @@ class MediaService extends SoapService {
     var listeners = this.webserver.listeners('request').slice();
     this.webserver.removeAllListeners('request');
     this.webserver.addListener('request', (request, response, next) => {
-      utils.log.debug('web request received : %s', request.url);
+      Utils.log.debug('web request received : %s', request.url);
 
       var uri = url.parse(request.url, true);
       var action = uri.pathname;
@@ -46,7 +45,7 @@ class MediaService extends SoapService {
           response.writeHead(200, { 'Content-Type': 'image/jpg' });
           response.end(img, 'binary');
         } catch (err) {
-          utils.log.debug("Error opening snapshot : %s", err);
+          Utils.log.debug("Error opening snapshot : %s", err);
           var img = fs.readFileSync('web/snapshot.jpg');
           response.writeHead(200, { 'Content-Type': 'image/jpg' });
           response.end(img, 'binary');
@@ -219,8 +218,8 @@ class MediaService extends SoapService {
       var GetStreamUriResponse = {
         MediaUri: {
           Uri: (args.StreamSetup.Stream == "RTP-Multicast" && this.config.MulticastEnabled ? 
-            `rtsp://${utils.getIpAddress() }:${this.config.RTSPPort}/${this.config.RTSPMulticastName}` :
-            `rtsp://${utils.getIpAddress() }:${this.config.RTSPPort}/${this.config.RTSPName}`),
+            `rtsp://${Utils.getIpAddress() }:${this.config.RTSPPort}/${this.config.RTSPMulticastName}` :
+            `rtsp://${Utils.getIpAddress() }:${this.config.RTSPPort}/${this.config.RTSPName}`),
           InvalidAfterConnect: false,
           InvalidAfterReboot: false,
           Timeout: "PT30S"
@@ -305,7 +304,7 @@ class MediaService extends SoapService {
     port.GetSnapshotUri = (args) => {
       var GetSnapshotUriResponse = {
         MediaUri : {
-          Uri : "http://" + utils.getIpAddress() + ":" + this.config.ServicePort + "/web/snapshot.jpg",
+          Uri : "http://" + Utils.getIpAddress() + ":" + this.config.ServicePort + "/web/snapshot.jpg",
           InvalidAfterConnect : false,
           InvalidAfterReboot : false,
           Timeout : "PT30S"
@@ -320,4 +319,3 @@ class MediaService extends SoapService {
     };
   }
 }
-export = MediaService;
