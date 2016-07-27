@@ -25,8 +25,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-/* WS-Discovery */
-/* Listens on Port 3702 on 239.255.255.0 for UDP WS-Discovery Messages */
+/* 
+ * WS-Discovery  (for Linux)
+ * Listens on Port 3702 on 239.255.255.0 for UDP WS-Discovery Messages
+ * and sends back a reply containing the ONVIF Xaddr
+ * 
+ * This will not work on Windows. Windows claims 239.255.255.0:3702 for itself (to discover things
+ * on the network) and so appliications need to use a Windows API
+ * 
+ */
 
 import dgram = require('dgram');
 import uuid = require('node-uuid');
@@ -44,6 +51,11 @@ class DiscoveryService {
 
 
   start() {
+
+    if (utils.isWindows()) {
+      return;
+    }
+
     var discover_socket = dgram.createSocket('udp4');
 
     discover_socket.on('error', (err) => {
