@@ -87,13 +87,13 @@ class PTZService extends SoapService {
     };
 
     port.SetHomePosition = (args) => {
-      if (this.callback) this.callback('setpreset', { name: 'Home', value: 1 });
+      if (this.callback) this.callback('sethome', {});
       var SetHomePositionResponse = { };
       return SetHomePositionResponse;
     };
 
     port.GotoHomePosition = (args) => {
-      if (this.callback) this.callback('gotopreset', { name: 'Home', value: 1 });
+      if (this.callback) this.callback('gotohome', {});
       var GotoHomePositionResponse = { };
       return GotoHomePositionResponse;
     };
