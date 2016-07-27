@@ -165,6 +165,11 @@ class DeviceService extends SoapService {
           }
         }
       }
+      if (category == "All" || category == "PTZ") {
+        GetCapabilitiesResponse.Capabilities["PTZ"] = {
+          XAddr: `http://${utils.getIpAddress() }:${this.config.ServicePort}/onvif/ptz_service`
+        }
+      }
       return GetCapabilitiesResponse;
     };
 

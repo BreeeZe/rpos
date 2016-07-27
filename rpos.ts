@@ -32,6 +32,7 @@ import { Utils } from "./lib/utils";
 import Camera = require("./lib/camera");
 import DeviceService = require("./services/device_service");
 import MediaService = require("./services/media_service");
+import PTZService = require("./services/ptz_service");
 import DiscoveryService = require("./services/discovery_service");
 
 var utils = Utils.utils;
@@ -55,8 +56,30 @@ let httpserver = http.createServer(webserver);
 let camera = new Camera(config, webserver);
 let device_service = new DeviceService(config, httpserver);
 let media_service = new MediaService(config, httpserver, camera);
+let ptz_service = new PTZService(config, httpserver, ptz_callback);
 let discovery_service = new DiscoveryService(config);
 
 device_service.start();
 media_service.start();
+ptz_service.start();
 discovery_service.start();
+
+
+function ptz_callback(command: string, data: any) {
+  if (command==='gotopreset') {
+   console.log("Goto Preset "+ data.name + ' / ' + data.value);
+  }
+  if (command==='setpreset') {
+   console.log("Store Preset "+ data.name + ' / ' + data.value);
+  }
+  if (command==='clearpreset') {
+   console.log("Clear Preset "+ data.name + ' / ' + data.value);
+  }
+  if (command==='aux') {
+   console.log("Aux "+ data.name);
+  }
+  if (command==='ptz') {
+   console.log("PTZ "+ data.pan + ' ' + data.tilt + ' ' + data.zoom);
+  }
+
+}
