@@ -9,11 +9,15 @@
   "MulticastAddress"  : "224.0.0.1",
   "MulticastPort"     : "10001",
   "RTSPServer" : 1, "RtspServerComment" : "## Select RTSP Server > 1:RPOS RTSP Server 2:V4L2 RTSP Server by mpromonet (auto selected if MulticastEnabled=true)",
+  "PTZDriver" : "none", "PTZDriverComment": "## valid values are none,tenx and pelcod",
+  "PTZSerialPort" : "/dev/ttyUSB0",
+  "PTZSerialPortSettings" : { "baudRate":2400, "dataBits":8, "parity":"none", "stopBits":1 },
+  "PTZCameraAddress": 1,
   "DeviceInformation" : {
     "Manufacturer" : "Raspberry Pi",
     "Model" : "2 B",
     "HardwareId" : ""
   },
-  "logLevel" : 4, "logLevelComment": "## LogLevels are > 1:Error 2:Warning 3:Info 4:Debug",
+  "logLevel" : 3, "logLevelComment": "## LogLevels are > 1:Error 2:Warning 3:Info 4:Debug",
   "logSoapCalls" : false
 }
