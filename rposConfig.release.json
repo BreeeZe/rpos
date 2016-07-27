@@ -9,6 +9,7 @@
   "MulticastAddress"  : "224.0.0.1",
   "MulticastPort"     : "10001",
   "RTSPServer" : 1, "RtspServerComment" : "## Select RTSP Server > 1:RPOS RTSP Server 2:V4L2 RTSP Server by mpromonet (auto selected if MulticastEnabled=true)",
+  "PTZDriver" : "none", "PTZDriverComment": "## valid values are none and tenx"
   "DeviceInformation" : {
     "Manufacturer" : "Raspberry Pi",
     "Model" : "2 B",
