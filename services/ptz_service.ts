@@ -50,7 +50,7 @@ class PTZService extends SoapService {
       Name : 'PTZ Node 0',
       SupportedPTZSpaces : { 
         ContinuousPanTiltVelocitySpace : [{ 
-          URI : 'http://www.onvif.org/ver10/PanTiltSpaces/VelocityGenericSpace',
+          URI : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/VelocityGenericSpace',
           XRange : { 
             Min : -1.0,
             Max : 1.0
@@ -61,7 +61,7 @@ class PTZService extends SoapService {
           }
         }],
         ContinuousZoomVelocitySpace : [{ 
-          URI : 'http://www.onvif.org/ver10/ZoomSpaces/VelocityGenericSpace',
+          URI : 'http://www.onvif.org/ver10/tptz/ZoomSpaces/VelocityGenericSpace',
           XRange : { 
             Min : -1.0,
             Max : 1.0

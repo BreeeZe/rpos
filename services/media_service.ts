@@ -175,20 +175,20 @@ class MediaService extends SoapService {
       Name: "PTZ Configuration",
       UseCount: 1,
       NodeToken: "ptz_node_token_0",
-      DefaultContinuousPanTiltVelocitySpace : 'http://www.onvif.org/ver10/PanTiltSpaces/VelocityGenericSpace',
-      DefaultContinuousZoomVelocitySpace : 'http://www.onvif.org/ver10/ZoomSpaces/VelocityGenericSpace',
+      DefaultContinuousPanTiltVelocitySpace : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/VelocityGenericSpace',
+      DefaultContinuousZoomVelocitySpace : 'http://www.onvif.org/ver10/tptz/ZoomSpaces/VelocityGenericSpace',
       DefaultPTZSpeed : { 
         PanTilt : { 
           attributes : {
             x : 1.0,
             y : 1.0,
-            space : 'http://www.onvif.org/ver10/PanTiltSpaces/VelocityGenericSpace'
+            space : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/VelocityGenericSpace'
           }
         },
         Zoom : { 
           attributes : {
             x : 1,
-            space : 'http://www.onvif.org/ver10/ZoomSpaces/VelocityGenericSpace'
+            space : 'http://www.onvif.org/ver10/tptz/ZoomSpaces/VelocityGenericSpace'
           }
         }
       },
