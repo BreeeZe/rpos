@@ -10,6 +10,7 @@ interface rposConfig {
   RTSPMulticastName : string;
   MulticastAddress: string;
   MulticastPort: number;
+  PTZDriver: string;
   DeviceInformation: DeviceInformation;
   logLevel: number;
   logSoapCalls: Boolean;
