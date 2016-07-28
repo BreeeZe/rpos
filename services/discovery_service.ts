@@ -26,12 +26,19 @@ THE SOFTWARE.
 */
 
 /* 
- * WS-Discovery  (for Linux)
+ * WS-Discovery
  * Listens on Port 3702 on 239.255.255.0 for UDP WS-Discovery Messages
  * and sends back a reply containing the ONVIF Xaddr
- * 
- * This will not work on Windows. Windows claims 239.255.255.0:3702 for itself (to discover things
- * on the network) and so appliications need to use a Windows API
+ *
+ * Raspberry Pi: Works fine.
+
+ * Windows: Will not work. Windows claims 239.255.255.0:3702 for itself (to discover things
+ * on the network) and so appliications need to use a Windows API to register for discovery
+ * messages. There is an example of this in the ONVIF Device Manager source.
+ *
+ * Mac: Works. The OS claims 239.255.255.0:3702 for a process called SpotlightNetHelper
+ * and the error EADDRINUSE gets reported when trying to bind to this address and port.
+ * Running this code as root (sudo) seemed to work around the issue.
  * 
  */
 
@@ -57,6 +64,7 @@ class DiscoveryService {
     }
 
     var discover_socket = dgram.createSocket('udp4');
+    var reply_socket    = dgram.createSocket('udp4');
 
     discover_socket.on('error', (err) => {
       throw err;
@@ -113,7 +121,9 @@ class DiscoveryService {
           </SOAP-ENV:Envelope>`;
 
           let reply_bytes = new Buffer(reply);
-          return discover_socket.send(reply_bytes, 0, reply_bytes.length, rinfo.port, rinfo.address);
+
+          // Mac needed replies from a different UDP socket (ie not the bounded socket)
+          return reply_socket.send(reply_bytes, 0, reply_bytes.length, rinfo.port, rinfo.address);
         }
       });
     });
