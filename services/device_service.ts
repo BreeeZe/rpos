@@ -11,10 +11,13 @@ var utils = Utils.utils;
 
 class DeviceService extends SoapService {
   device_service: any;
-  constructor(config: rposConfig, server: Server) {
+  callback: any;
+
+  constructor(config: rposConfig, server: Server, callback) {
     super(config, server);
 
     this.device_service = require('./stubs/device_service.js').DeviceService;
+    this.callback = callback;
 
     this.serviceOptions = {
       path: '/onvif/device_service',
@@ -122,7 +125,7 @@ class DeviceService extends SoapService {
           },
           IO: {
             InputConnectors: 0,
-            RelayOutputs: 0,
+            RelayOutputs: 1,
             Extension: {
               Auxiliary: false,
               AuxiliaryCommands: "",
@@ -316,9 +319,31 @@ class DeviceService extends SoapService {
     };
 
     port.GetRelayOutputs = (args /*, cb, headers*/) => {
-      var GetRelayOutputsResponse = {};
+      var GetRelayOutputsResponse = {
+        RelayOutputs: [{
+          attributes: {
+            token: "relay1"
+          },
+          Properties : {
+            Mode: "Bistable",
+            // DelayTime: "",
+            IdleState: "open"
+          }
+        }]
+      };
       return GetRelayOutputsResponse;
     };
+
+    port.SetRelayOutputState = (args /*, cb, headers*/) => {
+      var SetRelayOutputStateResponse = {};
+      if (this.callback) {
+        if (args.LogicalState === 'active') this.callback('relayactive', { name: args.RelayOutputToken });
+        if (args.LogicalState === 'inactive') this.callback('relayinactive', { name: args.RelayOutputToken });
+      }
+      return SetRelayOutputStateResponse;
+    };
+
+
   }
 }
 export = DeviceService;

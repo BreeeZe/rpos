@@ -54,7 +54,7 @@ let webserver = express();
 let httpserver = http.createServer(webserver);
 
 let camera = new Camera(config, webserver);
-let device_service = new DeviceService(config, httpserver);
+let device_service = new DeviceService(config, httpserver, ptz_callback);
 let media_service = new MediaService(config, httpserver, camera);
 let ptz_service = new PTZService(config, httpserver, ptz_callback);
 let discovery_service = new DiscoveryService(config);
@@ -114,6 +114,15 @@ if (config.PTZDriver === 'pelcod') {
   });
 }
 
+
+// Data
+//   name:
+//   value:
+//   pan:
+//   tilt:
+//   zoom:
+
+
 function ptz_callback(command: string, data: any) {
   if (command==='gotohome') {
    console.log("Goto Home");
@@ -156,6 +165,12 @@ function ptz_callback(command: string, data: any) {
       if (data.name === 'AUX8on') pelcod.sendSetAux(8);
       if (data.name === 'AUX8off') pelcod.sendClearAux(8);
     }
+  }
+  if (command==='relayactive') {
+    console.log("Relay Active "+ data.name);
+  }
+  if (command==='relayinactive') {
+    console.log("Relay Inactive "+ data.name);
   }
   if (command==='ptz') {
     console.log("PTZ "+ data.pan + ' ' + data.tilt + ' ' + data.zoom);
