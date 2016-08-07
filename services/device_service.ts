@@ -7,6 +7,7 @@ import os = require('os');
 import SoapService = require('../lib/SoapService');
 import { Utils }  from '../lib/utils';
 import { Server } from 'http';
+import ip = require('ip');
 var utils = Utils.utils;
 
 class DeviceService extends SoapService {
@@ -311,11 +312,35 @@ class DeviceService extends SoapService {
       };
       var nwifs = os.networkInterfaces();
       for (var nwif in nwifs) {
-        GetNetworkInterfacesResponse.NetworkInterfaces.push({
-          attributes: {
-            token: nwif
+        for (var addr in nwifs[nwif]) {
+           if (nwifs[nwif][addr].family === 'IPv4' ) {
+            var mac = (nwifs[nwif][addr].mac).replace(/:/g,'-');
+            var ipv4_addr = nwifs[nwif][addr].address;
+            var netmask = nwifs[nwif][addr].netmask;
+            var prefix_len = ip.subnet(ipv4_addr,netmask).subnetMaskLength;
+            GetNetworkInterfacesResponse.NetworkInterfaces.push({
+              attributes: {
+                token: nwif
+              },
+              Enabled: true,
+              Info: {
+                Name: nwif,
+                HwAddress: mac,
+                MTU: 1500
+              },
+              IPv4: {
+                Enabled: true,
+                Config: {
+                   Manual: {
+                     Address: ipv4_addr,
+                     PrefixLength: prefix_len
+                   },
+                   DHCP: false
+                }
+              }
+            });
           }
-        });
+        }
       }
       return GetNetworkInterfacesResponse;
     };
