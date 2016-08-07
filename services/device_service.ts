@@ -157,6 +157,14 @@ class DeviceService extends SoapService {
           Extension: {}
         };
       }
+      if (category == "All" || category == "Events") {
+        GetCapabilitiesResponse.Capabilities["Events"] = {
+          XAddr: `http://${utils.getIpAddress() }:${this.config.ServicePort}/onvif/events_service`,
+          WSSubscriptionPolicySupport: false,
+          WSPullPointSupport: false,
+          WSPausableSubscriptionManagerInterfaceSupport: false
+        }
+      }
       if (category == "All" || category == "Media") {
         GetCapabilitiesResponse.Capabilities["Media"] = {
           XAddr: `http://${utils.getIpAddress() }:${this.config.ServicePort}/onvif/media_service`,
