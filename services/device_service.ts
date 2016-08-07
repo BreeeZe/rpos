@@ -77,6 +77,11 @@ class DeviceService extends SoapService {
       return GetSystemDateAndTimeResponse;
     };
 
+    port.SetSystemDateAndTime = (args /*, cb, headers*/) => {
+      var SetSystemDateAndTimeResponse = {};
+      return SetSystemDateAndTimeResponse;
+    };
+
     port.SystemReboot = (args /*, cb, headers*/) => {
       var SystemRebootResponse = {
         Message: utils.execSync("sudo reboot")
