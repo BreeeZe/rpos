@@ -262,7 +262,7 @@ export module v4l2ctl {
 
     export function ReadControls() {
         var settings = execV4l2("-l");
-        var regexPart = ".*value=([0-9]*)";
+        var regexPart = "\\s.*value=([0-9]*)";
 
         var getControls = function(controls) {
             for (var c in controls) {
