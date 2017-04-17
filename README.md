@@ -9,13 +9,13 @@ First demo video @ https://youtu.be/ZcZbF4XOH7E
 
 This version uses a patched version of the "node-soap" v0.80 library (https://github.com/vpulim/node-soap/releases/tag/v0.8.0) located @ https://github.com/BreeeZe/node-soap
 
-#Features:
+# Features:
 
 - Streams H264 video over rtsp
 - Camera control (resolution and framerate) through Onvif
 - Set other camera options through a web interface.
 
-#How to:
+# How to:
 
 Install the live555 library to stream h264 video over rtsp [ source http://forum.synology.com/enu/viewtopic.php?f=82&t=69224&start=15#p289293 ] :
 
@@ -45,14 +45,14 @@ Optionaly set the service port or other options in rposConfig.json
 
 Then you start rpos by running "sudo node rpos.js"
 
-#Camera settings
+# Camera settings
 You can set camera settings by browsing to : http://CameraIP:Port/
 These settings are then saved in a file called v4l2ctl.json and are persisted on rpos restart.
 
-#Known Issues
+# Known Issues
 - 1920x1080 can cause hangs and crashes.
 
-#ToDo's
+# ToDo's
 - Add authentication
 - Add MJPEG
 - Implement more ONVIF calls
