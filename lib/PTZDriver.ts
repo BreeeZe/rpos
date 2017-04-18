@@ -81,6 +81,9 @@ class PTZDriver {
       this.stream.on('close', function() {
         console.log('PTZ Driver - Socket closed');
       });
+      this.stream.on('error', function() {
+        console.log('PTZ Driver - Socket error');
+      });
       this.stream.connect(port, host, function() {
         console.log('PTZ Driver connected to ' + host + ':' + port);
 
