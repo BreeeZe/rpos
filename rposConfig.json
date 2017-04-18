@@ -2,6 +2,7 @@
   "NetworkAdapters" : ["awdl0","eth0", "en0"], 
   "IpAddress" : "192.168.1.15",
   "ServicePort" : 8081,
+  "RTSPAddress" : "", "//":"Normally left blank. Used to set RTSP Server Address",
   "RTSPPort" : 8554,
   "RTSPName" : "h264",
   "MulticastEnabled"  : false,

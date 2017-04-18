@@ -3,6 +3,7 @@ interface rposConfig {
   NetworkAdapters: string[];
   IpAddress: string;
   ServicePort: number;
+  RTSPAddress: string;
   RTSPPort: number;
   RTSPName: string;
   RTSPServer: number;

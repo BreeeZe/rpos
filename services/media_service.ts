@@ -242,13 +242,16 @@ class MediaService extends SoapService {
     //};
     port.GetStreamUri = (args /*, cb, headers*/) => {
 
-     let stream = args.StreamSetup.Stream;
+     // Usually RTSP server is on same IP Address as the ONVIF Service
+     // Setting RTSPAddress in the config file lets you to use another IP Address
+     let rtspAddress = utils.getIpAddress();
+     if (this.config.RTSPAddress.length > 0) rtspAddress = this.config.RTSPAddress;
 
       var GetStreamUriResponse = {
         MediaUri: {
           Uri: (args.StreamSetup.Stream == "RTP-Multicast" && this.config.MulticastEnabled ? 
-            `rtsp://${utils.getIpAddress() }:${this.config.RTSPPort}/${this.config.RTSPMulticastName}` :
-            `rtsp://${utils.getIpAddress() }:${this.config.RTSPPort}/${this.config.RTSPName}`),
+            `rtsp://${rtspAddress}:${this.config.RTSPPort}/${this.config.RTSPMulticastName}` :
+            `rtsp://${rtspAddress}:${this.config.RTSPPort}/${this.config.RTSPName}`),
           InvalidAfterConnect: false,
           InvalidAfterReboot: false,
           Timeout: "PT30S"
