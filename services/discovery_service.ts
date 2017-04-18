@@ -36,9 +36,9 @@ THE SOFTWARE.
  * on the network) and so appliications need to use a Windows API to register for discovery
  * messages. There is an example of this in the ONVIF Device Manager source.
  *
- * Mac: Works. The OS claims 239.255.255.250:3702 for a process called SpotlightNetHelper
- * and the error EADDRINUSE gets reported when trying to bind to this address and port.
- * Running this code as root (sudo) seemed to work around the issue.
+ * Mac: OS 10.10 worked but only if you ran it as root. Seems that a process
+ * called SpotlightNetHelper takes the address.
+ * Mac: OS 10.11 did not work (even as root)
  * 
  */
 
@@ -59,7 +59,8 @@ class DiscoveryService {
 
   start() {
 
-    if (utils.isWindows()) {
+    if (process.platform != 'linux') {
+      utils.log.info("discovery_service not started (requires linux)");
       return;
     }
 
