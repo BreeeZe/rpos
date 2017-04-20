@@ -43,6 +43,44 @@ class PTZService extends SoapService {
   extendService() {
     var port = this.ptz_service.PTZService.PTZ;
 
+    var ptzConfiguration = {
+      attributes: {
+        token: "ptz_config_token_0"
+      },
+      Name: "PTZ Configuration",
+      UseCount: 1,
+      NodeToken: "ptz_node_token_0",
+      DefaultContinuousPanTiltVelocitySpace : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/VelocityGenericSpace',
+      DefaultContinuousZoomVelocitySpace : 'http://www.onvif.org/ver10/tptz/ZoomSpaces/VelocityGenericSpace',
+      DefaultPTZSpeed : { 
+        PanTilt : { 
+          attributes : {
+            x : 1.0,
+            y : 1.0,
+            space : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/VelocityGenericSpace'
+          }
+        },
+        Zoom : { 
+          attributes : {
+            x : 1,
+            space : 'http://www.onvif.org/ver10/tptz/ZoomSpaces/VelocityGenericSpace'
+          }
+        }
+      },
+      DefaultPTZTimeout : 'PT5S'
+    }
+        
+	port.GetConfiguration = (args) => {
+	  // ToDo. Check token and return a valid response or an error reponse
+      var GetConfigurationResponse = { PTZConfiguration: ptzConfiguration };
+      return GetConfigurationResponse;
+    };
+	
+	port.GetConfigurations = (args) => {
+      var GetConfigurationsResponse = { PTZConfiguration: ptzConfiguration };
+      return GetConfigurationsResponse;
+    };
+
     var node = { 
       attributes : {
         token : 'ptz_node_token_0',
@@ -77,6 +115,7 @@ class PTZService extends SoapService {
     }
 
     port.GetNode = (args) => {
+	  // ToDo. Check token and return a valid response or an error reponse
       var GetNodeResponse = { PTZNode: node };
       return GetNodeResponse;
     };
