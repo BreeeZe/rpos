@@ -43,6 +43,53 @@ class PTZService extends SoapService {
   extendService() {
     var port = this.ptz_service.PTZService.PTZ;
 
+    var ptzConfigurationOptions = { 
+          Spaces : { 
+              ContinuousPanTiltVelocitySpace : [{ 
+                URI : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/VelocityGenericSpace',
+                XRange : { 
+                  Min : -1,
+                  Max : 1
+                },
+                YRange : { 
+                  Min : -1,
+                  Max : 1
+                }
+              }],
+              ContinuousZoomVelocitySpace : [{ 
+                URI : 'http://www.onvif.org/ver10/tptz/ZoomSpaces/VelocityGenericSpace',
+                XRange : { 
+                  Min : -1,
+                  Max : 1
+                }
+              }],
+              PanTiltSpeedSpace : [{ 
+                URI : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/GenericSpeedSpace',
+                XRange : { 
+                  Min : 0,
+                  Max : 1
+                }
+              }],
+              ZoomSpeedSpace : [{ 
+                URI : 'http://www.onvif.org/ver10/tptz/ZoomSpaces/GenericSpeedSpace',
+                XRange : { 
+                  Min : 0,
+                  Max : 1
+                }
+              }],
+            },
+            PTZTimeout : { 
+              Min : 'PT0S',
+              Max : 'PT10S'
+            },
+          };
+
+    port.GetConfigurationOptions = (args) => {
+      // ToDo. Check token and return a valid response or an error reponse
+      var GetConfigurationOptionsResponse = { PTZConfigurationOptions: ptzConfigurationOptions };
+      return GetConfigurationOptionsResponse;
+    };
+
     var ptzConfiguration = {
       attributes: {
         token: "ptz_config_token_0"
@@ -70,13 +117,13 @@ class PTZService extends SoapService {
       DefaultPTZTimeout : 'PT5S'
     }
         
-	port.GetConfiguration = (args) => {
-	  // ToDo. Check token and return a valid response or an error reponse
+    port.GetConfiguration = (args) => {
+      // ToDo. Check token and return a valid response or an error reponse
       var GetConfigurationResponse = { PTZConfiguration: ptzConfiguration };
       return GetConfigurationResponse;
     };
 	
-	port.GetConfigurations = (args) => {
+    port.GetConfigurations = (args) => {
       var GetConfigurationsResponse = { PTZConfiguration: ptzConfiguration };
       return GetConfigurationsResponse;
     };
