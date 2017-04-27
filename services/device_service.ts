@@ -90,14 +90,49 @@ class DeviceService extends SoapService {
       return SystemRebootResponse;
     };
 
+    port.GetServices = (args /*, cb, headers*/) => {
+      // ToDo. Check value of args.IncludeCapability
+
+      var GetServicesResponse = {
+        Service : [
+        {
+          Namespace : "http://www.onvif.org/ver10/device/wsdl",
+          XAddr : `http://${utils.getIpAddress() }:${this.config.ServicePort}/onvif/device_service`,
+          Version : { 
+            Major : 2,
+            Minor : 5,
+          }
+        },
+        { 
+          Namespace : "http://www.onvif.org/ver10/media/wsdl",
+          XAddr : `http://${utils.getIpAddress() }:${this.config.ServicePort}/onvif/media_service`,
+          Version : { 
+            Major : 2,
+            Minor : 5,
+          }
+        },
+        { 
+          Namespace : "http://www.onvif.org/ver20/ptz/wsdl",
+          XAddr : `http://${utils.getIpAddress() }:${this.config.ServicePort}/onvif/ptz_service`,
+          Version : { 
+            Major : 2,
+            Minor : 5,
+          },
+        }]
+      };
+
+      return GetServicesResponse;
+    };
+
+
     port.GetCapabilities = (args /*, cb, headers*/) => {
-      var category = args.Category;
+      var category = args.Category; // Category is Optional and may be undefined
       //{ 'All', 'Analytics', 'Device', 'Events', 'Imaging', 'Media', 'PTZ' }
       var GetCapabilitiesResponse = {
         Capabilities: {}
       };
 
-      if (category == "All" || category == "Device") {
+      if (category === undefined || category == "All" || category == "Device") {
         GetCapabilitiesResponse.Capabilities["Device"] = {
           XAddr: `http://${utils.getIpAddress() }:${this.config.ServicePort}/onvif/device_service`,
           Network: {
@@ -158,7 +193,7 @@ class DeviceService extends SoapService {
           Extension: {}
         };
       }
-      if (category == "All" || category == "Events") {
+      if (category == undefined || category == "All" || category == "Events") {
         GetCapabilitiesResponse.Capabilities["Events"] = {
           XAddr: `http://${utils.getIpAddress() }:${this.config.ServicePort}/onvif/events_service`,
           WSSubscriptionPolicySupport: false,
@@ -166,7 +201,7 @@ class DeviceService extends SoapService {
           WSPausableSubscriptionManagerInterfaceSupport: false
         }
       }
-      if (category == "All" || category == "Media") {
+      if (category === undefined || category == "All" || category == "Media") {
         GetCapabilitiesResponse.Capabilities["Media"] = {
           XAddr: `http://${utils.getIpAddress() }:${this.config.ServicePort}/onvif/media_service`,
           StreamingCapabilities: {
@@ -182,7 +217,7 @@ class DeviceService extends SoapService {
           }
         }
       }
-      if (category == "All" || category == "PTZ") {
+      if (category === undefined || category == "All" || category == "PTZ") {
         GetCapabilitiesResponse.Capabilities["PTZ"] = {
           XAddr: `http://${utils.getIpAddress() }:${this.config.ServicePort}/onvif/ptz_service`
         }
