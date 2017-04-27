@@ -24,6 +24,7 @@ class PTZDriver {
   config: rposConfig;
   tenx: any;
   pelcod: any;
+  visca: any;
   serialPort: any;
   stream: any;
 
@@ -64,6 +65,9 @@ class PTZDriver {
               parent.pelcod = new PelcoD(parent.stream);
               parent.pelcod.setAddress(parent.config.PTZCameraAddress);
             }
+            if (parent.config.PTZDriver === 'visca') {
+              parent.visca = true;
+            }
             // Initialise other protocols here
           }
       });
@@ -93,6 +97,9 @@ class PTZDriver {
           parent.pelcod = new PelcoD(parent.stream);
           parent.pelcod.setAddress(parent.config.PTZCameraAddress);
         }
+        if (parent.config.PTZDriver === 'visca') {
+          parent.visca = true;
+        }
         // Initialise other protocols here
       });
 
@@ -111,25 +118,30 @@ class PTZDriver {
 // is used in a callback function.
   process_ptz_command = (command: string, data: any) => {
     if (command==='gotohome') {
-    console.log("Goto Home");
-    if (this.pelcod) this.pelcod.sendGotoPreset(1); // use preset 1 for Home
+      console.log("Goto Home");
+      if (this.pelcod) this.pelcod.sendGotoPreset(1); // use preset 1 for Home
+      if (this.visca) {
+        let data: number[] = [];
+        data.push(0x81,0x01,0x06,0x04,0xff);
+        this.stream.write(new Buffer(data));
+      }
     }
     if (command==='sethome') {
-    console.log("SetHome ");
-    if (this.pelcod) this.pelcod.sendSetPreset(1); // use preset 1 for Home
+      console.log("SetHome ");
+      if (this.pelcod) this.pelcod.sendSetPreset(1); // use preset 1 for Home
     }
     if (command==='gotopreset') {
-    console.log("Goto Preset "+ data.name + ' / ' + data.value);
-    if (this.tenx) this.tenx.fire();
-    if (this.pelcod) this.pelcod.sendGotoPreset(parseInt(data.value));
+      console.log("Goto Preset "+ data.name + ' / ' + data.value);
+      if (this.tenx) this.tenx.fire();
+      if (this.pelcod) this.pelcod.sendGotoPreset(parseInt(data.value));
     }
     if (command==='setpreset') {
-    console.log("Set Preset "+ data.name + ' / ' + data.value);
-    if (this.pelcod) this.pelcod.sendSetPreset(parseInt(data.value));
+      console.log("Set Preset "+ data.name + ' / ' + data.value);
+      if (this.pelcod) this.pelcod.sendSetPreset(parseInt(data.value));
     }
     if (command==='clearpreset') {
-    console.log("Clear Preset "+ data.name + ' / ' + data.value);
-    if (this.pelcod) this.pelcod.sendClearPreset(parseInt(data.value));
+      console.log("Clear Preset "+ data.name + ' / ' + data.value);
+      if (this.pelcod) this.pelcod.sendClearPreset(parseInt(data.value));
     }
     if (command==='aux') {
       console.log("Aux "+ data.name);
@@ -216,6 +228,60 @@ class PTZDriver {
         } catch (err) {}
 
         this.pelcod.send();
+      }
+      if (this.visca) {
+        // Map ONVIF Pan and Tilt Speed 0 to 1 to VISCA Speed 1 to 0x18
+        // Map ONVIF Zoom Speed (0 to 1) to VISCA Speed 0 to 7
+        let visca_pan_speed = ( Math.abs(p) * 0x18) / 1.0;
+        let visca_tilt_speed = ( Math.abs(t) * 0x18) / 1.0;
+        let visca_zoom_speed = ( Math.abs(z) * 0x07) / 1.0;
+
+        // rounding check. Visca Pan/Tilt to be in range 0x01 .. 0x18
+        if (visca_pan_speed === 0) visca_pan_speed = 1;
+        if (visca_tilt_speed === 0) visca_tilt_speed = 1;
+
+        if (this.config.PTZDriver === 'visca') {
+          let data: number[] = [];
+          if      (p < 0 && t > 0) { // upleft
+            data.push(0x81,0x01,0x06,0x01,visca_pan_speed,visca_zoom_speed,0x01,0x01,0xff);
+          }
+          else if (p > 0 && t > 0) { // upright
+            data.push(0x81,0x01,0x06,0x01,visca_pan_speed,visca_zoom_speed,0x02,0x01,0xff);
+          }
+          else if (p < 0 && t < 0) { // downleft;
+            data.push(0x81,0x01,0x06,0x01,visca_pan_speed,visca_zoom_speed,0x01,0x02,0xff);
+          }
+          else if (p >  0 && t < 0) { // downright;
+            data.push(0x81,0x01,0x06,0x01,visca_pan_speed,visca_zoom_speed,0x02,0x01,0xff);
+          }
+          else if (p > 0) { // right
+            data.push(0x81,0x01,0x06,0x01,visca_pan_speed,0x00,0x02,0x03,0xff);
+          }
+          else if (p < 0) { // left
+            data.push(0x81,0x01,0x06,0x01,visca_pan_speed,0x00,0x01,0x03,0xff);
+          }
+          else if (t > 0) { // up
+            data.push(0x81,0x01,0x06,0x01,0x00,visca_tilt_speed,0x03,0x01,0xff);
+          }
+          else if (t < 0) { // down
+            data.push(0x81,0x01,0x06,0x01,0x00,visca_tilt_speed,0x03,0x02,0xff);
+          }
+          else { // stop 
+            data.push(0x81,0x01,0x06,0x01,0x00,0x00,0x03,0x03,0xff);
+          }
+
+          // Zoom
+          if (z < 0) { // zoom out
+            data.push(0x81,0x01,0x04,0x07,(0x30 + visca_zoom_speed),0xff);
+          }
+          else if (z > 0) { // zoom in
+            data.push(0x81,0x01,0x04,0x07,(0x20 + visca_zoom_speed),0xff);
+          } else { // zoom stop
+            data.push(0x81,0x01,0x04,0x07,0x00,0xff);
+          }
+
+          this.stream.write(new Buffer(data));
+        }
       }
     }
   }

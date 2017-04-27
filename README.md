@@ -18,7 +18,7 @@ This version uses a patched version of the "node-soap" v0.80 library (https://gi
 - Discoverable (WS-Discovery) on Pi/Linux
 - Works with ONVIF Device Manager (Windows) and ONVIF Device Tool (Linux)
 - Works with other CCTV Viewing Software that implements the Onvif standard
-- Implements PTZ service
+- Implements PTZ service and emits PTZ commands as ASCII, Pelco D and Visca
 - Implements Relay (digital output) function
 - Supports Unicast (UDP/TDP) and Multicast using mpromonet's RTSP server
 
