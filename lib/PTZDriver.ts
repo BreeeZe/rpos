@@ -19,12 +19,17 @@
 // Opens a serial port (or network stream) and sends Pelco D commands including
 // Pan, Tilt, Zoom and Preset commands. ONVIF Home Position is mapped to Preset 1.
 
+// Pimoroni Pan-Tilt HAT Support
+// Uses the Pimoroni Pan-Tilt HAT kit for the Raspberry Pi
+// with Pan and Tilt functions
+
 class PTZDriver {
 
   config: rposConfig;
   tenx: any;
   pelcod: any;
   visca: any;
+  pan_tilt_hat: any;
   serialPort: any;
   stream: any;
 
@@ -38,10 +43,20 @@ class PTZDriver {
       PTZOutput = 'none';
     }
 
+    // Sanity checks. Do not open serial or socket if using Pan-Tilt HAT
+    if (config.PTZDriver === 'pan-tilt-hat') {
+      PTZOutput = 'none';
+    }
+
     if (config.PTZDriver === 'tenx') {
       var TenxDriver = require('./tenx_driver');
       this.tenx = new TenxDriver();
       this.tenx.open();
+    }
+
+    if (config.PTZDriver === 'pan-tilt-hat') {
+      var PanTiltHAT = require('pan-tilt-hat');
+      this.pan_tilt_hat = new PanTiltHAT();
     }
 
     if (PTZOutput === 'serial') {
@@ -124,6 +139,9 @@ class PTZDriver {
         let data: number[] = [];
         data.push(0x81,0x01,0x06,0x04,0xff);
         this.stream.write(new Buffer(data));
+      }
+      if (this.pan_tilt_hat) {
+        this.pan_tilt_hat.goto_home();
       }
     }
     if (command==='sethome') {
@@ -282,6 +300,24 @@ class PTZDriver {
 
           this.stream.write(new Buffer(data));
         }
+      }
+      if (this.pan_tilt_hat) {
+        // Map ONVIF Pan and Tilt Speed 0 to 1 to Speed 0 to 15
+        let pan_speed  = ( Math.abs(p) * 15) / 1.0;
+        let tilt_speed = ( Math.abs(t) * 15) / 1.0;
+
+        // rounding check.
+        if (pan_speed > 15) pan_speed = 15;
+        if (tilt_speed > 15) tilt_speed = 15;
+        if (pan_speed < 0) pan_speed = 0;
+        if (tilt_speed < 0) tilt_speed = 0;
+
+        if (p > 0)  this.pan_tilt_hat.pan_left(pan_speed);
+        if (p < 0)  this.pan_tilt_hat.pan_right(pan_speed);
+        if (p == 0) this.pan_tilt_hat.pan_right(0); // stop
+        if (t > 0)  this.pan_tilt_hat.tilt_down(tilt_speed);
+        if (t < 0)  this.pan_tilt_hat.tilt_up(tilt_speed);
+        if (t == 0) this.pan_tilt_hat.tilt_down(0); // stop
       }
     }
   }
