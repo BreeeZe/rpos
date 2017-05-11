@@ -10,7 +10,7 @@
   "MulticastAddress"  : "224.0.0.1",
   "MulticastPort"     : "10001",
   "RTSPServer" : 1, "RtspServerComment" : "## Select RTSP Server > 1:RPOS RTSP Server 2:V4L2 RTSP Server by mpromonet (auto selected if MulticastEnabled=true)",
-  "PTZDriver" : "none", "PTZDriverComment": "## valid values are none,tenx,pelcod and visca",
+  "PTZDriver" : "none", "PTZDriverComment": "## valid values are none,tenx,pelcod,visca and pan-tilt-hat",
   "PTZOutput" : "none", "PTZOutputComment": "## values are none (eg Tenx), serial and tcp",
   "PTZSerialPort" : "/dev/ttyUSB0",
   "PTZSerialPortSettings" : { "baudRate":2400, "dataBits":8, "parity":"none", "stopBits":1 },
