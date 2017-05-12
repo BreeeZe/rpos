@@ -1,59 +1,77 @@
 # rpos
-Raspberry Pi Onvif Server
+Node.js based ONVIF Camera/NVT service. (http://www.onvif.org) 
+Runs on a range of operating systems that support NodeJS
+with special support for the Raspberry Pi Camera and Pan-Tilt HAT
 
-Node.js based Onvif Soap service. (http://www.onvif.org) 
-
-Initial goal was to provide a Onvif Media service which is compatible with Synology Surveillance Station to allow the Pi to be used as a surveillance camera without the need for adding any custom camera files to your Synology NAS.
+#History
+The initial goal was to provide a Onvif Media service which is compatible with Synology Surveillance Station to allow the Pi to be used as a surveillance camera without the need for adding any custom camera files to your Synology NAS.
 First demo video @ https://youtu.be/ZcZbF4XOH7E
 
-The next goal (by @RogerHardiman) was to implement more of the Onvif standard so the Raspberry Pi could be used with a wide range of CCTV systems and with ONVIF Device Manager and ONVIF Device Tool.
+The next goal (by @RogerHardiman) was to implement more of the Onvif standard so that RPOS could be used with a wide range of CCTV systems and with ONVIF Device Manager and ONVIF Device Tool. Additional ONVIF Soap commands were added including the PTZ Service with backend drivers that control the Raspberry Pi Pan-Tit HAT or emit various PTZ protocols including Pelco D.
 
 This version uses a patched version of the "node-soap" v0.80 library (https://github.com/vpulim/node-soap/releases/tag/v0.8.0) located @ https://github.com/BreeeZe/node-soap
 
 #Features:
 
-- Streams H264 video over rtsp
-- Camera control (resolution and framerate) through Onvif
+- Streams H264 video over rtsp from the Raspberry Pi's camera
+- For other operating systems just run your own RTSP server for your video
+- Camera control (resolution and framerate) through Onvif 
 - Set other camera options through a web interface.
 - Discoverable (WS-Discovery) on Pi/Linux
 - Works with ONVIF Device Manager (Windows) and ONVIF Device Tool (Linux)
 - Works with other CCTV Viewing Software that implements the Onvif standard
-- Implements PTZ service and emits PTZ commands as ASCII, Pelco D and Visca
+- Implements PTZ service and controls the Pimononi Pan-Tilt HAT
+- Also emits PTZ commands as as Pelco D and Visca on a serial port (UART)
 - Implements Relay (digital output) function
 - Supports Unicast (UDP/TDP) and Multicast using mpromonet's RTSP server
+- Also runs on Mac and Windows and other Linux machines but you need to supply your own RTSP server. An exaple to use ffserver on the Mac is included.
 
-#How to:
+#How to Install on a Raspberry Pi:
 
-Install the live555 library to stream h264 video over rtsp [ source http://forum.synology.com/enu/viewtopic.php?f=82&t=69224&start=15#p289293 ] :
+STEP 1 - PI
+  Run ‘rasps-config’ and enable the camera and reboot
+ 
+STEP 2 - GET NODEJS v6 from NODESOURCE and Live555
+  curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
+  sudo apt-get install nodejs
+  sudo apt-get install liblivemedia-dev
+ 
+  ((Note, this installs npm and node-legacy))
+  ((Note, git is already installed on the Pi))
 
-	*login to your pi via ssh
-	cd /home/pi/
-	wget http://www.live555.com/liveMedia/public/live555-latest.tar.gz
-	tar xvzf live555-latest.tar.gz
-	cd live
-	./genMakefiles linux
-	make
-	#delete sources
-	cd ..
-	rm live -r -f
 
-Install nodejs on your pi (http://weworkweplay.com/play/raspberry-pi-nodejs/):
+STEP 3 - GET RPOS SOURCE (using Roger Hardiman's fork with PTZ and bug fixes)
+  git clone https://github.com/RogerHardiman/rpos.git
 
-	wget http://node-arm.herokuapp.com/node_latest_armhf.deb
-	sudo dpkg -i node_latest_armhf.deb
+STEP 4 - CD into RPOS FOLDER
+  cd rpos
 
-Download rpos release from github to your pi
-	
-XX	wget https://github.com/BreeeZe/rpos/releases/download/0.1.0/rpos-0.1.0.zip
-XX	unzip rpos-0.1.0.zip
-XX	cd rpos-0.1.0
+STEP 5 - INSTALL RPOS Dependencies
+  npm install
 
-	Check out the source from github
-	
+STEP 6 - COMPILE TYPESCRIPT TO JAVASCRIPT using local Gulp module
+  ./node_modules/gulp/bin/gulp.js
 
-Optionaly set the service port or other options in rposConfig.json
+STEP 7 - RECOMPILE the RTSP Server
+  RPOS comes with a pre-compiled ARM binary for a simple RTSP server.
+  The source in in the ‘cpp’ folder.
+  However the mpromonet RTSP server has more options and can be installed by running this script
+     sh setup_v4l2rtspserver.sh
+ 
+
+STEP 8 - EDIT CONFIG
+  Edit rposConf.json if you want to
+    Change the ONVIF Service Port (where the Web Server and SOAP service live)
+    Enable PTZ support
+    Enable multicast (and switch to the mpromonet RTSP server
+    Enable a basic ONVIF/RTSP Gateway
+
+STEP 9 - RUN (needs Root to load the camera module)
+  sudo node rpos.js
+
 
 Then you start rpos by running "sudo node rpos.js"
+
 
 #Camera settings
 You can set camera settings by browsing to : http://CameraIP:Port/
@@ -65,7 +83,7 @@ These settings are then saved in a file called v4l2ctl.json and are persisted on
 #ToDo's
 - Add authentication
 - Add MJPEG
-- Implement more ONVIF calls
-- Implement control of Pi-Pan Pan/Tilt hardware
+- Implement more ONVIF calls (PTZ Abs Position, Events, Analytics)
 - Add GPIO digital input
 - and more...
+
