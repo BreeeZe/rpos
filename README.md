@@ -62,12 +62,17 @@ STEP 7 - RECOMPILE the RTSP Server
 STEP 8 - EDIT CONFIG
   Edit rposConf.json if you want to
     Change the ONVIF Service Port (where the Web Server and SOAP service live)
-    Enable PTZ support
+    Enable PTZ support eg for the Pan-Tilt HAT or Pelco D backends
     Enable multicast (and switch to the mpromonet RTSP server
     Enable a basic ONVIF/RTSP Gateway
 
 STEP 9 - RUN (needs Root to load the camera module)
   sudo node rpos.js
+
+STEP 10 - PAN-TILT HAT (Pimononi) USERS
+  The camera on the Pan-Tilt hat is installed upside down.
+  Goto the Web Page that runs with rpos http://rpos-ip:8081
+  and tick the horizontal and vertial flip boxes and apply the changes
 
 
 Then you start rpos by running "sudo node rpos.js"
