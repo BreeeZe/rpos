@@ -1,7 +1,8 @@
 ﻿{
-  "NetworkAdapters" : ["awdl0","eth0", "en0"], 
+  "NetworkAdapters" : ["awdl0","eth0", "wlan0", "en0"], 
   "IpAddress" : "192.168.1.15",
   "ServicePort" : 8081,
+  "RTSPAddress" : "", "//":"Normally left blank. Used to set RTSP Server Address",
   "RTSPPort" : 8554,
   "RTSPName" : "h264",
   "MulticastEnabled"  : false,
@@ -9,11 +10,17 @@
   "MulticastAddress"  : "224.0.0.1",
   "MulticastPort"     : "10001",
   "RTSPServer" : 1, "RtspServerComment" : "## Select RTSP Server > 1:RPOS RTSP Server 2:V4L2 RTSP Server by mpromonet (auto selected if MulticastEnabled=true)",
+  "PTZDriver" : "none", "PTZDriverComment": "## valid values are none,tenx,pelcod,visca and pan-tilt-hat",
+  "PTZOutput" : "none", "PTZOutputComment": "## values are none (eg Tenx), serial and tcp",
+  "PTZSerialPort" : "/dev/ttyUSB0",
+  "PTZSerialPortSettings" : { "baudRate":2400, "dataBits":8, "parity":"none", "stopBits":1 },
+  "PTZOutputURL": "127.0.0.1:9999",
+  "PTZCameraAddress": 1,
   "DeviceInformation" : {
     "Manufacturer" : "Raspberry Pi",
     "Model" : "2 B",
     "HardwareId" : ""
   },
-  "logLevel" : 4, "logLevelComment": "## LogLevels are > 1:Error 2:Warning 3:Info 4:Debug",
+  "logLevel" : 3, "logLevelComment": "## LogLevels are > 1:Error 2:Warning 3:Info 4:Debug",
   "logSoapCalls" : false
 }

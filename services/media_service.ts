@@ -168,13 +168,41 @@ class MediaService extends SoapService {
       Options: []
     };
 
+    var ptzConfiguration = {
+      attributes: {
+        token: "ptz_config_token_0"
+      },
+      Name: "PTZ Configuration",
+      UseCount: 1,
+      NodeToken: "ptz_node_token_0",
+      DefaultContinuousPanTiltVelocitySpace : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/VelocityGenericSpace',
+      DefaultContinuousZoomVelocitySpace : 'http://www.onvif.org/ver10/tptz/ZoomSpaces/VelocityGenericSpace',
+      DefaultPTZSpeed : { 
+        PanTilt : { 
+          attributes : {
+            x : 1.0,
+            y : 1.0,
+            space : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/VelocityGenericSpace'
+          }
+        },
+        Zoom : { 
+          attributes : {
+            x : 1,
+            space : 'http://www.onvif.org/ver10/tptz/ZoomSpaces/VelocityGenericSpace'
+          }
+        }
+      },
+      DefaultPTZTimeout : 'PT5S'
+    }
+
     var profile = {
       Name: "CurrentProfile",
       attributes: {
         token: "token"
       },
       VideoSourceConfiguration: videoSourceConfiguration,
-      VideoEncoderConfiguration: videoEncoderConfiguration
+      VideoEncoderConfiguration: videoEncoderConfiguration,
+      PTZConfiguration: ptzConfiguration
     };
 
     port.GetServiceCapabilities = (args /*, cb, headers*/) => {
@@ -214,13 +242,16 @@ class MediaService extends SoapService {
     //};
     port.GetStreamUri = (args /*, cb, headers*/) => {
 
-     let stream = args.StreamSetup.Stream;
+     // Usually RTSP server is on same IP Address as the ONVIF Service
+     // Setting RTSPAddress in the config file lets you to use another IP Address
+     let rtspAddress = utils.getIpAddress();
+     if (this.config.RTSPAddress.length > 0) rtspAddress = this.config.RTSPAddress;
 
       var GetStreamUriResponse = {
         MediaUri: {
           Uri: (args.StreamSetup.Stream == "RTP-Multicast" && this.config.MulticastEnabled ? 
-            `rtsp://${utils.getIpAddress() }:${this.config.RTSPPort}/${this.config.RTSPMulticastName}` :
-            `rtsp://${utils.getIpAddress() }:${this.config.RTSPPort}/${this.config.RTSPName}`),
+            `rtsp://${rtspAddress}:${this.config.RTSPPort}/${this.config.RTSPMulticastName}` :
+            `rtsp://${rtspAddress}:${this.config.RTSPPort}/${this.config.RTSPName}`),
           InvalidAfterConnect: false,
           InvalidAfterReboot: false,
           Timeout: "PT30S"
