@@ -92,3 +92,6 @@ These settings are then saved in a file called v4l2ctl.json and are persisted on
 - Add GPIO digital input
 - and more...
 
+#rpos-gateway
+There is another project on github that is based on RPOS. It provides a simple ONVIF Gateway which delivers up RTSP addresses to ONVIF viewing software. https://github.com/kristian/rpos-gateway
+
