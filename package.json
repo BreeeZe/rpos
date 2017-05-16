@@ -24,7 +24,7 @@
     "xml2js":"0.4.16",
     "tenx-usb-missile-launcher-driver":"^0.2.0",
     "node-pelcod":"^0.2.0",
-    "pan-tilt-hat":"^1.0.0",
+    "pan-tilt-hat":"^1.1.0",
     "serialport":"^4.0.1",
     "ip":"^1.1.3"
   },
