@@ -312,11 +312,11 @@ class PTZDriver {
         if (pan_speed < 0) pan_speed = 0;
         if (tilt_speed < 0) tilt_speed = 0;
 
-        if (p > 0)  this.pan_tilt_hat.pan_left(pan_speed);
-        if (p < 0)  this.pan_tilt_hat.pan_right(pan_speed);
+        if (p < 0)  this.pan_tilt_hat.pan_left(pan_speed);
+        if (p > 0)  this.pan_tilt_hat.pan_right(pan_speed);
         if (p == 0) this.pan_tilt_hat.pan_right(0); // stop
-        if (t > 0)  this.pan_tilt_hat.tilt_down(tilt_speed);
-        if (t < 0)  this.pan_tilt_hat.tilt_up(tilt_speed);
+        if (t < 0)  this.pan_tilt_hat.tilt_down(tilt_speed);
+        if (t > 0)  this.pan_tilt_hat.tilt_up(tilt_speed);
         if (t == 0) this.pan_tilt_hat.tilt_down(0); // stop
       }
     }
