@@ -1,32 +1,32 @@
 # rpos
 Node.js based ONVIF Camera/NVT service. (http://www.onvif.org) 
-Runs on a range of operating systems that support NodeJS
-with special support for the Raspberry Pi Camera and Pan-Tilt HAT
+Runs on a range of operating systems that support NodeJS with special support for the Raspberry Pi, the Pi Camera and the Pimoroni Pan-Tilt HAT.
 
-#History
-The initial goal was to provide a Onvif Media service which is compatible with Synology Surveillance Station to allow the Pi to be used as a surveillance camera without the need for adding any custom camera files to your Synology NAS.
+## History
+The initial goal (by @BreeeZe) was to provide a Onvif Media service which was compatible with Synology Surveillance Station to allow the Pi to be used as a surveillance camera without the need for adding any custom camera files to your Synology NAS.
 First demo video @ https://youtu.be/ZcZbF4XOH7E
 
-The next goal (by @RogerHardiman) was to implement more of the Onvif standard so that RPOS could be used with a wide range of CCTV systems and with ONVIF Device Manager and ONVIF Device Tool. Additional ONVIF Soap commands were added including the PTZ Service with backend drivers that control the Raspberry Pi Pan-Tit HAT or emit various PTZ protocols including Pelco D.
+The next goal (by @RogerHardiman) was to implement more of the Onvif standard so that RPOS could be used with a wide range of CCTV systems and with ONVIF Device Manager and ONVIF Device Tool and to ensure SOAP messages were validated against the WSDL. Additional ONVIF Soap commands were added including the PTZ Service with backend drivers that control the Raspberry Pi Pan-Tit HAT made by Pimoroni or emit various PTZ protocols including Pelco D.
 
+## node-soap
 This version uses a patched version of the "node-soap" v0.80 library (https://github.com/vpulim/node-soap/releases/tag/v0.8.0) located @ https://github.com/BreeeZe/node-soap
 
-#Features:
-
-- Streams H264 video over rtsp from the Raspberry Pi's camera
+## Features:
+- ONVIF compatible Service to deliver live video to CCTV viewing software
+- Streams H264 video over rtsp from the Raspberry Pi's camera (hardware h264 encoding)
 - For other operating systems just run your own RTSP server for your video
-- Camera control (resolution and framerate) through Onvif 
-- Set other camera options through a web interface.
+- Pi Camera control (resolution and framerate) through Onvif 
+- Set other Pi camera options through a web interface.
 - Discoverable (WS-Discovery) on Pi/Linux
+- Supports Unicast (UDP/TDP) and Multicast using mpromonet's RTSP server
 - Works with ONVIF Device Manager (Windows) and ONVIF Device Tool (Linux)
 - Works with other CCTV Viewing Software that implements the Onvif standard
 - Implements PTZ service and controls the Pimononi Pan-Tilt HAT
 - Also emits PTZ commands as as Pelco D and Visca on a serial port (UART)
 - Implements Relay (digital output) function
-- Supports Unicast (UDP/TDP) and Multicast using mpromonet's RTSP server
-- Also runs on Mac and Windows and other Linux machines but you need to supply your own RTSP server. An exaple to use ffserver on the Mac is included.
+- On Mac and Windows and other Linux machines you need to run your own RTSP server. An exaple to use ffserver on the Mac with the Macbook Camera is included.
 
-#How to Install on a Raspberry Pi:
+## How to Install on a Raspberry Pi:
 
 STEP 1 - PI
   Run ‘rasps-config’ and enable the camera and reboot
@@ -58,7 +58,6 @@ STEP 7 - RECOMPILE the RTSP Server
   However the mpromonet RTSP server has more options and can be installed by running this script
      sh setup_v4l2rtspserver.sh
  
-
 STEP 8 - EDIT CONFIG
   Edit rposConf.json if you want to
     Change the ONVIF Service Port (where the Web Server and SOAP service live)
@@ -76,22 +75,24 @@ STEP 10 - PAN-TILT HAT (Pimononi) USERS
 
 
 Then you start rpos by running "sudo node rpos.js"
+sudo is neeeded as rpos loads the Broadcom Raspberry Pi camera drivers
 
 
-#Camera settings
+## Camera settings
 You can set camera settings by browsing to : http://CameraIP:Port/
 These settings are then saved in a file called v4l2ctl.json and are persisted on rpos restart.
 
-#Known Issues
+## Known Issues
 - 1920x1080 can cause hangs and crashes.
 
-#ToDo's
+## ToDo's
 - Add authentication
 - Add MJPEG
+- Test against ONVIF's own comformance tools
 - Implement more ONVIF calls (PTZ Abs Position, Events, Analytics)
 - Add GPIO digital input
 - and more...
 
-#rpos-gateway
+## rpos-gateway
 There is another project on github that is based on RPOS. It provides a simple ONVIF Gateway which delivers up RTSP addresses to ONVIF viewing software. https://github.com/kristian/rpos-gateway
 
