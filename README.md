@@ -3,17 +3,17 @@ Node.js based ONVIF Camera/NVT service. (http://www.onvif.org)
 Runs on a range of operating systems that support NodeJS
 with special support for the Raspberry Pi Camera and Pan-Tilt HAT
 
-#History
-The initial goal was to provide a Onvif Media service which is compatible with Synology Surveillance Station to allow the Pi to be used as a surveillance camera without the need for adding any custom camera files to your Synology NAS.
+## History
+The initial goal (by @BreeeZe) was to provide a Onvif Media service which is compatible with Synology Surveillance Station to allow the Pi to be used as a surveillance camera without the need for adding any custom camera files to your Synology NAS.
 First demo video @ https://youtu.be/ZcZbF4XOH7E
 
 The next goal (by @RogerHardiman) was to implement more of the Onvif standard so that RPOS could be used with a wide range of CCTV systems and with ONVIF Device Manager and ONVIF Device Tool. Additional ONVIF Soap commands were added including the PTZ Service with backend drivers that control the Raspberry Pi Pan-Tit HAT or emit various PTZ protocols including Pelco D.
 
 This version uses a patched version of the "node-soap" v0.80 library (https://github.com/vpulim/node-soap/releases/tag/v0.8.0) located @ https://github.com/BreeeZe/node-soap
 
-#Features:
-
+## Features:
 - Streams H264 video over rtsp from the Raspberry Pi's camera
+- Uses hardware H264 encoding (on the Pi)
 - For other operating systems just run your own RTSP server for your video
 - Camera control (resolution and framerate) through Onvif 
 - Set other camera options through a web interface.
@@ -26,7 +26,7 @@ This version uses a patched version of the "node-soap" v0.80 library (https://gi
 - Supports Unicast (UDP/TDP) and Multicast using mpromonet's RTSP server
 - Also runs on Mac and Windows and other Linux machines but you need to supply your own RTSP server. An exaple to use ffserver on the Mac is included.
 
-#How to Install on a Raspberry Pi:
+## How to Install on a Raspberry Pi:
 
 STEP 1 - PI
   Run ‘rasps-config’ and enable the camera and reboot
@@ -38,7 +38,6 @@ STEP 2 - GET NODEJS v6 from NODESOURCE and Live555
  
   ((Note, this installs npm and node-legacy))
   ((Note, git is already installed on the Pi))
-
 
 STEP 3 - GET RPOS SOURCE (using Roger Hardiman's fork with PTZ and bug fixes)
   git clone https://github.com/RogerHardiman/rpos.git
@@ -58,7 +57,6 @@ STEP 7 - RECOMPILE the RTSP Server
   However the mpromonet RTSP server has more options and can be installed by running this script
      sh setup_v4l2rtspserver.sh
  
-
 STEP 8 - EDIT CONFIG
   Edit rposConf.json if you want to
     Change the ONVIF Service Port (where the Web Server and SOAP service live)
@@ -74,24 +72,25 @@ STEP 10 - PAN-TILT HAT (Pimononi) USERS
   Goto the Web Page that runs with rpos http://rpos-ip:8081
   and tick the horizontal and vertial flip boxes and apply the changes
 
-
 Then you start rpos by running "sudo node rpos.js"
-
+sudo is required so the broadcom driver fort the camera can load.
 
 #Camera settings
 You can set camera settings by browsing to : http://CameraIP:Port/
 These settings are then saved in a file called v4l2ctl.json and are persisted on rpos restart.
 
-#Known Issues
+## Known Issues
 - 1920x1080 can cause hangs and crashes.
+- Not all of the ONVIF standard is implemented
 
-#ToDo's
+## ToDo's
 - Add authentication
 - Add MJPEG
 - Implement more ONVIF calls (PTZ Abs Position, Events, Analytics)
+- Test with ONVIF's own test tools (need a sponsor for this)
 - Add GPIO digital input
 - and more...
 
-#rpos-gateway
+## rpos-gateway
 There is another project on github that is based on RPOS. It provides a simple ONVIF Gateway which delivers up RTSP addresses to ONVIF viewing software. https://github.com/kristian/rpos-gateway
 
