@@ -141,11 +141,15 @@ class Camera {
   }
 
   loadDriver() {
-    utils.execSync("sudo modprobe bcm2835-v4l2");
+      try {
+          utils.execSync("sudo modprobe bcm2835-v4l2"); // only on PI
+      } catch (err) {}
   }
   
   unloadDriver(){
-    utils.execSync("sudo modprobe -r bcm2835-v4l2");
+      try {
+          utils.execSync("sudo modprobe -r bcm2835-v4l2");
+      } catch (err) {}
   }
 
   setupCamera() {

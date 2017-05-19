@@ -94,6 +94,10 @@ export module Utils {
       return /^win/.test(process.platform) || /^darwin/.test(process.platform);
     }
 
+    static isWindows() {
+      return /^win/.test(process.platform);
+    }
+    
     static log = {
       level: logLevel.Error,
       error(message: string, ...args) {
