@@ -41,8 +41,8 @@ STEP 2 - GET NODEJS v6 from NODESOURCE and Live555
   ((Note, this installs npm and node-legacy))
   ((Note, git is already installed on the Pi))
 
-STEP 3 - GET RPOS SOURCE (using Roger Hardiman's fork with PTZ and bug fixes)
-```  git clone https://github.com/RogerHardiman/rpos.git```
+STEP 3 - GET RPOS SOURCE
+```  git clone https://github.com/BreeeZe/rpos.git```
 
 STEP 4 - CD into RPOS FOLDER
 ```  cd rpos```
