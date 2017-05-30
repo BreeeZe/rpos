@@ -32,30 +32,32 @@ STEP 1 - PI
   Run ‘rasps-config’ and enable the camera and reboot
  
 STEP 2 - GET NODEJS v6 from NODESOURCE and Live555
+```
   curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
   sudo apt-get install nodejs
   sudo apt-get install liblivemedia-dev
+```
  
   ((Note, this installs npm and node-legacy))
   ((Note, git is already installed on the Pi))
 
 STEP 3 - GET RPOS SOURCE (using Roger Hardiman's fork with PTZ and bug fixes)
-  git clone https://github.com/RogerHardiman/rpos.git
+```  git clone https://github.com/RogerHardiman/rpos.git```
 
 STEP 4 - CD into RPOS FOLDER
-  cd rpos
+```  cd rpos```
 
 STEP 5 - INSTALL RPOS Dependencies
-  npm install
+```  npm install```
 
 STEP 6 - COMPILE TYPESCRIPT TO JAVASCRIPT using local Gulp module
-  ./node_modules/gulp/bin/gulp.js
+```  ./node_modules/gulp/bin/gulp.js```
 
 STEP 7 - RECOMPILE the RTSP Server
   RPOS comes with a pre-compiled ARM binary for a simple RTSP server.
   The source in in the ‘cpp’ folder.
   However the mpromonet RTSP server has more options and can be installed by running this script
-     sh setup_v4l2rtspserver.sh
+```     sh setup_v4l2rtspserver.sh```
  
 STEP 8 - EDIT CONFIG
   Edit rposConf.json if you want to
@@ -65,14 +67,14 @@ STEP 8 - EDIT CONFIG
     Enable a basic ONVIF/RTSP Gateway
 
 STEP 9 - RUN (needs Root to load the camera module)
-  sudo node rpos.js
+```  sudo node rpos.js```
 
 STEP 10 - PAN-TILT HAT (Pimononi) USERS
   The camera on the Pan-Tilt hat is installed upside down.
   Goto the Web Page that runs with rpos http://rpos-ip:8081
   and tick the horizontal and vertial flip boxes and apply the changes
 
-Then you start rpos by running "sudo node rpos.js"
+Then you start rpos by running ```sudo node rpos.js```
 sudo is required so the broadcom driver fort the camera can load.
 
 #Camera settings
