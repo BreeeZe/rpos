@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/RogerHardiman/rpos.git"
+    "url": "https://github.com/Breeeze/rpos.git"
   },
   "dependencies": {
     "soap": "git://github.com/BreeeZe/node-soap.git",
@@ -26,7 +26,7 @@
     "node-pelcod":"^0.2.0",
     "pan-tilt-hat":"^1.1.0",
     "serialport":"^4.0.1",
-    "ip":"^1.1.3"
+    "ip":"^1.1.5"
   },
   "devDependencies": {
     "gulp": "^3.9.1",
