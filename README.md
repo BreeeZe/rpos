@@ -12,19 +12,19 @@ The next goal (by @RogerHardiman) was to implement more of the Onvif standard so
 This version uses a patched version of the "node-soap" v0.80 library (https://github.com/vpulim/node-soap/releases/tag/v0.8.0) located @ https://github.com/BreeeZe/node-soap
 
 ## Features:
-- Streams H264 video over rtsp from the Raspberry Pi's camera
+- Streams H264 video over rtsp from the Official Raspberry Pi camera (the one that uses the ribbon cable)
 - Uses hardware H264 encoding (on the Pi)
-- For other operating systems just run your own RTSP server for your video
 - Camera control (resolution and framerate) through Onvif 
 - Set other camera options through a web interface.
 - Discoverable (WS-Discovery) on Pi/Linux
 - Works with ONVIF Device Manager (Windows) and ONVIF Device Tool (Linux)
 - Works with other CCTV Viewing Software that implements the Onvif standard
-- Implements PTZ service and controls the Pimononi Pan-Tilt HAT
-- Also emits PTZ commands as as Pelco D and Visca on a serial port (UART)
+- Implements PTZ service and controls the Pimononi Raspberry Pi Pan-Tilt HAT
+- Also emits PTZ commands as as Pelco D and Visca on a serial port (UART) for other Pan/Tilt platforms
 - Implements Relay (digital output) function
 - Supports Unicast (UDP/TDP) and Multicast using mpromonet's RTSP server
 - Also runs on Mac and Windows and other Linux machines but you need to supply your own RTSP server. An exaple to use ffserver on the Mac is included.
+- Currently does not support USB cameras (see Todo List)
 
 ## How to Install on a Raspberry Pi:
 
@@ -88,6 +88,7 @@ These settings are then saved in a file called v4l2ctl.json and are persisted on
 ## ToDo's
 - Add authentication
 - Add MJPEG
+- Support USB cameras with the Pi's Hardware H264 encoder (OMX) (see https://github.com/mpromonet/v4l2tools)
 - Implement more ONVIF calls (PTZ Abs Position, Events, Analytics)
 - Test with ONVIF's own test tools (need a sponsor for this)
 - Add GPIO digital input
