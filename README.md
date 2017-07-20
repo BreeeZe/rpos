@@ -26,6 +26,10 @@ This version uses a patched version of the "node-soap" v0.80 library (https://gi
 - Also runs on Mac and Windows and other Linux machines but you need to supply your own RTSP server. An exaple to use ffserver on the Mac is included.
 - Currently does not support USB cameras (see Todo List)
 
+![Picture of RPOS running on a Pi with the PanTiltHAT and Pi Camera](RPOS_PanTiltHAT.jpg?raw=true "PanTiltHAT")
+Picture of RPOS running on a Pi 3 with the PiMoroni PanTiltHAT and Official Pi Camera
+
+
 ## How to Install on a Raspberry Pi:
 
 STEP 1 - PI
