@@ -17,15 +17,15 @@
   },
   "dependencies": {
     "soap": "git://github.com/BreeeZe/node-soap.git",
-    "cli-color": "1.0.0",
-    "express": "4.12.3",
-    "body-parser": "1.12.3",
-    "node-uuid": "1.4.7",
-    "xml2js":"0.4.16",
+    "cli-color": "1.2.0",
+    "express": "4.16.2",
+    "body-parser": "1.18.2",
+    "node-uuid": "1.4.8",
+    "xml2js":"0.4.19",
     "tenx-usb-missile-launcher-driver":"^0.2.0",
-    "node-pelcod":"^0.2.0",
+    "node-pelcod":"^0.3.0",
     "pan-tilt-hat":"^1.1.0",
-    "serialport":"^4.0.1",
+    "serialport":"^6.0.4",
     "ip":"^1.1.5"
   },
   "devDependencies": {
