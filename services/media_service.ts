@@ -8,11 +8,14 @@ import url = require('url');
 import { Server } from 'http';
 import Camera = require('../lib/camera');
 import { v4l2ctl } from '../lib/v4l2ctl';
+import { exec } from 'child_process';
 var utils = Utils.utils;
 
 class MediaService extends SoapService {
   media_service: any;
   camera: Camera;
+  ffmpeg_process: any = null;
+  ffmpeg_responses: any[] = [];
 
   constructor(config: rposConfig, server: Server, camera: Camera) {
     super(config, server);
@@ -41,16 +44,23 @@ class MediaService extends SoapService {
       var uri = url.parse(request.url, true);
       var action = uri.pathname;
       if (action == '/web/snapshot.jpg') {
-        try {
-          var img = fs.readFileSync('/dev/shm/snapshot.jpg');
-          response.writeHead(200, { 'Content-Type': 'image/jpg' });
-          response.end(img, 'binary');
-        } catch (err) {
-          utils.log.debug("Error opening snapshot : %s", err);
-          var img = fs.readFileSync('web/snapshot.jpg');
-          response.writeHead(200, { 'Content-Type': 'image/jpg' });
-          response.end(img, 'binary');
-
+        if (this.ffmpeg_process != null) {
+          utils.log.info("ffmpeg - already running");
+          this.ffmpeg_responses.push(response);
+        } else {
+          var cmd = 'ffmpeg -fflags nobuffer -probesize 256 -rtsp_transport tcp -i rtsp://127.0.0.1:8554/h264 -vframes 1  -r 1 -s 640x360 -y /dev/shm/snapshot.jpg';
+          var options = { timeout: 15000 };
+          utils.log.info("ffmpeg - starting");
+          this.ffmpeg_responses.push(response);
+          this.ffmpeg_process = exec(cmd,options,(error,stdout,stderr) => {
+            // callback
+            utils.log.info("ffmpeg - finished");
+            if (error) {
+              utils.log.warn('ffmpeg exec error: %s',error);
+            }
+            this.ffmpeg_responses.forEach( (response) => { this.deliver_jpg(response); } );
+            this.ffmpeg_process = null;
+          });
         }
       } else {
         for (var i = 0, len = listeners.length; i < len; i++) {
@@ -58,6 +68,19 @@ class MediaService extends SoapService {
         }
       }
     });
+  }
+
+  deliver_jpg(response: any){
+    try {
+      var img = fs.readFileSync('/dev/shm/snapshot.jpg');
+      response.writeHead(200, { 'Content-Type': 'image/jpg' });
+      response.end(img, 'binary');
+    } catch (err) {
+      utils.log.debug("Error opening snapshot : %s", err);
+      var img = fs.readFileSync('web/snapshot.jpg');
+      response.writeHead(200, { 'Content-Type': 'image/jpg' });
+      response.end(img, 'binary');
+    }
   }
 
   started() {
@@ -209,7 +232,7 @@ class MediaService extends SoapService {
       var GetServiceCapabilitiesResponse = {
         Capabilities: {
           attributes: {
-            SnapshotUri: false,
+            SnapshotUri: true,
             Rotation: false,
             VideoSourceMode: true,
             OSD: false
