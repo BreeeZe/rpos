@@ -429,6 +429,17 @@ class DeviceService extends SoapService {
       return SetRelayOutputStateResponse;
     };
 
+    port.GetUsers = (args /*, cb, headers*/) => {
+      var GetUsersResponse = {
+//        User : [{
+//          Username : '',
+//          Password : '',
+//          UserLevel : 'Administrator',
+//        }]
+      };
+      return GetUsersResponse;
+    }
+
 
   }
 }
