@@ -8,6 +8,8 @@
 			"name": "Launch rpos",
 			// Type of configuration. Possible values: "node", "mono".
 			"type": "node",
+			// Request type
+			"request": "launch",
 			// Workspace relative or absolute path to the program.
 			"program": "${workspaceRoot}/rpos.js",
 			// Automatically stop program after launch.
