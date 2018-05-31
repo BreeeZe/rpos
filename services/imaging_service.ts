@@ -330,6 +330,37 @@ class ImagingService extends SoapService {
         return SetImagingSettingsResponse;
       };
 
+        //var Move = { 
+        //VideoSourceToken : { xs:string},
+        //Focus : { 
+          //Absolute : { 
+            //Position : { xs:float},
+            //Speed : { xs:float}
+          //},
+          //Relative : { 
+            //Distance : { xs:float},
+            //Speed : { xs:float}
+          //},
+          //Continuous : { 
+            //Speed : { xs:float}
+          //}
+        //}
+      //
+      //};
+      port.Move = (args) => {
+        var MoveResponse = { };
+        return MoveResponse;
+      };
+
+      //var Stop = { 
+      //VideoSourceToken : { xs:string}
+      //
+      //};
+      port.Stop = (args) => {
+        var StopResponse = { };
+        return StopResponse;
+      };
+
   }
 }
 export = ImagingService;
