@@ -1,7 +1,6 @@
 # rpos
-Node.js based ONVIF Camera/NVT service. (http://www.onvif.org) 
-Runs on a range of operating systems that support NodeJS
-with special support for the Raspberry Pi Camera and Pan-Tilt HAT
+Node.js based ONVIF Camera/NVT service that implements parts of Profile S and parts of Profile T (http://www.onvif.org) 
+Runs on a range of operating systems that support NodeJS with special support for the Raspberry Pi Camera and Pan-Tilt HAT
 
 ## History
 The initial goal (by @BreeeZe) was to provide a Onvif Media service which is compatible with Synology Surveillance Station to allow the Pi to be used as a surveillance camera without the need for adding any custom camera files to your Synology NAS.
@@ -14,16 +13,16 @@ This version uses a patched version of the "node-soap" v0.80 library (https://gi
 ## Features:
 - Streams H264 video over rtsp from the Official Raspberry Pi camera (the one that uses the ribbon cable)
 - Uses hardware H264 encoding (on the Pi)
-- Camera control (resolution and framerate) through Onvif 
+- Camera control (resolution and framerate) through ONVIF 
 - Set other camera options through a web interface.
 - Discoverable (WS-Discovery) on Pi/Linux
 - Works with ONVIF Device Manager (Windows) and ONVIF Device Tool (Linux)
-- Works with other CCTV Viewing Software that implements the Onvif standard
+- Works with other CCTV Viewing Software that implements the ONVIF standard including Milestone and Bosch BVMS
 - Implements PTZ service and controls the Pimononi Raspberry Pi Pan-Tilt HAT
 - Also emits PTZ commands as as Pelco D and Visca on a serial port (UART) for other Pan/Tilt platforms
 - Implements Relay (digital output) function
 - Supports Unicast (UDP/TDP) and Multicast using mpromonet's RTSP server
-- Also runs on Mac and Windows and other Linux machines but you need to supply your own RTSP server. An exaple to use ffserver on the Mac is included.
+- Also runs on Mac and Windows and other Linux machines but you need to supply your own RTSP server. An example to use ffserver on the Mac is included.
 - Currently does not support USB cameras (see Todo List)
 
 ![Picture of RPOS running on a Pi with the PanTiltHAT and Pi Camera](RPOS_PanTiltHAT.jpg?raw=true "PanTiltHAT")
@@ -94,7 +93,7 @@ These settings are then saved in a file called v4l2ctl.json and are persisted on
 - Add MJPEG
 - Support USB cameras with the Pi's Hardware H264 encoder (OMX) (see https://github.com/mpromonet/v4l2tools)
 - Implement more ONVIF calls (PTZ Abs Position, Events, Analytics)
-- Test with ONVIF's own test tools (need a sponsor for this)
+- Test with ONVIF's own test tools (need a sponsor for this as we do not have funds to buy it)
 - Add GPIO digital input
 - and more...
 
