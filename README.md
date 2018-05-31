@@ -20,6 +20,7 @@ This version uses a patched version of the "node-soap" v0.80 library (https://gi
 - Works with other CCTV Viewing Software that implements the ONVIF standard including Milestone and Bosch BVMS
 - Implements PTZ service and controls the Pimononi Raspberry Pi Pan-Tilt HAT
 - Also emits PTZ commands as as Pelco D and Visca on a serial port (UART) for other Pan/Tilt platforms
+- Implements Imaging service Brightness and Focus commands (for Profile T)
 - Implements Relay (digital output) function
 - Supports Unicast (UDP/TDP) and Multicast using mpromonet's RTSP server
 - Also runs on Mac and Windows and other Linux machines but you need to supply your own RTSP server. An example to use ffserver on the Mac is included.
