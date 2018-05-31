@@ -144,24 +144,24 @@ class PTZDriver {
         this.pan_tilt_hat.goto_home();
       }
     }
-    if (command==='sethome') {
+    else if (command==='sethome') {
       console.log("SetHome ");
       if (this.pelcod) this.pelcod.sendSetPreset(1); // use preset 1 for Home
     }
-    if (command==='gotopreset') {
+    else if (command==='gotopreset') {
       console.log("Goto Preset "+ data.name + ' / ' + data.value);
       if (this.tenx) this.tenx.fire();
       if (this.pelcod) this.pelcod.sendGotoPreset(parseInt(data.value));
     }
-    if (command==='setpreset') {
+    else if (command==='setpreset') {
       console.log("Set Preset "+ data.name + ' / ' + data.value);
       if (this.pelcod) this.pelcod.sendSetPreset(parseInt(data.value));
     }
-    if (command==='clearpreset') {
+    else if (command==='clearpreset') {
       console.log("Clear Preset "+ data.name + ' / ' + data.value);
       if (this.pelcod) this.pelcod.sendClearPreset(parseInt(data.value));
     }
-    if (command==='aux') {
+    else if (command==='aux') {
       console.log("Aux "+ data.name);
       if (this.pelcod) {
         if (data.name === 'AUX1on') this.pelcod.sendSetAux(1);
@@ -182,13 +182,13 @@ class PTZDriver {
         if (data.name === 'AUX8off') this.pelcod.sendClearAux(8);
       }
     }
-    if (command==='relayactive') {
+    else if (command==='relayactive') {
       console.log("Relay Active "+ data.name);
     }
-    if (command==='relayinactive') {
+    else if (command==='relayinactive') {
       console.log("Relay Inactive "+ data.name);
     }
-    if (command==='ptz') {
+    else if (command==='ptz') {
       console.log("PTZ "+ data.pan + ' ' + data.tilt + ' ' + data.zoom);
       var p=0.0;
       var t=0.0;
@@ -319,6 +319,8 @@ class PTZDriver {
         if (t > 0)  this.pan_tilt_hat.tilt_up(tilt_speed);
         if (t == 0) this.pan_tilt_hat.tilt_down(0); // stop
       }
+    } else {
+      console.log("Unhandled PTZ/Imaging Command Received: " + command);
     }
   }
 }
