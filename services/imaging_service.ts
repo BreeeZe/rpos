@@ -352,7 +352,7 @@ class ImagingService extends SoapService {
 
         if (args.Focus) {
           if (args.Focus.Continuous) {
-            if (this.callback) this.callback('focus', args.Focus.Continuous.Speed);
+            if (this.callback) this.callback('focus', {value: args.Focus.Continuous.Speed});
           }
         }
 
