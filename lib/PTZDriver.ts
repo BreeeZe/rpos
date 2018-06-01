@@ -1,8 +1,10 @@
 ///<reference path="../typings/main.d.ts"/>
 ///<reference path="../rpos.d.ts"/>
 
+import { v4l2ctl } from "./v4l2ctl";
+
 // PTZDriver for RPOS (Raspberry Pi ONVIF Server)
-// (c) 2016, 2017 Roger Hardiman
+// (c) 2016, 2017, 2018 Roger Hardiman
 // MIT License
 //
 // This code processes the ONVIF Pan/Tilt/Zoom messages and generates a CCTV
@@ -22,6 +24,8 @@
 // Pimoroni Pan-Tilt HAT Support
 // Uses the Pimoroni Pan-Tilt HAT kit for the Raspberry Pi
 // with Pan and Tilt functions
+
+// For Imaging Service, commands are sent through to the V4L2 interface
 
 class PTZDriver {
 
@@ -319,8 +323,16 @@ class PTZDriver {
         if (t > 0)  this.pan_tilt_hat.tilt_up(tilt_speed);
         if (t == 0) this.pan_tilt_hat.tilt_down(0); // stop
       }
+    }
+    else if (command==='brightness') {
+      console.log("Set Brightness "+ data.value);
+      v4l2ctl.SetBrightness(data.value);
     } else {
-      console.log("Unhandled PTZ/Imaging Command Received: " + command);
+      if (!data.value) {
+        console.log("Unhandled PTZ/Imaging Command Received: " + command);
+      } else {
+        console.log("Unhandled PTZ/Imaging Command Received: " + command + ' Value:' + data.value);
+      }
     }
   }
 }

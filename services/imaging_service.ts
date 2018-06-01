@@ -305,24 +305,24 @@ class ImagingService extends SoapService {
           if (args.ImagingSettings.Brightness) {
             this.brightness = args.ImagingSettings.Brightness;
             // emit the 'brightness' message to the parent
-            if (this.callback) this.callback('brightness', this.brightness);
+            if (this.callback) this.callback('brightness', {value: this.brightness});
           }
           if (args.ImagingSettings.Focus) {
             if (args.ImagingSettings.Focus.AutoFocusMode) {
               this.autoFocusMode = args.ImagingSettings.Focus.AutoFocusMode;
-              if (this.callback) this.callback('focusmode', this.autoFocusMode);
+              if (this.callback) this.callback('focusmode', {value: this.autoFocusMode});
             }
             if (args.ImagingSettings.Focus.DefaultSpeed) {
               this.focusDefaultSpeed = args.ImagingSettings.Focus.DefaultSpeed;
-              if (this.callback) this.callback('focusdefaultspeed', this.focusDefaultSpeed);
+              if (this.callback) this.callback('focusdefaultspeed', {value: this.focusDefaultSpeed});
             }
             if (args.ImagingSettings.Focus.NearLimit) {
               this.focusNearLimit = args.ImagingSettings.Focus.NearLimit;
-              if (this.callback) this.callback('focusnearlimit', this.focusNearLimit);
+              if (this.callback) this.callback('focusnearlimit', {value: this.focusNearLimit});
             }
             if (args.ImagingSettings.Focus.FarLimit) {
               this.focusFarLimit = args.ImagingSettings.Focus.FarLimit;
-              if (this.callback) this.callback('focusfarlimit', this.focusFarLimit);
+              if (this.callback) this.callback('focusfarlimit', {value: this.focusFarLimit});
             }
           }
         }
@@ -349,6 +349,13 @@ class ImagingService extends SoapService {
       //};
       port.Move = (args) => {
         var MoveResponse = { };
+
+        if (args.Focus) {
+          if (args.Focus.Continuous) {
+            if (this.callback) this.callback('focus', args.Focus.Continuous.Speed);
+          }
+        }
+
         return MoveResponse;
       };
 
@@ -358,6 +365,9 @@ class ImagingService extends SoapService {
       //};
       port.Stop = (args) => {
         var StopResponse = { };
+
+        if (this.callback) this.callback('focusstop', {});
+
         return StopResponse;
       };
 

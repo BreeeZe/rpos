@@ -315,4 +315,8 @@ export module v4l2ctl {
     export function SetPriority(priority: ProcessPriority) {
         execV4l2(`--set-priority=${priority}`);
     }
+
+    export function SetBrightness(brightness: number) {
+        execV4l2(`--set-ctrl brightness=${brightness}`);
+    }
 }
