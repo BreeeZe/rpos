@@ -359,6 +359,40 @@ class ImagingService extends SoapService {
         return MoveResponse;
       };
 
+      port.GetMoveOptions = (args) => {
+        var GetMoveOptionsResponse = {
+          MoveOptions : {
+            //Absolute : {
+              //Position : {
+                //Min : { xs:float},
+                //Max : { xs:float}
+              //},
+              //Speed : {
+                //Min : { xs:float},
+                //Max : { xs:float}
+              //}
+            //},
+            //Relative : {
+              //Distance : {
+                //Min : { xs:float},
+                //Max : { xs:float}
+              //},
+              //Speed : {
+                //Min : { xs:float},
+                //Max : { xs:float}
+              //}
+            //},
+            Continuous : {
+              Speed : {
+                Min : 0.0,
+                Max : 1.0
+              }
+            }
+          }
+        };
+        return GetMoveOptionsResponse;
+      };
+
       //var Stop = { 
       //VideoSourceToken : { xs:string}
       //
