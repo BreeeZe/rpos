@@ -359,6 +359,10 @@ class ImagingService extends SoapService {
         return MoveResponse;
       };
 
+      //var GetMoveOptions = {
+        //VideoSourceToken : { xs:string}
+      //
+      //};
       port.GetMoveOptions = (args) => {
         var GetMoveOptionsResponse = {
           MoveOptions : {
@@ -404,6 +408,28 @@ class ImagingService extends SoapService {
 
         return StopResponse;
       };
+
+      //var GetStatus = {
+        //VideoSourceToken : { xs:string}
+      //
+      //};
+      port.GetStatus = (args) => {
+        var GetStatusResponse = {
+          Status : {
+            FocusStatus20 : {
+              Position : 5.0,     // Need to read current focus position
+              MoveStatus : 'UNKNOWN', // MOVING IDLE or UNKNOWN
+              //Error : '',
+              //Extension : { }
+            },
+            //Extension : { }
+          }
+        };
+        return GetStatusResponse;
+      };
+
+
+
 
   }
 }
