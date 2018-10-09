@@ -46,6 +46,29 @@ class ImagingService extends SoapService {
   extendService() {
     var port = this.imaging_service.ImagingService.Imaging;
 
+      
+
+      //var GetServiceCapabilitiesResponse = {
+        //Capabilities : {
+          //attributes : {
+            //ImageStabilization : {xs:boolean},
+            //Presets : {xs:boolean}
+          //}
+        //}
+      //
+      //};
+
+      port.GetServiceCapabilities = (args) => {
+        var GetServiceCapabilitiesResponse = {
+          Capabilities : {
+            attributes : {
+              ImageStabilization : false,
+              Presets : false
+            }
+          }
+        };
+        return GetServiceCapabilitiesResponse;
+      };
 
       //var GetOptions = { 
         //VideoSourceToken : { xs:string}
