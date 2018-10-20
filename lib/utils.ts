@@ -90,12 +90,40 @@ export module Utils {
       return this.config.IpAddress;
     }
 
+    // Various methods to detect if this is a Pi
+    // a) Try Device Tree (newer Linux versions)
+    // b) Check /proc/cpuinfo Revision ID
+
+    static isPi() {
+      // Try Device-Tree. Only in kernels from 2017 onwards 
+      try {
+        var f = utils.execSync('sudo cat /proc/device-tree/model').toString();
+        if (f.includes('Raspberry Pi') return true;
+      } catch (ex) {
+      // Try /proc/cpuinfo and a valid Raspberry Pi Model ID
+      try {
+        var model = require('rpi-version')();
+        if (typeof model != "undefined") return true;
+      } catch (ex) {
+      }
+      return false;
+    }
+      
+
     static notPi() {
       return /^win/.test(process.platform) || /^darwin/.test(process.platform);
     }
 
     static isWindows() {
       return /^win/.test(process.platform);
+    }
+
+    static isLinux() {
+      return /^linux/.test(process.platform);
+    }
+
+    static isMac() {
+      return /^darwin/.test(process.platform);
     }
     
     static log = {

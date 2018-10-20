@@ -43,6 +43,12 @@ let config = <rposConfig>require("./rposConfig.json");
 
 utils.log.level = <Utils.logLevel>config.logLevel;
 
+if (utils.isPi()) {
+  var model = require('rpi-version')();
+  config.DeviceInformation.Manufacturer = 'Raspberry Pi';
+  config.DeviceInformation.Model = model; 
+}
+
 config.DeviceInformation.SerialNumber = utils.getSerial();
 config.DeviceInformation.FirmwareVersion = pjson.version;
 utils.setConfig(config);

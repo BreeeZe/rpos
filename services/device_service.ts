@@ -37,7 +37,7 @@ class DeviceService extends SoapService {
     port.GetDeviceInformation = (args /*, cb, headers*/) => {
       var GetDeviceInformationResponse = {
         Manufacturer: this.config.DeviceInformation.Manufacturer,
-        Model: this.config.DeviceInformation.Manufacturer,
+        Model: this.config.DeviceInformation.Model,
         FirmwareVersion: this.config.DeviceInformation.FirmwareVersion,
         SerialNumber: this.config.DeviceInformation.SerialNumber,
         HardwareId: this.config.DeviceInformation.HardwareId

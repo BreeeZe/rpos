@@ -1,6 +1,6 @@
 {
   "name": "rpos",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "rpos",
   "main": "rpos.js",
   "license": "MIT",
@@ -26,7 +26,8 @@
     "node-pelcod":"^0.3.0",
     "pan-tilt-hat":"^1.1.0",
     "serialport":"^6.0.4",
-    "ip":"^1.1.5"
+    "ip":"^1.1.5",
+    "rpi-version":"^1.4.1"
   },
   "devDependencies": {
     "gulp": "^3.9.1",
