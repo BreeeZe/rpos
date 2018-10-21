@@ -98,7 +98,7 @@ export module Utils {
       // Try Device-Tree. Only in kernels from 2017 onwards 
       try {
         var f = utils.execSync('sudo cat /proc/device-tree/model').toString();
-        if (f.includes('Raspberry Pi') return true;
+        if (f.includes('Raspberry Pi')) return true;
       } catch (ex) {
       // Try /proc/cpuinfo and a valid Raspberry Pi Model ID
       try {
