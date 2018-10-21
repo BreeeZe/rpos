@@ -107,6 +107,7 @@ class PTZDriver {
       this.stream.on('error', function() {
         console.log('PTZ Driver - Socket error');
       });
+      console.log('PTZ Driver connecting to ' + host + ':' + port);
       this.stream.connect(port, host, function() {
         console.log('PTZ Driver connected to ' + host + ':' + port);
 
@@ -327,7 +328,26 @@ class PTZDriver {
     else if (command==='brightness') {
       console.log("Set Brightness "+ data.value);
       v4l2ctl.SetBrightness(data.value);
-    } else {
+    }
+    else if (command==='focus') {
+      if (this.pelcod) {
+        if (data.value < 0) this.pelcod.focusNear(true);
+        else if (data.value > 0) this.pelcod.focusFar(true);
+        else {
+          this.pelcod.focusNear(false);
+          this.pelcod.focusFar(false);
+        }
+        this.pelcod.send();
+      }
+    }
+    else if (command==='focusstop') {
+      if (this.pelcod) {
+        this.pelcod.focusNear(false);
+        this.pelcod.focusFar(false);
+        this.pelcod.send();
+      }
+    }
+    else {
       if (!data.value) {
         console.log("Unhandled PTZ/Imaging Command Received: " + command);
       } else {
