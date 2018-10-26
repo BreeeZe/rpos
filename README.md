@@ -33,7 +33,7 @@ Picture of RPOS running on a Pi 3 with the PiMoroni PanTiltHAT and Official Pi C
 ## How to Install on a Raspberry Pi:
 
 STEP 1 - PI
-  Run ‘rasps-config’ and enable the camera and reboot
+  Run ‘raspi-config’ and enable the camera and reboot
  
 STEP 2 - GET NODEJS v6 from NODESOURCE and Live555
 ```
