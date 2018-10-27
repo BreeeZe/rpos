@@ -100,11 +100,12 @@ export module Utils {
         var f = utils.execSync('sudo cat /proc/device-tree/model').toString();
         if (f.includes('Raspberry Pi')) return true;
       } catch (ex) {
-      // Try /proc/cpuinfo and a valid Raspberry Pi Model ID
-      try {
-        var model = require('rpi-version')();
-        if (typeof model != "undefined") return true;
-      } catch (ex) {
+        // Try /proc/cpuinfo and a valid Raspberry Pi Model ID
+        try {
+          var model = require('rpi-version')();
+          if (typeof model != "undefined") return true;
+        } catch (ex) {
+        }
       }
       return false;
     }
