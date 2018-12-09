@@ -1,12 +1,11 @@
 # rpos
-Node.js based ONVIF Camera/NVT service that implements parts of Profile S and parts of Profile T (http://www.onvif.org) 
-Runs on a range of operating systems that support NodeJS with special support for the Raspberry Pi Camera and Pan-Tilt HAT
+Node.js based ONVIF Camera/NVT service that implements parts of Profile S and parts of Profile T (http://www.onvif.org). It has special support for the Raspberry Pi Camera and Pan-Tilt HAT and will also run on Windows, MacOS and Linux.
 
 ## History
 The initial goal (by @BreeeZe) was to provide a Onvif Media service which is compatible with Synology Surveillance Station to allow the Pi to be used as a surveillance camera without the need for adding any custom camera files to your Synology NAS.
 First demo video @ https://youtu.be/ZcZbF4XOH7E
 
-The next goal (by @RogerHardiman) was to implement more of the Onvif standard so that RPOS could be used with a wide range of CCTV systems and with ONVIF Device Manager and ONVIF Device Tool. Additional ONVIF Soap commands were added including the PTZ Service with backend drivers that control the Raspberry Pi Pan-Tit HAT or emit various PTZ protocols including Pelco D.
+The next goal (by @RogerHardiman) was to implement more of the Onvif standard so that RPOS could be used with a wide range of CCTV systems and with ONVIF Device Manager and ONVIF Device Tool. Additional ONVIF Soap commands were added including the PTZ Service with backend drivers that control the Raspberry Pi Pan-Tit HAT or emit various RS485 based PTZ protocols including Pelco D and Sony Visca.
 
 This version uses a patched version of the "node-soap" v0.80 library (https://github.com/vpulim/node-soap/releases/tag/v0.8.0) located @ https://github.com/BreeeZe/node-soap
 
@@ -17,7 +16,7 @@ This version uses a patched version of the "node-soap" v0.80 library (https://gi
 - Set other camera options through a web interface.
 - Discoverable (WS-Discovery) on Pi/Linux
 - Works with ONVIF Device Manager (Windows) and ONVIF Device Tool (Linux)
-- Works with other CCTV Viewing Software that implements the ONVIF standard including Milestone and Bosch BVMS
+- Works with other CCTV Viewing Software that implements the ONVIF standard including Antrica Decoder, Avigilon Control Centre, Bosch BVMS, Milestone, ISpy (Opensource), BenSoft SecuritySpy (Mac)
 - Implements PTZ service and controls the Pimononi Raspberry Pi Pan-Tilt HAT
 - Also emits PTZ commands as as Pelco D and Visca on a serial port (UART) for other Pan/Tilt platforms
 - Implements Imaging service Brightness and Focus commands (for Profile T)
@@ -59,16 +58,16 @@ STEP 6 - COMPILE TYPESCRIPT TO JAVASCRIPT using local Gulp module
 
 STEP 7 - RECOMPILE the RTSP Server
   RPOS comes with a pre-compiled ARM binary for a simple RTSP server.
-  The source in in the ‘cpp’ folder.
+  The source is in the ‘cpp’ folder.
   However the mpromonet RTSP server has more options and can be installed by running this script
 ```     sh setup_v4l2rtspserver.sh```
  
 STEP 8 - EDIT CONFIG
-  Edit rposConf.json if you want to
-    Change the ONVIF Service Port (where the Web Server and SOAP service live)
-    Enable PTZ support eg for the Pan-Tilt HAT or Pelco D backends
-    Enable multicast (and switch to the mpromonet RTSP server
-    Enable a basic ONVIF/RTSP Gateway
+  *  Edit ``` rposConf.json``` if you want to
+  *  Change the ONVIF Service Port (where the Web Server and SOAP service live)
+  *  Enable PTZ support eg for the Pan-Tilt HAT or Pelco D backends
+  *  Enable multicast (and switch to the mpromonet RTSP server
+  *  Enable a basic ONVIF/RTSP Gateway
 
 STEP 9 - RUN (needs Root to load the camera module)
 ```  sudo node rpos.js```
@@ -86,16 +85,17 @@ You can set camera settings by browsing to : http://CameraIP:Port/
 These settings are then saved in a file called v4l2ctl.json and are persisted on rpos restart.
 
 ## Known Issues
-- 1920x1080 can cause hangs and crashes.
+- 1920x1080 can cause hangs and crashes with the original RTSP server. The mpromonet one may work better
 - Not all of the ONVIF standard is implemented
 
-## ToDo's
+## ToDo's (Help is Required)
 - Add authentication
 - Add MJPEG
 - Support USB cameras with the Pi's Hardware H264 encoder (OMX) (see https://github.com/mpromonet/v4l2tools)
 - Implement more ONVIF calls (PTZ Abs Position, Events, Analytics)
 - Test with ONVIF's own test tools (need a sponsor for this as we do not have funds to buy it)
 - Add GPIO digital input
+- Add two way audio
 - and more...
 
 ## rpos-gateway
