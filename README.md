@@ -65,7 +65,10 @@ STEP 7.1 - RECOMPILE the RTSP Server (server option 2)
 ```     sh setup_v4l2rtspserver.sh```
 
 STEP 7.2 - INSTALL RPICAMSRC and GST-RTSP-SERVER (server option 3)
-  *  Install required packages:
+  *  Install required packages using apt or compile them yourself.
+     Installing the packages using apt saves a lot of time, but
+     provides a rather old gstreamer version.
+  *  Install using apt:
 ```
   sudo apt install git gstreamer1.0-plugins-bad gstreamer1.0-plugins-base \
                     gstreamer1.0-plugins-good gstreamer1.0-plugins-ugly \
@@ -79,10 +82,12 @@ STEP 7.2 - INSTALL RPICAMSRC and GST-RTSP-SERVER (server option 3)
   ./autogen.sh
   make
   sudo make install
+  cd ..
 ```
   * Check successful plugin installation by executing ```gst-inspect-1.0 rpicamsrc```
   *  Note: Do not load V4L2 modules when using rpicamsrc!
-  * Compile gst-rtsp-server v1.4.5 (newer versions require newer GStreamer libs)
+  * Compile gst-rtsp-server v1.4.5 
+    (newer versions require newer GStreamer libs than those installed by apt)
 ```
   git clone git://anongit.freedesktop.org/gstreamer/gst-rtsp-server
   cd gst-rtsp-server
