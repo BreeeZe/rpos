@@ -1,4 +1,4 @@
 #!/bin/sh
 echo $@
-/usr/bin/python /rwdata/rpos/python/gst-rtsp-launch.py $@
+/usr/bin/python ./python/gst-rtsp-launch.py $@
 

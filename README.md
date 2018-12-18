@@ -9,6 +9,8 @@ The next goal (by @RogerHardiman) was to implement more of the Onvif standard so
 
 This version uses a patched version of the "node-soap" v0.80 library (https://github.com/vpulim/node-soap/releases/tag/v0.8.0) located @ https://github.com/BreeeZe/node-soap
 
+Added gst-rtsp-server support as third option by Oliver Schwaneberg
+
 ## Features:
 - Streams H264 video over rtsp from the Official Raspberry Pi camera (the one that uses the ribbon cable)
 - Uses hardware H264 encoding (on the Pi)
@@ -56,12 +58,40 @@ STEP 5 - INSTALL RPOS Dependencies
 STEP 6 - COMPILE TYPESCRIPT TO JAVASCRIPT using local Gulp module
 ```  ./node_modules/gulp/bin/gulp.js```
 
-STEP 7 - RECOMPILE the RTSP Server
+STEP 7.1 - RECOMPILE the RTSP Server (server option 2)
   RPOS comes with a pre-compiled ARM binary for a simple RTSP server.
   The source is in the ‘cpp’ folder.
   However the mpromonet RTSP server has more options and can be installed by running this script
 ```     sh setup_v4l2rtspserver.sh```
- 
+
+STEP 7.2 - INSTALL RPICAMSRC and GST-RTSP-SERVER (server option 3)
+  *  Install required packages:
+```
+  sudo apt install git gstreamer1.0-plugins-bad gstreamer1.0-plugins-base \
+                    gstreamer1.0-plugins-good gstreamer1.0-plugins-ugly \
+                    gstreamer1.0-tools libgstreamer1.0-dev libgstreamer1.0-0-dbg \
+                    libgstreamer1.0-0 gstreamer1.0-omx \
+                    libgstreamer-plugins-base1.0-dev gtk-doc-tools
+  *  Compile gst-rpicamsrc:
+  cd ..
+  git clone https://github.com/thaytan/gst-rpicamsrc.git
+  cd gst-rpicamsrc
+  ./autogen.sh
+  make
+  sudo make install
+```
+  * Check successful plugin installation by executing ```gst-inspect-1.0 rpicamsrc```
+  *  Note: Do not load V4L2 modules when using rpicamsrc!
+  * Compile gst-rtsp-server v1.4.5 (newer versions require newer GStreamer libs)
+```
+  git clone git://anongit.freedesktop.org/gstreamer/gst-rtsp-server
+  cd gst-rtsp-server
+  git checkout 1.4.5
+  ./autogen.sh
+  make
+  sudo make install
+```
+
 STEP 8 - EDIT CONFIG
   *  Edit ``` rposConf.json``` if you want to
   *  Change the ONVIF Service Port (where the Web Server and SOAP service live)
@@ -90,7 +120,7 @@ These settings are then saved in a file called v4l2ctl.json and are persisted on
 
 ## ToDo's (Help is Required)
 - Add authentication
-- Add MJPEG
+- Add MJPEG (implemented in gst-rtsp-server)
 - Support USB cameras with the Pi's Hardware H264 encoder (OMX) (see https://github.com/mpromonet/v4l2tools)
 - Implement more ONVIF calls (PTZ Abs Position, Events, Analytics)
 - Test with ONVIF's own test tools (need a sponsor for this as we do not have funds to buy it)

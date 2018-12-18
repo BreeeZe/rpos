@@ -10,6 +10,7 @@ parser.add_argument('-P', '--rtspport', action='store', default=554, help='Set R
 parser.add_argument('-u', '--rtspname', action='store', default="live", help='Set RTSP name')
 parser.add_argument('-W', '--rtspresolutionwidth', action='store', default=1280, help='Set RTSP resolution width')
 parser.add_argument('-H', '--rtspresolutionheight', action='store', default=720, help='Set RTSP resolution height')
+parser.add_argument('-M', '--mjpeg', action='store_true', help='Start with MJPEG codec')
 args = parser.parse_args()
 
 
@@ -51,7 +52,7 @@ cam_mutex = Lock()
 # -------------------
 
 class StreamServer:
-	def __init__(self, file, port, name, width, height):
+	def __init__(self, file, port, name, width, height, codec):
 		signal.signal(signal.SIGTERM, self.exit_gracefully)
 		Gst.init(None)
 		self.mainloop = GObject.MainLoop()
@@ -74,7 +75,7 @@ class StreamServer:
 		log.info("StreamServer initialized")
 		
 		self.codec_options = {0:"h264", 1:"MJPEG"}
-		self.codec = 0
+		self.codec = codec
 		
 		# Declaring stream settings and initialize with safe default values
 		self.bitrate_range = [200000, 20000000]
@@ -164,31 +165,10 @@ class StreamServer:
 		self.rotation = 0
 		
 		self.configDate = 0
-		
-		## The following block is work in progress and currently broken
-		## GST-Plugin-Bad / SRTP required!
-		## Install libstrp2-dev and recompile if missing
-		
-		#auth = GstRtspServer.RTSPAuth()
-		#token = GstRtspServer.RTSPToken()
-		#token.set_string('role','user')
-		#token.set_bool('perm',True)
-		#log.debug(Gst.version_string())
-		#log.debug("Role, perm: "+token.get_string('role')+", "+str(token.is_allowed('perm')))
-		#basic = auth.make_basic(self.username, self.password)
-		#auth.add_basic(basic, token)
-		#self.server.set_auth(auth)
-		#perm = GstRtspServer.RTSPPermissions()
-		#perm.add_role("user")
-		#perm.add_permission_for_role("user", "media.factory.access", True)
-		#perm.add_permission_for_role("user", "media.factory.construct", True)
-		#self.factory.set_permissions(perm)
-			
 	
-	def exit_gracefully(self):
+	def exit_gracefully(self, signum, frame):
 		self.stop()
 		self.stayAwake = False
-		sys.exit()
 	
 	def check_range(self, value, value_range):
 		return value >= value_range[0] and value <= value_range[1]
@@ -307,7 +287,7 @@ class StreamServer:
 		if self.codec == 0:
 			launch_str = launch_str + ' ! video/x-h264, framerate='+str(self.fps)+'/1, width='+str(self.width)+', height='+str(self.height)+' ! h264parse ! rtph264pay name=pay0 pt=96 )'
 		elif self.codec == 1:
-			log.error("TODO: MJPEG support")
+			launch_str = launch_str + ' ! image/jpeg, framerate='+str(self.fps)+'/1, width='+str(self.width)+', height='+str(self.height)+' ! jpegparse ! rtpjpegpay name=pay0 pt=96 )'
 		else:
 			log.error("Illegal codec")
 		
@@ -365,8 +345,13 @@ class StreamServer:
 		self.launch()
 
 if __name__ == '__main__':
+	codec = 0 		# Default to H264
+	if args.mjpeg:
+		codec = 1
 	streamServer = StreamServer(args.file, args.rtspport, args.rtspname, \
-								args.rtspresolutionwidth, args.rtspresolutionheight)
+								args.rtspresolutionwidth, args.rtspresolutionheight,\
+								codec)
+	streamServer.readConfig()
 	streamServer.launch()
 	streamServer.start()
 	
