@@ -5,6 +5,7 @@ import { v4l2ctl } from "./v4l2ctl";
 
 // PTZDriver for RPOS (Raspberry Pi ONVIF Server)
 // (c) 2016, 2017, 2018 Roger Hardiman
+// (c) 2018 Casper Meijn
 // MIT License
 //
 // This code processes the ONVIF Pan/Tilt/Zoom messages and generates a CCTV
@@ -36,6 +37,7 @@ class PTZDriver {
   pan_tilt_hat: any;
   serialPort: any;
   stream: any;
+  supportsRelativePTZ: false;
 
   constructor(config: rposConfig) {
     this.config = config;
@@ -61,6 +63,7 @@ class PTZDriver {
     if (config.PTZDriver === 'pan-tilt-hat') {
       var PanTiltHAT = require('pan-tilt-hat');
       this.pan_tilt_hat = new PanTiltHAT();
+      this.supportsRelativePTZ = true;
     }
 
     if (PTZOutput === 'serial') {
@@ -194,7 +197,7 @@ class PTZDriver {
       console.log("Relay Inactive "+ data.name);
     }
     else if (command==='ptz') {
-      console.log("PTZ "+ data.pan + ' ' + data.tilt + ' ' + data.zoom);
+      console.log("Continuous PTZ "+ data.pan + ' ' + data.tilt + ' ' + data.zoom);
       var p=0.0;
       var t=0.0;
       var z=0.0;
@@ -323,6 +326,24 @@ class PTZDriver {
         if (t < 0)  this.pan_tilt_hat.tilt_down(tilt_speed);
         if (t > 0)  this.pan_tilt_hat.tilt_up(tilt_speed);
         if (t == 0) this.pan_tilt_hat.tilt_down(0); // stop
+      }
+    }
+    else if (command==='relative-ptz') {
+      console.log("Relative PTZ "+ data.pan + ' ' + data.tilt + ' ' + data.zoom);
+      var p=0.0;
+      var t=0.0;
+      var z=0.0;
+      try {p = parseFloat(data.pan)} catch (err) {}
+      try {t = parseFloat(data.tilt)} catch (err) {}
+      try {z = parseFloat(data.zoom)} catch (err) {}
+      if (this.pan_tilt_hat) {
+          let pan_degrees = p * 90.0
+          let new_pan_angle = this.pan_tilt_hat.pan_position - pan_degrees;
+          this.pan_tilt_hat.pan(Math.round(new_pan_angle));
+          
+          let tilt_degrees = t * 80.0
+          let new_tilt_angle = this.pan_tilt_hat.tilt_position - tilt_degrees;
+          this.pan_tilt_hat.tilt(Math.round(new_tilt_angle));
       }
     }
     else if (command==='brightness') {
