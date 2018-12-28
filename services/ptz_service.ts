@@ -45,6 +45,17 @@ class PTZService extends SoapService {
 
     var ptzConfigurationOptions = { 
           Spaces : { 
+              RelativePanTiltTranslationSpace : [{
+                URI : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/TranslationGenericSpace',
+                XRange : { 
+                    Min : -1.0,
+                    Max : 1.0
+                },
+                YRange : { 
+                    Min : -1.0,
+                    Max : 1.0
+                }
+              }],
               ContinuousPanTiltVelocitySpace : [{ 
                 URI : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/VelocityGenericSpace',
                 XRange : { 
@@ -97,6 +108,7 @@ class PTZService extends SoapService {
       Name: "PTZ Configuration",
       UseCount: 1,
       NodeToken: "ptz_node_token_0",
+      DefaultRelativePanTiltTranslationSpace : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/TranslationGenericSpace'
       DefaultContinuousPanTiltVelocitySpace : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/VelocityGenericSpace',
       DefaultContinuousZoomVelocitySpace : 'http://www.onvif.org/ver10/tptz/ZoomSpaces/VelocityGenericSpace',
       DefaultPTZSpeed : { 
@@ -134,6 +146,17 @@ class PTZService extends SoapService {
       },
       Name : 'PTZ Node 0',
       SupportedPTZSpaces : { 
+        RelativePanTiltTranslationSpace : [{
+          URI : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/TranslationGenericSpace',
+          XRange : { 
+            Min : -1.0,
+            Max : 1.0
+          },
+          YRange : { 
+            Min : -1.0,
+            Max : 1.0
+          }
+        }],
         ContinuousPanTiltVelocitySpace : [{ 
           URI : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/VelocityGenericSpace',
           XRange : { 
@@ -200,6 +223,15 @@ class PTZService extends SoapService {
       return ContinuousMoveResponse;
     };
 
+    port.RelativeMove = (args) =>  {
+      // Update values or keep last known value
+      try {pan = args.Translation.PanTilt.attributes.x} catch (err){}; 
+      try {tilt = args.Translation.PanTilt.attributes.y} catch (err){}; 
+      try {zoom = args.Translation.Zoom.attributes.x} catch (err){}; 
+      if (this.callback) this.callback('relative-ptz', { pan: pan, tilt: tilt, zoom: zoom});
+      var RelativeMoveResponse = { };
+      return RelativeMoveResponse;
+    };
 
     port.Stop = (args) =>  {
       // Update values (to zero) or keep last known value
