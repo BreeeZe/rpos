@@ -49,6 +49,14 @@ if (utils.isPi()) {
   config.DeviceInformation.Model = model; 
 }
 
+if (utils.isMac()) {
+  const os = require('os');
+  const macosRelease = require('macos-release');
+  config.DeviceInformation.Manufacturer = 'Apple';
+  config.DeviceInformation.Model = macosRelease()['name'] + ' ' + macosRelease()['version'];
+}
+
+
 config.DeviceInformation.SerialNumber = utils.getSerial();
 config.DeviceInformation.FirmwareVersion = pjson.version;
 utils.setConfig(config);
@@ -65,7 +73,7 @@ let ptz_driver = new PTZDriver(config);
 let camera = new Camera(config, webserver);
 let device_service = new DeviceService(config, httpserver, ptz_driver.process_ptz_command);
 let media_service = new MediaService(config, httpserver, camera);
-let ptz_service = new PTZService(config, httpserver, ptz_driver.process_ptz_command);
+let ptz_service = new PTZService(config, httpserver, ptz_driver.process_ptz_command, ptz_driver);
 let imaging_service = new ImagingService(config, httpserver, ptz_driver.process_ptz_command);
 let discovery_service = new DiscoveryService(config);
 
