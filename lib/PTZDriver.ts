@@ -65,6 +65,7 @@ class PTZDriver {
     if (config.PTZDriver === 'pan-tilt-hat') {
       var PanTiltHAT = require('pan-tilt-hat');
       this.pan_tilt_hat = new PanTiltHAT();
+      this.supportsAbsolutePTZ = true;
       this.supportsRelativePTZ = true;
     }
 

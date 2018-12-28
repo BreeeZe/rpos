@@ -138,6 +138,7 @@ class PTZService extends SoapService {
       Name: "PTZ Configuration",
       UseCount: 1,
       NodeToken: "ptz_node_token_0",
+      DefaultAbsolutePanTiltPositionSpace : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/PositionGenericSpace',
       DefaultRelativePanTiltTranslationSpace : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/TranslationGenericSpace',
       DefaultContinuousPanTiltVelocitySpace : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/VelocityGenericSpace',
       DefaultContinuousZoomVelocitySpace : 'http://www.onvif.org/ver10/tptz/ZoomSpaces/VelocityGenericSpace',
@@ -176,6 +177,17 @@ class PTZService extends SoapService {
       },
       Name : 'PTZ Node 0',
       SupportedPTZSpaces : { 
+        AbsolutePanTiltPositionSpace : [{
+          URI : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/PositionGenericSpace',
+          XRange : { 
+            Min : -1.0,
+            Max : 1.0
+          },
+          YRange : { 
+            Min : -1.0,
+            Max : 1.0
+          }
+        }],
         RelativePanTiltTranslationSpace : [{
           URI : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/TranslationGenericSpace',
           XRange : { 
@@ -251,6 +263,16 @@ class PTZService extends SoapService {
       if (this.callback) this.callback('ptz', { pan: pan, tilt: tilt, zoom: zoom});
       var ContinuousMoveResponse = { };
       return ContinuousMoveResponse;
+    };
+
+    port.AbsoluteMove = (args) =>  {
+      // Update values or keep last known value
+      try {pan = args.Position.PanTilt.attributes.x} catch (err){}; 
+      try {tilt = args.Position.PanTilt.attributes.y} catch (err){}; 
+      try {zoom = args.Position.Zoom.attributes.x} catch (err){}; 
+      if (this.callback) this.callback('absolute-ptz', { pan: pan, tilt: tilt, zoom: zoom});
+      var AbsoluteMoveResponse = { };
+      return AbsoluteMoveResponse;
     };
 
     port.RelativeMove = (args) =>  {
