@@ -17,6 +17,9 @@ class PTZService extends SoapService {
 
   presetArray = [];
 
+  public ptzConfiguration: any;
+
+
   constructor(config: rposConfig, server: Server, callback, ptz_driver) {
     super(config, server);
 
@@ -35,6 +38,38 @@ class PTZService extends SoapService {
     for (var i = 1; i <=  255; i++) {
       this.presetArray.push({profileToken: 'token', presetName: '', presetToken: i.toString(), used: false});
     }
+
+    this.ptzConfiguration = {
+      attributes: {
+        token: "ptz_config_token_0"
+      },
+      Name: "PTZ Configuration",
+      UseCount: 1,
+      NodeToken: "ptz_node_token_0",
+      DefaultAbsolutePantTiltPositionSpace : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/PositionGenericSpace',
+      DefaultAbsoluteZoomPositionSpace : 'http://www.onvif.org/ver10/tptz/ZoomSpaces/PositionGenericSpace',
+      DefaultRelativePanTiltTranslationSpace : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/TranslationGenericSpace',
+      DefaultRelativeZoomTranslationSpace : 'http://www.onvif.org/ver10/tptz/ZoomSpaces/TranslationGenericSpace',
+      DefaultContinuousPanTiltVelocitySpace : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/VelocityGenericSpace',
+      DefaultContinuousZoomVelocitySpace : 'http://www.onvif.org/ver10/tptz/ZoomSpaces/VelocityGenericSpace',
+      DefaultPTZSpeed : { 
+        PanTilt : { 
+          attributes : {
+            x : 1.0,
+            y : 1.0,
+            space : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/GenericSpeedSpace'
+          }
+        },
+        Zoom : { 
+          attributes : {
+            x : 1,
+            space : 'http://www.onvif.org/ver10/tptz/ZoomSpaces/ZoomGenericSpeedSpace'
+          }
+        }
+      },
+      DefaultPTZTimeout : 'PT5S'
+    }
+  
 
     this.extendService();
   }
@@ -138,43 +173,15 @@ class PTZService extends SoapService {
       return GetConfigurationOptionsResponse;
     };
 
-    var ptzConfiguration = {
-      attributes: {
-        token: "ptz_config_token_0"
-      },
-      Name: "PTZ Configuration",
-      UseCount: 1,
-      NodeToken: "ptz_node_token_0",
-      DefaultAbsolutePantTiltPositionSpace : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/PositionGenericSpace',
-      DefaultRelativePanTiltTranslationSpace : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/TranslationGenericSpace',
-      DefaultContinuousPanTiltVelocitySpace : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/VelocityGenericSpace',
-      DefaultContinuousZoomVelocitySpace : 'http://www.onvif.org/ver10/tptz/ZoomSpaces/VelocityGenericSpace',
-      DefaultPTZSpeed : { 
-        PanTilt : { 
-          attributes : {
-            x : 1.0,
-            y : 1.0,
-            space : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/GenericSpeedSpace'
-          }
-        },
-        Zoom : { 
-          attributes : {
-            x : 1,
-            space : 'http://www.onvif.org/ver10/tptz/ZoomSpaces/ZoomGenericSpeedSpace'
-          }
-        }
-      },
-      DefaultPTZTimeout : 'PT5S'
-    }
         
     port.GetConfiguration = (args) => {
       // ToDo. Check token and return a valid response or an error reponse
-      var GetConfigurationResponse = { PTZConfiguration: ptzConfiguration };
+      var GetConfigurationResponse = { PTZConfiguration: this.ptzConfiguration };
       return GetConfigurationResponse;
     };
 	
     port.GetConfigurations = (args) => {
-      var GetConfigurationsResponse = { PTZConfiguration: ptzConfiguration };
+      var GetConfigurationsResponse = { PTZConfiguration: this.ptzConfiguration };
       return GetConfigurationsResponse;
     };
 

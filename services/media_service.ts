@@ -9,19 +9,22 @@ import { Server } from 'http';
 import Camera = require('../lib/camera');
 import { v4l2ctl } from '../lib/v4l2ctl';
 import { exec } from 'child_process';
+import PTZService = require('ptz_service');
 var utils = Utils.utils;
 
 class MediaService extends SoapService {
   media_service: any;
   camera: Camera;
+  ptz_service: PTZService;
   ffmpeg_process: any = null;
   ffmpeg_responses: any[] = [];
 
-  constructor(config: rposConfig, server: Server, camera: Camera) {
+  constructor(config: rposConfig, server: Server, camera: Camera, ptz_service: PTZService) {
     super(config, server);
     this.media_service = require('./stubs/media_service.js').MediaService;
 
     this.camera = camera;
+    this.ptz_service = ptz_service;
     this.serviceOptions = {
       path: '/onvif/media_service',
       services: this.media_service,
@@ -191,33 +194,6 @@ class MediaService extends SoapService {
       Options: []
     };
 
-    var ptzConfiguration = {
-      attributes: {
-        token: "ptz_config_token_0"
-      },
-      Name: "PTZ Configuration",
-      UseCount: 1,
-      NodeToken: "ptz_node_token_0",
-      DefaultContinuousPanTiltVelocitySpace : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/VelocityGenericSpace',
-      DefaultContinuousZoomVelocitySpace : 'http://www.onvif.org/ver10/tptz/ZoomSpaces/VelocityGenericSpace',
-      DefaultPTZSpeed : { 
-        PanTilt : { 
-          attributes : {
-            x : 1.0,
-            y : 1.0,
-            space : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/VelocityGenericSpace'
-          }
-        },
-        Zoom : { 
-          attributes : {
-            x : 1,
-            space : 'http://www.onvif.org/ver10/tptz/ZoomSpaces/VelocityGenericSpace'
-          }
-        }
-      },
-      DefaultPTZTimeout : 'PT5S'
-    }
-
     var profile = {
       Name: "CurrentProfile",
       attributes: {
@@ -225,7 +201,7 @@ class MediaService extends SoapService {
       },
       VideoSourceConfiguration: videoSourceConfiguration,
       VideoEncoderConfiguration: videoEncoderConfiguration,
-      PTZConfiguration: ptzConfiguration
+      PTZConfiguration: this.ptz_service.ptzConfiguration
     };
 
     port.GetServiceCapabilities = (args /*, cb, headers*/) => {
