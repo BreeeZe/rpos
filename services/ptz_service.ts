@@ -37,8 +37,105 @@ class PTZService extends SoapService {
 
     for (var i = 1; i <=  255; i++) {
       this.presetArray.push({profileToken: 'profile_token', presetName: '', presetToken: i.toString(), used: false});
+    }  
+
+    this.extendService();
+  }
+
+
+
+
+  extendService() {
+    var port = this.ptz_service.PTZService.PTZ;
+    
+    var node = { 
+      attributes : {
+        token : 'ptz_node_token_0',
+      },
+      Name : 'PTZ Node 0',
+      SupportedPTZSpaces : {},
+      MaximumNumberOfPresets : 255,
+      HomeSupported : this.ptz_driver.supportsGoToHome,
+      FixedHomePosition: this.ptz_driver.hasFixedHomePosition,
+      GeoMove: false,
+      AuxiliaryCommands : ['AUX1on','AUX1off','AUX2on','AUX2off',
+      'AUX3on','AUX3off','AUX4on','AUX4off',
+      'AUX5on','AUX5off','AUX6on','AUX6off',
+      'AUX7on','AUX7off','AUX8on','AUX8off']
+    }
+    
+    if (this.ptz_driver.supportsAbsolutePTZ) {
+      node.SupportedPTZSpaces['AbsolutePanTiltPositionSpace'] = [{
+          URI : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/PositionGenericSpace',
+          XRange : { 
+            Min : -1.0,
+            Max : 1.0
+          },
+          YRange : { 
+            Min : -1.0,
+            Max : 1.0
+          }
+        }];
+    }
+    if (this.ptz_driver.supportsRelativePTZ) {
+      node.SupportedPTZSpaces['RelativePanTiltTranslationSpace'] = [{
+          URI : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/TranslationGenericSpace',
+          XRange : { 
+            Min : -1.0,
+            Max : 1.0
+          },
+          YRange : { 
+            Min : -1.0,
+            Max : 1.0
+          }
+        }];
+    }
+    if (this.ptz_driver.supportsContinuousPTZ) {
+      node.SupportedPTZSpaces['ContinuousPanTiltVelocitySpace'] = [{ 
+          URI : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/VelocityGenericSpace',
+          XRange : { 
+            Min : -1.0,
+            Max : 1.0
+          },
+          YRange : { 
+            Min : -1.0,
+            Max : 1.0
+          }
+        }];
+      node.SupportedPTZSpaces['ContinuousZoomVelocitySpace'] =  [{ 
+          URI : 'http://www.onvif.org/ver10/tptz/ZoomSpaces/VelocityGenericSpace',
+          XRange : { 
+            Min : -1.0,
+            Max : 1.0
+          }
+        }];
+    }
+    if (this.ptz_driver.supportsRelativePTZ || this.ptz_driver.supportsAbsolutePTZ) {
+      node.SupportedPTZSpaces['PanTiltSpeedSpace'] = [{ 
+          URI : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/GenericSpeedSpace',
+          XRange : { 
+            Min : 0,
+            Max : 1
+          }
+        }];
+      node.SupportedPTZSpaces['ZoomSpeedSpace'] = [{ 
+          URI : 'http://www.onvif.org/ver10/tptz/ZoomSpaces/ZoomGenericSpeedSpace',
+          XRange : { 
+            Min : 0,
+            Max : 1
+          }
+        }];
     }
 
+    // ptzConfigurations is an Array.
+    var ptzConfigurationOptions = {
+      Spaces: node.SupportedPTZSpaces,
+      PTZTimeout : { 
+        Min : 'PT0S',
+        Max : 'PT10S'
+      },
+    };
+    
     this.ptzConfiguration = {
       attributes: {
         token: "ptz_config_token_0"
@@ -69,89 +166,8 @@ class PTZService extends SoapService {
       },
       DefaultPTZTimeout : 'PT5S'
     }
-  
 
-    this.extendService();
-  }
-
-
-
-
-  extendService() {
-    var port = this.ptz_service.PTZService.PTZ;
-
-    // ptzConfigurations is an Array.
-    var ptzConfigurationOptions = {
-      Spaces: {},
-      PTZTimeout : { 
-        Min : 'PT0S',
-        Max : 'PT10S'
-      },
-    };
-
-    if (this.ptz_driver.supportsAbsolutePTZ) {
-      ptzConfigurationOptions.Spaces['AbsolutePanTiltPositionSpace'] = [{
-          URI : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/PositionGenericSpace',
-          XRange : { 
-              Min : -1.0,
-              Max : 1.0
-          },
-          YRange : { 
-              Min : -1.0,
-              Max : 1.0
-          }
-        }];
-    }
-    if (this.ptz_driver.supportsRelativePTZ) {
-      ptzConfigurationOptions.Spaces['RelativePanTiltTranslationSpace'] = [{
-          URI : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/TranslationGenericSpace',
-          XRange : { 
-              Min : -1.0,
-              Max : 1.0
-          },
-          YRange : { 
-              Min : -1.0,
-              Max : 1.0
-          }
-        }];
-    }
-    if (this.ptz_driver.supportsContinuousPTZ) {
-      ptzConfigurationOptions.Spaces['ContinuousPanTiltVelocitySpace'] = [{ 
-          URI : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/VelocityGenericSpace',
-          XRange : { 
-            Min : -1,
-            Max : 1
-          },
-          YRange : { 
-            Min : -1,
-            Max : 1
-          }
-        }];
-       ptzConfigurationOptions.Spaces['ContinuousZoomVelocitySpace'] =  [{ 
-          URI : 'http://www.onvif.org/ver10/tptz/ZoomSpaces/VelocityGenericSpace',
-          XRange : { 
-            Min : -1,
-            Max : 1
-          }
-        }];
-    }
-    if (this.ptz_driver.supportsRelativePTZ || this.ptz_driver.supportsAbsolutePTZ) {
-      ptzConfigurationOptions.Spaces['PanTiltSpeedSpace'] = [{ 
-          URI : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/GenericSpeedSpace',
-          XRange : { 
-            Min : 0,
-            Max : 1
-          }
-        }];
-        ptzConfigurationOptions.Spaces['ZoomSpeedSpace'] = [{ 
-          URI : 'http://www.onvif.org/ver10/tptz/ZoomSpaces/ZoomGenericSpeedSpace',
-          XRange : { 
-            Min : 0,
-            Max : 1
-          }
-        }];
-    }
-
+    
     port.GetServiceCapabilities = (args) => {
       var GetServiceCapabilitiesResponse = { 
         Capabilities : { 
@@ -189,77 +205,6 @@ class PTZService extends SoapService {
 //      var GetCompatibleConfigurationsResponse = { };
 //      return GetCompatibleConfigurationsResponse;
 //    };
-
-
-    var node = { 
-      attributes : {
-        token : 'ptz_node_token_0',
-      },
-      Name : 'PTZ Node 0',
-      SupportedPTZSpaces : { 
-        AbsolutePanTiltPositionSpace : [{
-          URI : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/PositionGenericSpace',
-          XRange : { 
-            Min : -1.0,
-            Max : 1.0
-          },
-          YRange : { 
-            Min : -1.0,
-            Max : 1.0
-          }
-        }],
-        RelativePanTiltTranslationSpace : [{
-          URI : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/TranslationGenericSpace',
-          XRange : { 
-            Min : -1.0,
-            Max : 1.0
-          },
-          YRange : { 
-            Min : -1.0,
-            Max : 1.0
-          }
-        }],
-        ContinuousPanTiltVelocitySpace : [{ 
-          URI : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/VelocityGenericSpace',
-          XRange : { 
-            Min : -1.0,
-            Max : 1.0
-          },
-          YRange : { 
-            Min : -1.0,
-            Max : 1.0
-          }
-        }],
-        ContinuousZoomVelocitySpace : [{ 
-          URI : 'http://www.onvif.org/ver10/tptz/ZoomSpaces/VelocityGenericSpace',
-          XRange : { 
-            Min : -1.0,
-            Max : 1.0
-          }
-        }],
-        PanTiltSpeedSpace : [{ 
-          URI : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/GenericSpeedSpace',
-          XRange : { 
-            Min : 0,
-            Max : 1
-          }
-        }],
-        ZoomSpeedSpace : [{ 
-          URI : 'http://www.onvif.org/ver10/tptz/ZoomSpaces/ZoomGenericSpeedSpace',
-          XRange : { 
-            Min : 0,
-            Max : 1
-          }
-        }],
-
-      },
-      MaximumNumberOfPresets : 255,
-      HomeSupported : true,
-      AuxiliaryCommands : ['AUX1on','AUX1off','AUX2on','AUX2off',
-      'AUX3on','AUX3off','AUX4on','AUX4off',
-      'AUX5on','AUX5off','AUX6on','AUX6off',
-      'AUX7on','AUX7off','AUX8on','AUX8off']
-    }
 
     port.GetNode = (args) => {
 	  // ToDo. Check token and return a valid response or an error reponse

@@ -39,7 +39,9 @@ class PTZDriver {
   stream: any;
   supportsAbsolutePTZ: boolean = false;
   supportsRelativePTZ: boolean = false;
-  supportsContinuousPTZ: boolean = true;
+  supportsContinuousPTZ: boolean = false;
+  supportsGoToHome: boolean = false;
+  hasFixedHomePosition: boolean = true;
 
   constructor(config: rposConfig) {
     this.config = config;
@@ -60,6 +62,7 @@ class PTZDriver {
       var TenxDriver = require('./tenx_driver');
       this.tenx = new TenxDriver();
       this.tenx.open();
+      this.supportsContinuousPTZ = true;
     }
 
     if (config.PTZDriver === 'pan-tilt-hat') {
@@ -67,6 +70,19 @@ class PTZDriver {
       this.pan_tilt_hat = new PanTiltHAT();
       this.supportsAbsolutePTZ = true;
       this.supportsRelativePTZ = true;
+      this.supportsContinuousPTZ = true;
+      this.supportsGoToHome = true
+    }
+    
+    if (config.PTZDriver === 'pelcod') {
+      this.supportsContinuousPTZ = true;
+      this.supportsGoToHome = true
+      this.hasFixedHomePosition = false;
+    }
+    
+    if (config.PTZDriver === 'visca') {
+      this.supportsContinuousPTZ = true;
+      this.supportsGoToHome = true
     }
 
     if (PTZOutput === 'serial') {
