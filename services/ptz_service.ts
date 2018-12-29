@@ -36,7 +36,7 @@ class PTZService extends SoapService {
     };
 
     for (var i = 1; i <=  255; i++) {
-      this.presetArray.push({profileToken: 'token', presetName: '', presetToken: i.toString(), used: false});
+      this.presetArray.push({profileToken: 'profile_token', presetName: '', presetToken: i.toString(), used: false});
     }
 
     this.ptzConfiguration = {
