@@ -141,7 +141,7 @@ class MediaService extends SoapService {
 
     var videoEncoderConfiguration = {
       attributes: {
-        token: "token"
+        token: "encoder_config_token"
       },
       Name: "PiCameraConfiguration",
       UseCount: 0,
@@ -174,7 +174,7 @@ class MediaService extends SoapService {
 
     var videoSource = {
       attributes: {
-        token: "token"
+        token: "video_src_token"
       },
       Framerate: 25,
       Resolution: { Width: 1920, Height: 1280 }
@@ -184,9 +184,9 @@ class MediaService extends SoapService {
       Name: "Primary Source",
       UseCount: 0,
       attributes: {
-        token: "token"
+        token: "video_src_config_token"
       },
-      SourceToken: "token",
+      SourceToken: "video_src_token",
       Bounds: { attributes: { x: 0, y: 0, width: 1920, height: 1080 } }
     };
 
@@ -197,7 +197,7 @@ class MediaService extends SoapService {
     var profile = {
       Name: "CurrentProfile",
       attributes: {
-        token: "token"
+        token: "profile_token"
       },
       VideoSourceConfiguration: videoSourceConfiguration,
       VideoEncoderConfiguration: videoEncoderConfiguration,
