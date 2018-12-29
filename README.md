@@ -24,6 +24,7 @@ Casper Meijn wrote some Relative PTZ support (Roger Hardiman then implemented Ab
 - Discoverable (WS-Discovery) on Pi/Linux
 - Works with ONVIF Device Manager (Windows) and ONVIF Device Tool (Linux)
 - Works with other CCTV Viewing Software that implements the ONVIF standard including Antrica Decoder, Avigilon Control Centre, Bosch BVMS, Milestone, ISpy (Opensource), BenSoft SecuritySpy (Mac)
+- Implements ONVIF Authentication
 - Implements Absolute, Relative and Continuous PTZ service and controls the Pimononi Raspberry Pi Pan-Tilt HAT
 - Also converts ONVIF PTZ commands into Pelco D and Visca telemetry on a serial port (UART) for other Pan/Tilt platforms
 - Implements Imaging service Brightness and Focus commands (for Profile T)
@@ -129,7 +130,7 @@ These settings are then saved in a file called v4l2ctl.json and are persisted on
 - Not all of the ONVIF standard is implemented
 
 ## ToDo's (Help is Required)
-- Add authentication
+- Fix XML reply when ONVIF authentication fails
 - Add MJPEG (implemented in gst-rtsp-server but still needs to return the correct ONVIF XML for MJPEG)
 - Support USB cameras with the Pi's Hardware H264 encoder (OMX) (see https://github.com/mpromonet/v4l2tools)
 - Implement more ONVIF calls (Events, Analytics)
