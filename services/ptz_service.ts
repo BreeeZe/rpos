@@ -332,6 +332,17 @@ class PTZService extends SoapService {
     };
 
 
+    //var SendAuxiliaryCommand = { 
+    //  ProfileToken : { xs:string},
+    //  AuxiliaryData : { xs:string}
+    //};
+    port.SendAuxiliaryCommand = (args) => {
+      if (this.callback) this.callback('aux', { name: args.AuxiliaryData });
+      var SendAuxiliaryCommandResponse = { 
+        AuxiliaryResponse : true // no idea what the value should be
+      };
+      return SendAuxiliaryCommandResponse;
+    };
 
     port.GetPresets = (args) => {
       var GetPresetsResponse = { Preset: [] };
