@@ -47,7 +47,29 @@ class SoapService {
       onReady();
     };
     this.serviceInstance = soap.listen(this.webserver, this.serviceOptions);
+    if (this.config.Username) {
+      this.serviceInstance.authenticate = (security) => {
+        var token = security.UsernameToken;
+        var user = token.Username;
+        var password = token.Password.$value;
+        var nonce = token.Nonce.$value;
+        var created = token.Created;
 
+        var onvif_username = this.config.Username;
+        var onvif_password = this.config.Password;
+
+        // digest = base64 ( sha1 ( nonce + created + onvif_password ) )
+        var crypto = require('crypto');
+        var pwHash = crypto.createHash('sha1');
+        var rawNonce = new Buffer(nonce || '', 'base64')
+        var combined_data = Buffer.concat([rawNonce,
+          Buffer.from(created, 'ascii'), Buffer.from(onvif_password, 'ascii')]);
+        pwHash.update(combined_data);
+        var generated_password = pwHash.digest('base64');
+
+        return (user === onvif_username && password === generated_password);
+      };
+    }
 
     this.serviceInstance.on("request", (request: any, methodName: string) => {
       utils.log.debug('%s received request %s', (<TypeConstructor>this.constructor).name, methodName);
