@@ -110,17 +110,15 @@ STEP 8 - EDIT CONFIG
   *  Enable multicast (and switch to the mpromonet RTSP server
   *  Enable a basic ONVIF/RTSP Gateway
 
-STEP 9 - RUN (needs to be Root to load the camera module)
-```  sudo modprobe bcm2835-v4l2```
-```  node rpos.js```
+STEP 9 - RUN RPOS.JS
+ * ```sudo modprobe bcm2835-v4l2```     to load the Pi V4L2 Camera Driver
+ * ```node rpos.js```     to run the Application
 
 STEP 10 - PAN-TILT HAT (Pimononi) USERS
   The camera on the Pan-Tilt hat is installed upside down.
   Goto the Web Page that runs with rpos http://rpos-ip:8081
   and tick the horizontal and vertial flip boxes and apply the changes
 
-Then you start rpos by running ```sudo node rpos.js```
-sudo is required so the broadcom driver fort the camera can load.
 
 #Camera settings
 You can set camera settings by browsing to : http://CameraIP:Port/
@@ -131,7 +129,6 @@ These settings are then saved in a file called v4l2ctl.json and are persisted on
 - Not all of the ONVIF standard is implemented
 
 ## ToDo's (Help is Required)
-- Fix XML reply when ONVIF authentication fails
 - Add MJPEG (implemented in gst-rtsp-server but still needs to return the correct ONVIF XML for MJPEG)
 - Support USB cameras with the Pi's Hardware H264 encoder (OMX) (see https://github.com/mpromonet/v4l2tools)
 - Implement more ONVIF calls (Events, Analytics)
