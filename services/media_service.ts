@@ -9,7 +9,7 @@ import { Server } from 'http';
 import Camera = require('../lib/camera');
 import { v4l2ctl } from '../lib/v4l2ctl';
 import { exec } from 'child_process';
-import PTZService = require('ptz_service');
+import PTZService = require('./ptz_service');
 var utils = Utils.utils;
 
 class MediaService extends SoapService {
