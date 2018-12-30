@@ -200,7 +200,7 @@ export module v4l2ctl {
 
     function execV4l2(cmd: string): string {
         try {
-            return utils.execSync(`sudo v4l2-ctl ${cmd}`).toString();
+            return utils.execSync(`v4l2-ctl ${cmd}`).toString();
         } catch (err) {
             return '';
         }

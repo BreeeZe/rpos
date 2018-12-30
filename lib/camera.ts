@@ -47,7 +47,16 @@ class Camera {
   constructor(config: rposConfig, webserver: any) {
     this.config = config;
     this.rtspServer = null;
-    this.loadDriver();
+    if (!fs.existsSync("/dev/video0")) {
+      // this.loadDriver();
+      if (utils.isPi()) {
+        // Needs a V4L2 Driver to be installed
+        console.log('Use modprobe to load the Pi Camera V4L2 driver');
+        console.log('e.g.   sudo modprobe bcm2835-v4l2');
+        console.log('       or the uv4l driver');
+        process.exit(1);
+      }
+    }
     this.webserver = webserver;
 
     this.setupWebserver();
@@ -62,11 +71,12 @@ class Camera {
         //wait for rtsp server to stop
         ;
       }
-      this.unloadDriver();
+//      this.unloadDriver();
     });
 
     if (this.config.RTSPServer == 1 )fs.chmodSync("./bin/rtspServer", "0755");
   }
+
   setupWebserver() {
     utils.log.info("Starting camera settings webserver on http://%s:%s/", utils.getIpAddress(), this.config.ServicePort);
     this.webserver.use(parser.urlencoded({ extended: true }));

@@ -47,7 +47,7 @@ export module Utils {
       // Extract serial from cpuinfo file
       var cpuserial = "0000000000000000";
       try {
-        var f = utils.execSync('sudo cat /proc/cpuinfo').toString();
+        var f = utils.execSync('cat /proc/cpuinfo').toString();
         cpuserial = f.match(/Serial[\t]*: ([0-9a-f]{16})/)[1];
       } catch (ex) {
         this.log.error("Failed to read serial : %s", ex.message);
@@ -97,7 +97,7 @@ export module Utils {
     static isPi() {
       // Try Device-Tree. Only in kernels from 2017 onwards 
       try {
-        var f = utils.execSync('sudo cat /proc/device-tree/model').toString();
+        var f = utils.execSync('cat /proc/device-tree/model').toString();
         if (f.includes('Raspberry Pi')) return true;
       } catch (ex) {
         // Try /proc/cpuinfo and a valid Raspberry Pi Model ID

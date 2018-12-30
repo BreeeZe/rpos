@@ -110,8 +110,9 @@ STEP 8 - EDIT CONFIG
   *  Enable multicast (and switch to the mpromonet RTSP server
   *  Enable a basic ONVIF/RTSP Gateway
 
-STEP 9 - RUN (needs Root to load the camera module)
-```  sudo node rpos.js```
+STEP 9 - RUN (needs to be Root to load the camera module)
+```  sudo modprobe bcm2835-v4l2```
+```  node rpos.js```
 
 STEP 10 - PAN-TILT HAT (Pimononi) USERS
   The camera on the Pan-Tilt hat is installed upside down.
