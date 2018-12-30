@@ -122,16 +122,16 @@ STEP 6 - EDIT CONFIG
   *  Enable a basic ONVIF/RTSP Gateway
   *  Hard code an IP address in the ONVIF SOAP messages
 
-STEP 7 - RUN RPOS.JS
+STEP 7 - RUN RPOS.JS  
  ``` sudo modprobe bcm2835-v4l2 ``` to load the Pi V4L2 Camera Driver  
  ``` node rpos.js ``` to run the Application  
 
-STEP 8 - EXTRA CONFIGURATION ON PAN-TILT HAT (Pimononi)
+STEP 8 - EXTRA CONFIGURATION ON PAN-TILT HAT (Pimononi)  
 The camera on the Pan-Tilt hat is usually installed upside down.  
-Goto the Web Page that runs with rpos ```http://<your Pi ip adress>:8081``` and tick the horizontal and vertial flip boxes and apply the changes.
+Goto the Web Page that runs with rpos ```http://<CaperaIP>:8081``` and tick the horizontal and vertial flip boxes and apply the changes.
 
 
-##Camera Settings
+## Camera Settings
 You can set camera settings by browsing to : http://CameraIP:Port/
 These settings are then saved in a file called v4l2ctl.json and are persisted on rpos restart.
 
