@@ -128,12 +128,14 @@ STEP 7 - RUN RPOS.JS
 
 STEP 8 - EXTRA CONFIGURATION ON PAN-TILT HAT (Pimononi)  
 The camera on the Pan-Tilt hat is usually installed upside down.  
-Goto the Web Page that runs with rpos ```http://<CaperaIP>:8081``` and tick the horizontal and vertial flip boxes and apply the changes.
+Goto the Web Page that runs with rpos ```http://<CameraIP>:8081``` and tick the horizontal and vertial flip boxes and apply the changes.
 
 
 ## Camera Settings
-You can set camera settings by browsing to : http://CameraIP:Port/
-These settings are then saved in a file called v4l2ctl.json and are persisted on rpos restart.
+You can set camera settings by browsing to : ```http://CameraIP:Port/```  
+These settings are then saved in a file called v4l2ctl.json and are persisted on rpos restart.  
+The default port for RPOS is 8081.
+
 
 ## Known Issues
 - 1920x1080 can cause hangs and crashes with the original RTSP server. The mpromonet one may work better
