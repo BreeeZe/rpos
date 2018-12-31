@@ -44,6 +44,7 @@ Windows/Mac/Linux users can skip this step
  
 STEP 2.1 - INSTALL NODEJS AND NPM  
 Windows and Mac users can install Node from the nodejs.org web site. Version 6.x and 8.x have been tested with RPOS.  
+Only a small amount of testing has been done with Node v10.  
 Raspbian Stretch users can install NodeJS and NPM from using apt-get  
 Older Raspbian users (eg Jessie) can install NodeJS and NPM with these commands  
 ```
