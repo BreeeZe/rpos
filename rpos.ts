@@ -68,6 +68,8 @@ for (var i in config.DeviceInformation) {
 
 let webserver = express();
 let httpserver = http.createServer(webserver);
+httpserver.listen(config.ServicePort);
+
 let ptz_driver = new PTZDriver(config);
 
 let camera = new Camera(config, webserver);

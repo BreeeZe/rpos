@@ -63,7 +63,6 @@ class SoapService {
     this.starting();
 
     utils.log.info("Binding %s to http://%s:%s%s", (<TypeConstructor>this.constructor).name, utils.getIpAddress(), this.config.ServicePort, this.serviceOptions.path);
-    this.webserver.listen(this.config.ServicePort);
     var onReady = this.serviceOptions.onReady;
     this.serviceOptions.onReady = () => {
       this._started();
