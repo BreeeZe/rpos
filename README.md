@@ -54,7 +54,7 @@ Older Raspbian users (eg Jessie) can install NodeJS and NPM with these commands
 
 STEP 2.2 - UPGRADE NPM  
 Check you have upgraded to the latest NPM with this command  
-```npm install -g npm```  
+```npm install -g npm@latest```  
 
 
 STEP 3 - GET RPOS SOURCE, INSTALL DEPENDENCIES  
