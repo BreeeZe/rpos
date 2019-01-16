@@ -361,7 +361,7 @@ class DeviceService extends SoapService {
       var nwifs = os.networkInterfaces();
       for (var nwif in nwifs) {
         for (var addr in nwifs[nwif]) {
-           if (nwifs[nwif][addr].family === 'IPv4' && nwif !== 'lo0') {
+           if (nwifs[nwif][addr].family === 'IPv4' && nwif !== 'lo0' && nwif !== 'lo') {
             var mac = (nwifs[nwif][addr].mac).replace(/:/g,'-');
             var ipv4_addr = nwifs[nwif][addr].address;
             var netmask = nwifs[nwif][addr].netmask;
