@@ -42,11 +42,16 @@ STEP 1 - ENABLE RASPBERRY PI CAMERA
 Pi users can run ‘raspi-config’ and enable the camera and reboot  
 Windows/Mac/Linux users can skip this step
  
-STEP 2.1 - INSTALL NODEJS AND NPM  
-Windows and Mac users can install Node from the nodejs.org web site. Version 6.x and 8.x have been tested with RPOS.  
-Only a small amount of testing has been done with Node v10.  
-Raspbian Stretch users can install NodeJS and NPM from using apt-get  
-Older Raspbian users (eg Jessie) can install NodeJS and NPM with these commands  
+STEP 2.1 - INSTALL NODEJS AND NPM
+Pi and Linux users can install Node and NPM together with this command
+```
+   sudo apt-get install npm
+```
+Windows and Mac users can install Node from the nodejs.org web site.
+
+Version 6.x and 8.x have been tested with RPOS. Only a small amount of testing has been done with Node v10.  
+
+Older Raspbian users (eg thouse running Jessie) can install NodeJS and NPM with these commands  
 ```
   curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
   sudo apt-get install nodejs
@@ -54,8 +59,8 @@ Older Raspbian users (eg Jessie) can install NodeJS and NPM with these commands
 
 STEP 2.2 - UPGRADE NPM  
 Check you have upgraded to the latest NPM with this command  
-```npm install -g npm@latest```  
-
+```   sudo npm install -g npm@latest```  
+Note this seemed to fail first time and needed to be ran twice to get my onto NPM version 6.7.0
 
 STEP 3 - GET RPOS SOURCE, INSTALL DEPENDENCIES  
 ```  git clone https://github.com/BreeeZe/rpos.git```  
@@ -63,8 +68,9 @@ STEP 3 - GET RPOS SOURCE, INSTALL DEPENDENCIES
 ```  npm install```
 
 STEP 4 - COMPILE TYPESCRIPT(.ts) TO JAVASCRIPT(.js) using GULP  
-Using npx, which came with recent versions of npm, type ```npx gulp```  
-or you can type ```  ./node_modules/gulp/bin/gulp.js```
+Usw npx to run the 'gulp' command. npx came with npm version 5.2 or higher
+```npx gulp```  
+If you do not have npx, use ```  ./node_modules/gulp/bin/gulp.js```
 
 STEP 5 - PICK YOUR RTSP SERVER  
 RPOS comes with a pre-compiled ARM binary for a simple RTSP server. The source is in the ‘cpp’ folder.  
@@ -77,8 +83,8 @@ STEP 5.1 - USING MPROMONET RTSP SERVER - COMPILE the RTSP Server (server option 
 RPOS comes with a pre-compiled ARM binary for a simple RTSP server. The source is in the ‘cpp’ folder.  
 However Pi and Linux users will probably prefer the mpromonet RTSP server as has more options and supports multicasting.  
 It can be installed and can be installed by running this script  
-```sudo apt-get install liblivemedia-dev```   
-```sh setup_v4l2rtspserver.sh```
+```   sudo apt-get install liblivemedia-dev```   
+```   sh setup_v4l2rtspserver.sh```
 
 STEP 5.2 - USING GSTREAMER RTSP SERVER - INSTALL RPICAMSRC and GST-RTSP-SERVER (server option 3)
   *  Install required packages using apt or compile them yourself.  
@@ -118,8 +124,11 @@ STEP 6 - EDIT CONFIG
   *  Edit ``` rposConf.json ``` if you want to
   *  Add an ONVIF Username and Password
   *  Change the TCP Port for the Web Server and the ONVIF Service
-  *  Enable PTZ support eg for the Pan-Tilt HAT or Pelco D backends
-  *  Enable multicast (and switch to the mpromonet RTSP server
+  *  Change the RTSP Port
+  *  Enable PTZ support eg for the Pan-Tilt HAT or RS485 backends (Visca and Pelco D)
+  *  Enable multicast
+  *  Switch to the mpromonet RTSP Server
+  *  Switch to the GStreamer RTSP Server
   *  Enable a basic ONVIF/RTSP Gateway
   *  Hard code an IP address in the ONVIF SOAP messages
 
@@ -139,8 +148,8 @@ The default port for RPOS is 8081.
 
 
 ## Known Issues
-- 1920x1080 can cause hangs and crashes with the original RTSP server. The mpromonet one may work better
-- Not all of the ONVIF standard is implemented
+- 1920x1080 can cause hangs and crashes with the original RTSP server. The mpromonet one may work better.
+- Not all of the ONVIF standard is implemented. 
 
 ## ToDo's (Help is Required)
 - Add MJPEG (implemented in gst-rtsp-server but still needs to return the correct ONVIF XML for MJPEG)
@@ -151,6 +160,4 @@ The default port for RPOS is 8081.
 - Add two way audio
 - and more...
 
-## rpos-gateway
-There is another project on github that is based on RPOS. It provides a simple ONVIF Gateway which delivers up RTSP addresses to ONVIF viewing software. https://github.com/kristian/rpos-gateway
 
