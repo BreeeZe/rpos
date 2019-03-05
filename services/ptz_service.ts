@@ -51,13 +51,13 @@ class PTZService extends SoapService {
     var node = { 
       attributes : {
         token : 'ptz_node_token_0',
+        FixedHomePosition: this.ptz_driver.hasFixedHomePosition,
+        GeoMove: false
       },
       Name : 'PTZ Node 0',
       SupportedPTZSpaces : {},
       MaximumNumberOfPresets : 255,
       HomeSupported : this.ptz_driver.supportsGoToHome,
-      FixedHomePosition: this.ptz_driver.hasFixedHomePosition,
-      GeoMove: false,
       AuxiliaryCommands : ['AUX1on','AUX1off','AUX2on','AUX2off',
       'AUX3on','AUX3off','AUX4on','AUX4off',
       'AUX5on','AUX5off','AUX6on','AUX6off',
