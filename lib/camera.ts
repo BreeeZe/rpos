@@ -47,14 +47,16 @@ class Camera {
   constructor(config: rposConfig, webserver: any) {
     this.config = config;
     this.rtspServer = null;
-    if (!fs.existsSync("/dev/video0")) {
-      // this.loadDriver();
-      if (utils.isPi()) {
-        // Needs a V4L2 Driver to be installed
-        console.log('Use modprobe to load the Pi Camera V4L2 driver');
-        console.log('e.g.   sudo modprobe bcm2835-v4l2');
-        console.log('       or the uv4l driver');
-        process.exit(1);
+    if (this.config.RTSPServer != 0) {
+      if (!fs.existsSync("/dev/video0")) {
+        // this.loadDriver();
+        if (utils.isPi()) {
+          // Needs a V4L2 Driver to be installed
+          console.log('Use modprobe to load the Pi Camera V4L2 driver');
+          console.log('e.g.   sudo modprobe bcm2835-v4l2');
+          console.log('       or the uv4l driver');
+          process.exit(1);
+        }
       }
     }
     this.webserver = webserver;
@@ -197,15 +199,17 @@ class Camera {
         if (this.config.RTSPServer == 3) this.rtspServer = utils.spawn("./python/gst-rtsp-launch.sh", ["-P",this.config.RTSPPort.toString(), "-u" , this.config.RTSPName.toString(),"-W",this.settings.resolution.Width.toString(),"-H",this.settings.resolution.Height.toString()]);
     }
 
-    this.rtspServer.stdout.on('data', data => utils.log.debug("rtspServer: %s", data));
-    this.rtspServer.stderr.on('data', data => utils.log.error("rtspServer: %s", data));
-    this.rtspServer.on('error', err=> utils.log.error("rtspServer error: %s", err));
-    this.rtspServer.on('exit', (code, signal) => {
-      if (code)
-        utils.log.error("rtspServer exited with code: %s", code);
-      else
-        utils.log.debug("rtspServer exited")
-    });
+    if (this.rtspServer) {
+      this.rtspServer.stdout.on('data', data => utils.log.debug("rtspServer: %s", data));
+      this.rtspServer.stderr.on('data', data => utils.log.error("rtspServer: %s", data));
+      this.rtspServer.on('error', err=> utils.log.error("rtspServer error: %s", err));
+      this.rtspServer.on('exit', (code, signal) => {
+        if (code)
+          utils.log.error("rtspServer exited with code: %s", code);
+        else
+          utils.log.debug("rtspServer exited")
+      });
+    }
   }
 
   stopRtsp() {
