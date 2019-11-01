@@ -44,16 +44,22 @@ STEP 1 - ENABLE RASPBERRY PI CAMERA
 Pi users can run ‘raspi-config’ and enable the camera and reboot  
 Windows/Mac/Linux users can skip this step
 
-STEP 2.1 - INSTALL NODEJS AND NPM
-Pi and Linux users can install Node and NPM together with this command
+STEP 2 - INSTALL NODEJS AND NPM
+
+NOTE: Node.js Version 6.x and 8.x have been tested with RPOS. Only a small amount of testing has been done with Node v10.
+
+STEP 2.1.a - INSTALL NODE USING NVM
+You may choose to use [Node Version Manager (NVM)](https://github.com/nvm-sh/nvm) to install & use a specific version of Node & NPM, such as `nvm install 8` instead of the latest. Follow the instructions on NVM's github page to install & use.
+
+STEP 2.1.b - INSTALL NODE USING APT
+Pi and Linux users can install latest versions of Node and NPM together with this command:
 
 ```
    sudo apt-get install npm
 ```
 
+STEP 2.1.c - OTHER METHODS
 Windows and Mac users can install Node from the nodejs.org web site.
-
-Version 6.x and 8.x have been tested with RPOS. Only a small amount of testing has been done with Node v10.
 
 Older Raspbian users (eg thouse running Jessie) can install NodeJS and NPM with these commands
 
@@ -62,15 +68,22 @@ Older Raspbian users (eg thouse running Jessie) can install NodeJS and NPM with 
   sudo apt-get install nodejs
 ```
 
-STEP 2.2 - UPGRADE NPM  
-Check you have upgraded to the latest NPM with this command  
-`sudo npm install -g npm@latest`  
+STEP 2.2 - UPDATE NPM
+
+If using NVM to manage your Node.js version, the following will update NPM to the latest supported on your version of Node.js:
+`nvm install-latest-npm`
+
+Otherwise you can use NPM to update itself the latest NPM with this command:
+`sudo npm install -g npm@latest`
 Note this seemed to fail first time and needed to be ran twice to get my onto NPM version 6.7.0
 
-STEP 3 - GET RPOS SOURCE, INSTALL DEPENDENCIES  
-`git clone https://github.com/BreeeZe/rpos.git`  
-`cd rpos`  
-`npm install`
+STEP 3 - GET RPOS SOURCE, INSTALL DEPENDENCIES
+
+```
+git clone https://github.com/BreeeZe/rpos.git
+cd rpos
+npm install
+```
 
 STEP 4 - COMPILE TYPESCRIPT(.ts) TO JAVASCRIPT(.js) using GULP  
 For NPM version 5.2 and up, use the `npx` command to run the 'gulp' script:
