@@ -176,7 +176,8 @@ sudo make install
 
 ### STEP 6 - EDIT CONFIG
 
-- Edit `rposConf.json` to fit your application
+Edit `rposConf.json` to fit your application. Options include:
+
 - Add a Username and Password for ONVIF access
 - Change the TCP Port for the Camera configuration and the ONVIF Services
 - Change the RTSP Port
