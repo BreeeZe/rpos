@@ -56,7 +56,7 @@ STEP 2.1.b - INSTALL NODE USING APT
 Pi and Linux users can install latest versions of Node and NPM together with this command:
 
 ```
-   sudo apt-get install npm
+  sudo apt-get install npm
 ```
 
 STEP 2.1.c - OTHER METHODS
@@ -73,10 +73,17 @@ Older Raspbian users (eg thouse running Jessie) can install NodeJS and NPM with 
 STEP 2.2 - UPDATE NPM
 
 If using NVM to manage your Node.js version, the following will update NPM to the latest supported on your version of Node.js:
-`nvm install-latest-npm`
+
+```
+nvm install-latest-npm
+```
 
 Otherwise you can use NPM to update itself the latest NPM with this command:
-`sudo npm install -g npm@latest`
+
+```
+sudo npm install -g npm@latest
+```
+
 Note this seemed to fail first time and needed to be ran twice to get my onto NPM version 6.7.0
 
 STEP 3 - GET RPOS SOURCE, INSTALL DEPENDENCIES
@@ -89,49 +96,59 @@ npm install
 
 STEP 4 - COMPILE TYPESCRIPT(.ts) TO JAVASCRIPT(.js) using GULP  
 For NPM version 5.2 and up, use the `npx` command to run the 'gulp' script:
-`npx gulp`
+
+```
+npx gulp
+```
 
 For older versions of NPM without `npx`, run the gulp script directly:
-`./node_modules/gulp/bin/gulp.js`
+
+```
+./node_modules/gulp/bin/gulp.js
+```
 
 STEP 5 - PICK YOUR RTSP SERVER
-RPOS comes with a pre-compiled ARM binary for a simple RTSP server. The source is in the ‘cpp’ folder.  
-But the mpromonet RTSP Server (server option 2) and the GStreamer RTSP Server (server option 3) offer more features using the build instructions below.  
-Windows users will need to run their own RTSP Server.  
-Mac users can use the ffserver script.  
+RPOS comes with a pre-compiled ARM binary for a simple RTSP server. The source is in the ‘cpp’ folder.
+But the mpromonet RTSP Server (server option 2) and the GStreamer RTSP Server (server option 3) offer more features using the build instructions below.
+Windows users will need to run their own RTSP Server.
+Mac users can use the ffserver script.
 Note:- The choice of RTSP Server is made in rposConfig.json
 
 STEP 5.1 - USING MPROMONET RTSP SERVER - COMPILE the RTSP Server (server option 2)
-RPOS comes with a pre-compiled ARM binary for a simple RTSP server. The source is in the ‘cpp’ folder.  
-However Pi and Linux users will probably prefer the mpromonet RTSP server as has more options and supports multicasting.  
-It can be installed and can be installed by running this script  
-`sudo apt-get install liblivemedia-dev`  
+RPOS comes with a pre-compiled ARM binary for a simple RTSP server. The source is in the ‘cpp’ folder.
+However Pi and Linux users will probably prefer the mpromonet RTSP server as has more options and supports multicasting.
+It can be installed and can be installed by running this script
+`sudo apt-get install liblivemedia-dev`
 `sh setup_v4l2rtspserver.sh`
 
 STEP 5.2 - USING GSTREAMER RTSP SERVER - INSTALL RPICAMSRC and GST-RTSP-SERVER (server option 3)
 
-- Install required packages using apt or compile them yourself.  
+- Install required packages using apt or compile them yourself.
   Installing the packages using apt saves a lot of time, but provides a rather old gstreamer version.
 - Install using apt:
 
 ```
-  sudo apt install git gstreamer1.0-plugins-bad gstreamer1.0-plugins-base \
-                    gstreamer1.0-plugins-good gstreamer1.0-plugins-ugly \
-                    gstreamer1.0-tools libgstreamer1.0-dev libgstreamer1.0-0-dbg \
-                    libgstreamer1.0-0 gstreamer1.0-omx \
-                    libgstreamer-plugins-base1.0-dev gtk-doc-tools
+
+sudo apt install git gstreamer1.0-plugins-bad gstreamer1.0-plugins-base \
+ gstreamer1.0-plugins-good gstreamer1.0-plugins-ugly \
+ gstreamer1.0-tools libgstreamer1.0-dev libgstreamer1.0-0-dbg \
+ libgstreamer1.0-0 gstreamer1.0-omx \
+ libgstreamer-plugins-base1.0-dev gtk-doc-tools
+
 ```
 
 - Compile gst-rpicamsrc:
 
 ```
-  cd ..
-  git clone https://github.com/thaytan/gst-rpicamsrc.git
-  cd gst-rpicamsrc
-  ./autogen.sh
-  make
-  sudo make install
-  cd ..
+
+cd ..
+git clone https://github.com/thaytan/gst-rpicamsrc.git
+cd gst-rpicamsrc
+./autogen.sh
+make
+sudo make install
+cd ..
+
 ```
 
 - Check successful plugin installation by executing `gst-inspect-1.0 rpicamsrc`
@@ -140,12 +157,14 @@ STEP 5.2 - USING GSTREAMER RTSP SERVER - INSTALL RPICAMSRC and GST-RTSP-SERVER (
   (newer versions require newer GStreamer libs than those installed by apt)
 
 ```
-  git clone git://anongit.freedesktop.org/gstreamer/gst-rtsp-server
-  cd gst-rtsp-server
-  git checkout 1.4.5
-  ./autogen.sh
-  make
-  sudo make install
+
+git clone git://anongit.freedesktop.org/gstreamer/gst-rtsp-server
+cd gst-rtsp-server
+git checkout 1.4.5
+./autogen.sh
+make
+sudo make install
+
 ```
 
 STEP 6 - EDIT CONFIG
@@ -161,18 +180,18 @@ STEP 6 - EDIT CONFIG
 - Enable a basic ONVIF/RTSP Gateway
 - Hard code an IP address in the ONVIF SOAP messages
 
-STEP 7 - RUN RPOS.JS  
- `sudo modprobe bcm2835-v4l2` to load the Pi V4L2 Camera Driver  
- `node rpos.js` to run the Application
+STEP 7 - RUN RPOS.JS
+`sudo modprobe bcm2835-v4l2` to load the Pi V4L2 Camera Driver
+`node rpos.js` to run the Application
 
-STEP 8 - EXTRA CONFIGURATION ON PAN-TILT HAT (Pimononi)  
-The camera on the Pan-Tilt hat is usually installed upside down.  
+STEP 8 - EXTRA CONFIGURATION ON PAN-TILT HAT (Pimononi)
+The camera on the Pan-Tilt hat is usually installed upside down.
 Goto the Web Page that runs with rpos `http://<CameraIP>:8081` and tick the horizontal and vertial flip boxes and apply the changes.
 
 ## Camera Settings
 
-You can set camera settings by browsing to : `http://CameraIP:Port/`  
-These settings are then saved in a file called v4l2ctl.json and are persisted on rpos restart.  
+You can set camera settings by browsing to : `http://CameraIP:Port/`
+These settings are then saved in a file called v4l2ctl.json and are persisted on rpos restart.
 The default port for RPOS is 8081.
 
 ## Known Issues
@@ -189,3 +208,7 @@ The default port for RPOS is 8081.
 - Add GPIO digital input
 - Add two way audio
 - and more...
+
+```
+
+```
