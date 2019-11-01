@@ -40,26 +40,28 @@ Picture of RPOS running on a Pi 3 with the PiMoroni PanTiltHAT and Official Pi C
 
 ## How to Install on a Raspberry Pi:
 
-STEP 1 - ENABLE RASPBERRY PI CAMERA  
+### STEP 1 - ENABLE RASPBERRY PI CAMERA
+
 Pi users can run ‘raspi-config’ and enable the camera and reboot  
 Windows/Mac/Linux users can skip this step
 
-STEP 2 - INSTALL NODEJS AND NPM
+### STEP 2 - INSTALL NODEJS AND NPM
 
 NOTE: Node.js Version 6.x and 8.x have been tested with RPOS. Only a small amount of testing has been done with Node v10.
 
-STEP 2.1.a - INSTALL NODE USING NVM
+#### STEP 2.1.a - INSTALL NODE USING NVM
 
 You may choose to use [Node Version Manager (NVM)](https://github.com/nvm-sh/nvm) to install & use a specific version of Node & NPM, such as `nvm install 8` instead of the latest. Follow the instructions on NVM's github page to install & use.
 
-STEP 2.1.b - INSTALL NODE USING APT
+#### STEP 2.1.b - INSTALL NODE USING APT
+
 Pi and Linux users can install latest versions of Node and NPM together with this command:
 
 ```
   sudo apt-get install npm
 ```
 
-STEP 2.1.c - OTHER METHODS
+#### STEP 2.1.c - OTHER METHODS
 
 Windows and Mac users can install Node from the nodejs.org web site.
 
@@ -70,7 +72,7 @@ Older Raspbian users (eg thouse running Jessie) can install NodeJS and NPM with 
   sudo apt-get install nodejs
 ```
 
-STEP 2.2 - UPDATE NPM
+#### STEP 2.2 - UPDATE NPM
 
 If using NVM to manage your Node.js version, the following will update NPM to the latest supported on your version of Node.js:
 
@@ -86,7 +88,7 @@ sudo npm install -g npm@latest
 
 Note this seemed to fail first time and needed to be ran twice to get my onto NPM version 6.7.0
 
-STEP 3 - GET RPOS SOURCE, INSTALL DEPENDENCIES
+### STEP 3 - GET RPOS SOURCE, INSTALL DEPENDENCIES
 
 ```
 git clone https://github.com/BreeeZe/rpos.git
@@ -94,34 +96,39 @@ cd rpos
 npm install
 ```
 
-STEP 4 - COMPILE TYPESCRIPT(.ts) TO JAVASCRIPT(.js) using GULP  
+### STEP 4 - COMPILE TYPESCRIPT(.ts) TO JAVASCRIPT(.js) using GULP
+
+#### 4.1.a
+
 For NPM version 5.2 and up, use the `npx` command to run the 'gulp' script:
 
 ```
 npx gulp
 ```
 
-For older versions of NPM without `npx`, run the gulp script directly:
+#### 4.1.b For older versions of NPM without `npx`, run the gulp script directly:
 
 ```
 ./node_modules/gulp/bin/gulp.js
 ```
 
-STEP 5 - PICK YOUR RTSP SERVER
+### STEP 5 - PICK YOUR RTSP SERVER
+
 RPOS comes with a pre-compiled ARM binary for a simple RTSP server. The source is in the ‘cpp’ folder.
 But the mpromonet RTSP Server (server option 2) and the GStreamer RTSP Server (server option 3) offer more features using the build instructions below.
 Windows users will need to run their own RTSP Server.
 Mac users can use the ffserver script.
 Note:- The choice of RTSP Server is made in rposConfig.json
 
-STEP 5.1 - USING MPROMONET RTSP SERVER - COMPILE the RTSP Server (server option 2)
+#### STEP 5.1 - USING MPROMONET RTSP SERVER - COMPILE the RTSP Server (server option 2)
+
 RPOS comes with a pre-compiled ARM binary for a simple RTSP server. The source is in the ‘cpp’ folder.
 However Pi and Linux users will probably prefer the mpromonet RTSP server as has more options and supports multicasting.
 It can be installed and can be installed by running this script
 `sudo apt-get install liblivemedia-dev`
 `sh setup_v4l2rtspserver.sh`
 
-STEP 5.2 - USING GSTREAMER RTSP SERVER - INSTALL RPICAMSRC and GST-RTSP-SERVER (server option 3)
+#### STEP 5.2 - USING GSTREAMER RTSP SERVER - INSTALL RPICAMSRC and GST-RTSP-SERVER (server option 3)
 
 - Install required packages using apt or compile them yourself.
   Installing the packages using apt saves a lot of time, but provides a rather old gstreamer version.
@@ -167,24 +174,24 @@ sudo make install
 
 ```
 
-STEP 6 - EDIT CONFIG
+### STEP 6 - EDIT CONFIG
 
-- Edit `rposConf.json` if you want to
-- Add an ONVIF Username and Password
-- Change the TCP Port for the Web Server and the ONVIF Service
+- Edit `rposConf.json` to fit your application
+- Add a Username and Password for ONVIF access
+- Change the TCP Port for the Camera configuration and the ONVIF Services
 - Change the RTSP Port
 - Enable PTZ support eg for the Pan-Tilt HAT or RS485 backends (Visca and Pelco D)
 - Enable multicast
-- Switch to the mpromonet RTSP Server
-- Switch to the GStreamer RTSP Server
-- Enable a basic ONVIF/RTSP Gateway
-- Hard code an IP address in the ONVIF SOAP messages
+- Switch to the mpromonet or GStreamer RTSP servers
+- Hardcode an IP address in the ONVIF SOAP messages
 
-STEP 7 - RUN RPOS.JS
+### STEP 7 - RUN RPOS.JS
+
 `sudo modprobe bcm2835-v4l2` to load the Pi V4L2 Camera Driver
 `node rpos.js` to run the Application
 
-STEP 8 - EXTRA CONFIGURATION ON PAN-TILT HAT (Pimononi)
+### STEP 8 - EXTRA CONFIGURATION ON PAN-TILT HAT (Pimononi)
+
 The camera on the Pan-Tilt hat is usually installed upside down.
 Goto the Web Page that runs with rpos `http://<CameraIP>:8081` and tick the horizontal and vertial flip boxes and apply the changes.
 
