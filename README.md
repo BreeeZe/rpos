@@ -202,7 +202,7 @@ Initial setup is now complete!
 
 To start the application each time the system reboots:
 
-````
+```
 node rpos.js
 ```
 
@@ -237,3 +237,4 @@ The default port for RPOS is 8081.
 ```
 
 ```
+````
