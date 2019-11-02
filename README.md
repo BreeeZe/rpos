@@ -181,15 +181,30 @@ Edit `rposConf.json` to fit your application. Options include:
 - Add a Username and Password for ONVIF access
 - Change the TCP Port for the Camera configuration and the ONVIF Services
 - Change the RTSP Port
-- Enable PTZ support eg for the Pan-Tilt HAT or RS485 backends (Visca and Pelco D)
+- Enable PTZ support by selecting Pan-Tilt HAT or RS485 backends (Visca and Pelco D)
 - Enable multicast
 - Switch to the mpromonet or GStreamer RTSP servers
 - Hardcode an IP address in the ONVIF SOAP messages
 
 ### STEP 7 - RUN RPOS.JS
 
-`sudo modprobe bcm2835-v4l2` to load the Pi V4L2 Camera Driver
-`node rpos.js` to run the Application
+#### First run
+
+If you're using RTSP option 1 or 2, before you run RPOS for the first time you'll need to load the Pi V4L2 Camera Driver:
+
+```
+sudo modprobe bcm2835-v4l2
+```
+
+Initial setup is now complete!
+
+#### Launch RPOS
+
+To start the application each time the system reboots:
+
+````
+node rpos.js
+```
 
 ### STEP 8 - EXTRA CONFIGURATION ON PAN-TILT HAT (Pimononi)
 
@@ -216,6 +231,8 @@ The default port for RPOS is 8081.
 - Add GPIO digital input
 - Add two way audio
 - and more...
+
+````
 
 ```
 
