@@ -116,28 +116,28 @@ For older versions of NPM without `npx`, run the gulp script directly:
 
 ### STEP 5 - PICK YOUR RTSP SERVER
 
-RTSP Server options:
+RTSP Server options for Pi / Linux:
 
-0. RPOS comes with a pre-compiled ARM binary for a simple RTSP server. The source is in the ‘cpp’ folder.
+1. RPOS comes with a pre-compiled ARM binary for a simple RTSP server. The source is in the ‘cpp’ folder.
 1. mpromonet RTSP Server (server option 2)
-2. GStreamer RTSP Server (server option 3)
+1. GStreamer RTSP Server (server option 3)
 
-Options 2 & 3 offer more features, but require additional setup. See the build instructions below.
+RTSP Server options 2 & 3 offer more features, but require additional setup. See instructions below.
 
 Windows users will need to run their own RTSP Server.
 Mac users can use the ffserver script.
 
-Note:- The choice of RTSP Server is made in rposConfig.json
+Note: The choice of RTSP Server is made in rposConfig.json
 
-#### STEP 5.a - USING PRE-COMPILED ARM BINARY
+#### STEP 5.a - USING PRE-COMPILED ARM BINARY (1)
 
-RPOS comes with a pre-compiled ARM binary for a simple RTSP server. The source is in the ‘cpp’ folder. No action required to use, this is pre-selected in `rpos_config.json`
+Option 1: RPOS comes with a pre-compiled ARM binary for a simple RTSP server. The source is in the ‘cpp’ folder. No action required to use, this is pre-selected in `rpos_config.json`
 
 Note that this option can be unstable, recommend option 2 or 3.
 
-#### STEP 5.b - USING MPROMONET RTSP SERVER
+#### STEP 5.b - USING MPROMONET RTSP SERVER (2)
 
-Raspberry Pi and Linux users will probably prefer the mpromonet RTSP server, as it has more options and supports multicasting.
+Option 2: Raspberry Pi and Linux users will probably prefer the mpromonet RTSP server, as it has more options and supports multicasting.
 It can be installed and can be installed by installing dependency and running this script:
 
 ```
@@ -145,11 +145,15 @@ sudo apt-get install liblivemedia-dev
 sh setup_v4l2rtspserver.sh
 ```
 
-#### STEP 5.c - USING GSTREAMER RTSP SERVER - INSTALL RPICAMSRC and GST-RTSP-SERVER (server option 3)
+#### STEP 5.c - USING GSTREAMER RTSP SERVER (server option 3)
+
+Option 3:
 
 - Install required packages using apt or compile them yourself.
   Installing the packages using apt saves a lot of time, but provides a rather old gstreamer version.
 - Install using apt:
+
+##### INSTALL RPICAMSRC
 
 ```
 sudo apt install git gstreamer1.0-plugins-bad gstreamer1.0-plugins-base \
@@ -175,6 +179,8 @@ cd ..
 - Note: You do not need to load V4L2 modules when using rpicamsrc!
 - Compile gst-rtsp-server v1.4.5
   (newer versions require newer GStreamer libs than those installed by apt)
+
+##### INSTALL GST-RTSP-SERVER
 
 ```
 git clone git://anongit.freedesktop.org/gstreamer/gst-rtsp-server
