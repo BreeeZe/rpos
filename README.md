@@ -153,7 +153,7 @@ Option 3:
   Installing the packages using apt saves a lot of time, but provides a rather old gstreamer version.
 - Install using apt:
 
-##### INSTALL RPICAMSRC
+##### INSTALL RPICAMSRC:
 
 ```
 sudo apt install git gstreamer1.0-plugins-bad gstreamer1.0-plugins-base \
@@ -163,7 +163,7 @@ sudo apt install git gstreamer1.0-plugins-bad gstreamer1.0-plugins-base \
  libgstreamer-plugins-base1.0-dev gtk-doc-tools
 ```
 
-- Compile gst-rpicamsrc:
+(starting in /rpos root directory)
 
 ```
 cd ..
@@ -175,12 +175,15 @@ sudo make install
 cd ..
 ```
 
-- Check successful plugin installation by executing `gst-inspect-1.0 rpicamsrc`
-- Note: You do not need to load V4L2 modules when using rpicamsrc!
-- Compile gst-rtsp-server v1.4.5
-  (newer versions require newer GStreamer libs than those installed by apt)
+Check successful plugin installation by executing
+
+```
+gst-inspect-1.0 rpicamsrc
+```
 
 ##### INSTALL GST-RTSP-SERVER
+
+Compile gst-rtsp-server v1.4.5 (newer versions require newer GStreamer libs than those installed by apt)
 
 ```
 git clone git://anongit.freedesktop.org/gstreamer/gst-rtsp-server
@@ -190,6 +193,8 @@ git checkout 1.4.5
 make
 sudo make install
 ```
+
+Note: You do not need to load V4L2 modules when using rpicamsrc (option 3).
 
 ### STEP 6 - EDIT CONFIG
 
