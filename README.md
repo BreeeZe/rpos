@@ -163,7 +163,7 @@ sudo apt install git gstreamer1.0-plugins-bad gstreamer1.0-plugins-base \
  libgstreamer-plugins-base1.0-dev gtk-doc-tools
 ```
 
-##### 5.c.1b - INSTALL GSTREAMER FROM SOURCE
+##### 5.c.1b - INSTALL GST-RPICAMSRC FROM SOURCE
 
 (starting in /rpos root directory)
 
