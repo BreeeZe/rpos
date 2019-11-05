@@ -151,7 +151,7 @@ Option 3: Install precompiled packages using apt, or compile them yourself.
 
 Installing the packages using apt saves a lot of time, but provides a rather old gstreamer version.
 
-##### 5.c.a - INSTALL GSTREAMER USING APT:
+##### 5.c.1a - INSTALL GSTREAMER USING APT:
 
 ```
 sudo apt install git gstreamer1.0-plugins-bad gstreamer1.0-plugins-base \
@@ -161,7 +161,7 @@ sudo apt install git gstreamer1.0-plugins-bad gstreamer1.0-plugins-base \
  libgstreamer-plugins-base1.0-dev gtk-doc-tools
 ```
 
-##### 5.c.b - INSTALL GSTREAMER & GST-RTSP-SERVER FROM SOURCE
+##### 5.c.1b - INSTALL GSTREAMER FROM SOURCE
 
 (starting in /rpos root directory)
 
@@ -180,6 +180,8 @@ Check successful plugin installation by executing
 ```
 gst-inspect-1.0 rpicamsrc
 ```
+
+##### 5.c.2 - INSTALL GST-RTSP-SERVER FROM SOURCE
 
 Next, compile gst-rtsp-server v1.4.5 (newer versions require newer GStreamer libs than those installed by apt)
 
