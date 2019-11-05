@@ -138,7 +138,7 @@ Note that this option can be unstable, recommend option 2 or 3.
 #### STEP 5.b - USING MPROMONET RTSP SERVER (2)
 
 Option 2: Raspberry Pi and Linux users will probably prefer the mpromonet RTSP server, as it has more options and supports multicasting.
-It can be installed and can be installed by installing dependency and running this script:
+Install dependency and run this setup script:
 
 ```
 sudo apt-get install liblivemedia-dev
@@ -147,13 +147,11 @@ sh setup_v4l2rtspserver.sh
 
 #### STEP 5.c - USING GSTREAMER RTSP SERVER (server option 3)
 
-Option 3:
+Option 3: Install precompiled packages using apt, or compile them yourself.
 
-- Install required packages using apt or compile them yourself.
-  Installing the packages using apt saves a lot of time, but provides a rather old gstreamer version.
-- Install using apt:
+Installing the packages using apt saves a lot of time, but provides a rather old gstreamer version.
 
-##### INSTALL RPICAMSRC:
+##### 5.c.a - INSTALL GSTREAMER USING APT:
 
 ```
 sudo apt install git gstreamer1.0-plugins-bad gstreamer1.0-plugins-base \
@@ -162,6 +160,8 @@ sudo apt install git gstreamer1.0-plugins-bad gstreamer1.0-plugins-base \
  libgstreamer1.0-0 gstreamer1.0-omx \
  libgstreamer-plugins-base1.0-dev gtk-doc-tools
 ```
+
+##### 5.c.b - COMPILE & INSTALL GSTREAMER FROM SOURCE
 
 (starting in /rpos root directory)
 
@@ -181,7 +181,7 @@ Check successful plugin installation by executing
 gst-inspect-1.0 rpicamsrc
 ```
 
-##### INSTALL GST-RTSP-SERVER
+##### COMPILE & INSTALL GST-RTSP-SERVER
 
 Compile gst-rtsp-server v1.4.5 (newer versions require newer GStreamer libs than those installed by apt)
 
@@ -222,7 +222,7 @@ Initial setup is now complete!
 
 #### Launch RPOS
 
-To start the application each time the system reboots:
+To start the application:
 
 ```
 node rpos.js
@@ -253,10 +253,3 @@ The default port for RPOS is 8081.
 - Add GPIO digital input
 - Add two way audio
 - and more...
-
-````
-
-```
-
-```
-````
