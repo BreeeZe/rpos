@@ -65,7 +65,7 @@ Pi and Linux users can install latest versions of Node and NPM together with thi
 
 Windows and Mac users can install Node from the nodejs.org web site.
 
-Older Raspbian users (eg thouse running Jessie) can install NodeJS and NPM with these commands
+Older Raspbian users (eg those running Jessie) can install NodeJS and NPM with these commands
 
 ```
   curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
@@ -74,13 +74,13 @@ Older Raspbian users (eg thouse running Jessie) can install NodeJS and NPM with 
 
 #### STEP 2.2 - UPDATE NPM
 
-If using NVM to manage your Node.js version, the following will update NPM to the latest supported on your version of Node.js:
+If using [`NVM`](https://github.com/nvm-sh/nvm) to manage your Node.js version, the following will update NPM to the latest supported on your version of Node.js:
 
 ```
 nvm install-latest-npm
 ```
 
-Otherwise you can use NPM to update itself the latest NPM with this command:
+Otherwise you can use NPM to update itself with this command:
 
 ```
 sudo npm install -g npm@latest
