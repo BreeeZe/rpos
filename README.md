@@ -116,11 +116,13 @@ For older versions of NPM without `npx`, run the gulp script directly:
 
 ### STEP 5 - PICK YOUR RTSP SERVER
 
+Select & setup an RTSP option for your platform.
+
 RTSP Server options for Pi / Linux:
 
-1. RPOS comes with a pre-compiled ARM binary for a simple RTSP server. The source is in the ‘cpp’ folder.
-1. mpromonet RTSP Server (server option 2)
-1. GStreamer RTSP Server (server option 3)
+1. RPOS comes with a pre-compiled ARM binary for a simple RTSP server. The source is in the ‘cpp’ folder. (option 1)
+1. mpromonet RTSP Server (option 2)
+1. GStreamer RTSP Server (option 3)
 
 RTSP Server options 2 & 3 offer more features, but require additional setup. See instructions below.
 
@@ -129,26 +131,26 @@ Mac users can use the ffserver script.
 
 Note: The choice of RTSP Server is made in rposConfig.json
 
-#### STEP 5.a - USING PRE-COMPILED ARM BINARY (1)
+#### STEP 5.a - OPTION 1: USING PRE-COMPILED ARM BINARY
 
-Option 1: RPOS comes with a pre-compiled ARM binary for a simple RTSP server. The source is in the ‘cpp’ folder. No action required to use, this is pre-selected in `rpos_config.json`
+RPOS comes with a pre-compiled ARM binary for a simple RTSP server. The source is in the ‘cpp’ folder. No action required to use, this is pre-selected in `rpos_config.json`
 
 Note that this option can be unstable, recommend option 2 or 3.
 
-#### STEP 5.b - USING MPROMONET RTSP SERVER (2)
+#### STEP 5.b - OPTION 2: USING MPROMONET RTSP SERVER
 
-Option 2: Raspberry Pi and Linux users will probably prefer the mpromonet RTSP server, as it has more options and supports multicasting.
-Install dependency and run this setup script:
+Raspberry Pi and Linux users will probably prefer the mpromonet RTSP server, as it has more options and supports multicasting.
+
+Install dependencies and run setup script:
 
 ```
 sudo apt-get install liblivemedia-dev
 sh setup_v4l2rtspserver.sh
 ```
 
-#### STEP 5.c - USING GSTREAMER RTSP SERVER (server option 3)
+#### STEP 5.c - OPTION 3: USING GSTREAMER RTSP SERVER
 
-Option 3: Install precompiled packages using apt, or compile them yourself.
-
+Install the precompiled packages using apt, or compile them yourself for latest version.  
 Installing the packages using apt saves a lot of time, but provides a rather old gstreamer version.
 
 ##### 5.c.1a - INSTALL GSTREAMER USING APT:
