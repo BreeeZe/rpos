@@ -161,7 +161,7 @@ sudo apt install git gstreamer1.0-plugins-bad gstreamer1.0-plugins-base \
  libgstreamer-plugins-base1.0-dev gtk-doc-tools
 ```
 
-##### 5.c.b - COMPILE & INSTALL GSTREAMER FROM SOURCE
+##### 5.c.b - INSTALL GSTREAMER & GST-RTSP-SERVER FROM SOURCE
 
 (starting in /rpos root directory)
 
@@ -181,9 +181,7 @@ Check successful plugin installation by executing
 gst-inspect-1.0 rpicamsrc
 ```
 
-##### COMPILE & INSTALL GST-RTSP-SERVER
-
-Compile gst-rtsp-server v1.4.5 (newer versions require newer GStreamer libs than those installed by apt)
+Next, compile gst-rtsp-server v1.4.5 (newer versions require newer GStreamer libs than those installed by apt)
 
 ```
 git clone git://anongit.freedesktop.org/gstreamer/gst-rtsp-server
