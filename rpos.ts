@@ -1,5 +1,4 @@
 ﻿/// <reference path="./rpos.d.ts"/>
-/// <reference path="./typings/main.d.ts"/>
 
 /*
 The MIT License(MIT)

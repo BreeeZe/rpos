@@ -5,6 +5,8 @@ interface rposConfig {
   ServicePort: number;
   Username: string;
   Password: string;
+  CameraType: string;
+  CameraDevice: string;
   RTSPAddress: string;
   RTSPPort: number;
   RTSPName: string;
