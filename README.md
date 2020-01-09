@@ -200,7 +200,9 @@ Note: You do not need to load V4L2 modules when using rpicamsrc (option 3).
 
 ### STEP 6 - EDIT CONFIG
 
-Edit `rposConf.json` to fit your application. Options include:
+Rename `rposConfig.sample-*.json` to `rposConfig.json`. (Choosing the appropriate sample to start with)
+
+Edit `rposConfig.json` to fit your application. Options include:
 
 - Add a Username and Password for ONVIF access
 - Change the TCP Port for the Camera configuration and the ONVIF Services

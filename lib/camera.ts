@@ -167,7 +167,7 @@ class Camera {
 
   loadDriver() {
       try {
-          utils.execSync("sudo modprobe bcm2835-v4l2"); // only on PI
+          utils.execSync("sudo modprobe bcm2835-v4l2"); // only on PI, and not needed with USB Camera
       } catch (err) {}
   }
   
