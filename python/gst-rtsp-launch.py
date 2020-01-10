@@ -321,7 +321,7 @@ class StreamServer:
 	def start(self):
 		p = subprocess.Popen("ps -ax | grep rpos.js", shell=True, stdout=subprocess.PIPE)
 		output = p.stdout.read()
-		while self.stayAwake and "node rpos.js" in output:
+		while self.stayAwake and "node" in output:
 			if os.stat(self.file).st_mtime != self.configDate:
 				log.info("Updating stream settings")
 				self.readConfig()
