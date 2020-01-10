@@ -17,6 +17,8 @@ Oliver Schwaneberg added GStreamer gst-rtsp-server support as third RTSP Server 
 
 Casper Meijn added Relative PTZ support
 
+Johnny Wan added limited USB Camera support for GStreamer RTSP server.
+
 ## Features:
 
 - Streams H264 video over rtsp from the Official Raspberry Pi camera (the one that uses the ribbon cable)
@@ -33,17 +35,23 @@ Casper Meijn added Relative PTZ support
 - Implements Relay (digital output) function
 - Supports Unicast (UDP/TDP) and Multicast using mpromonet's RTSP server
 - Also runs on Mac and Windows and other Linux machines but you need to supply your own RTSP server. An example to use ffserver on the Mac is included.
-- Currently does not support USB cameras (see Todo List)
+- Currently USB cameras only support GStreamer RTSP server with limited parameters available (Only tried with RasPI 3B (Debian Buster) and MJPEG USB HD camera, see Todo List)
 
 ![Picture of RPOS running on a Pi with the PanTiltHAT and Pi Camera](RPOS_PanTiltHAT.jpg?raw=true "PanTiltHAT")
 Picture of RPOS running on a Pi 3 with the PiMoroni PanTiltHAT and Official Pi Camera
 
 ## How to Install on a Raspberry Pi:
 
-### STEP 1 - ENABLE RASPBERRY PI CAMERA
-
-Pi users can run ‘raspi-config’ and enable the camera and reboot  
+### STEP 1 - CONFIG RASPBERRY PI
 Windows/Mac/Linux users can skip this step
+
+#### STEP 1.a - ENABLE RASPBERRY PI CAMERA
+(For Raspberry PI camera)
+Pi users can run ‘raspi-config’ and enable the camera and reboot  
+
+#### STEP 1.b - ADJUST GPU MEMORY
+(For USB camera, and need to use hardware encoding acceleration)
+Add ‘gpu_mem=128’ in /boot/bootconf.txt and reboot
 
 ### STEP 2 - INSTALL NODEJS AND NPM
 
@@ -125,6 +133,7 @@ RTSP Server options for Pi / Linux:
 1. GStreamer RTSP Server (option 3)
 
 RTSP Server options 2 & 3 offer more features, but require additional setup. See instructions below.
+Currently USB camera is only supported by GStreamer RTSP Server
 
 Windows users will need to run their own RTSP Server.
 Mac users can use the ffserver script.
@@ -155,12 +164,26 @@ Installing the packages using apt saves a lot of time, but provides a rather old
 
 ##### 5.c.1a - INSTALL GSTREAMER USING APT:
 
+(For Raspberry PI camera)
 ```
 sudo apt install git gstreamer1.0-plugins-bad gstreamer1.0-plugins-base \
  gstreamer1.0-plugins-good gstreamer1.0-plugins-ugly \
  gstreamer1.0-tools libgstreamer1.0-dev libgstreamer1.0-0-dbg \
  libgstreamer1.0-0 gstreamer1.0-omx \
  libgstreamer-plugins-base1.0-dev gtk-doc-tools
+```
+
+(For USB camera, tested with Raspberry PI)
+The default pipeline takes MJPEG from USB camera, decode it to Raw using omxmjpegdec, then encode it to H.264 using omxh264enc
+
+Install GStreamer pipeline
+```
+sudo apt install gstreamer1.0-tools gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-omx-rpi gstreamer1.0-omx
+```
+
+Install Python Binding and gst-rtsp-server
+```
+sudo apt-get install python-gi gir1.2-gst-plugins-base-1.0 gir1.2-gst-rtsp-server-1.0
 ```
 
 ##### 5.c.1b - INSTALL GST-RPICAMSRC FROM SOURCE
@@ -200,7 +223,7 @@ Note: You do not need to load V4L2 modules when using rpicamsrc (option 3).
 
 ### STEP 6 - EDIT CONFIG
 
-Rename `rposConfig.sample-*.json` to `rposConfig.json`. (Choosing the appropriate sample to start with)
+Rename or copy `rposConfig.sample-*.json` to `rposConfig.json`. (Choosing the appropriate sample to start with)
 
 Edit `rposConfig.json` to fit your application. Options include:
 
@@ -214,7 +237,7 @@ Edit `rposConfig.json` to fit your application. Options include:
 
 ### STEP 7 - RUN RPOS.JS
 
-#### First run
+#### First run (Skip with USB camera)
 
 If you're using RTSP option 1 or 2, before you run RPOS for the first time you'll need to load the Pi V4L2 Camera Driver:
 
@@ -242,15 +265,18 @@ Goto the Web Page that runs with rpos `http://<CameraIP>:8081` and tick the hori
 You can set camera settings by browsing to : `http://CameraIP:Port/`
 These settings are then saved in a file called v4l2ctl.json and are persisted on rpos restart.
 The default port for RPOS is 8081.
+(Note that a lot of camera settings are now ignored by USB camera)
 
 ## Known Issues
 
 - 1920x1080 can cause hangs and crashes with the original RTSP server. The mpromonet one may work better.
+- 1920x1080 can cause encoding issue with USB camera pipeline. 1280x720 is recommended now.
 - Not all of the ONVIF standard is implemented.
 
 ## ToDo's (Help is Required)
 
 - Add MJPEG (implemented in gst-rtsp-server but still needs to return the correct ONVIF XML for MJPEG)
+- Support more parameters for USB cameras with GStreamer RTSP server
 - Support USB cameras with the Pi's Hardware H264 encoder (OMX) (see https://github.com/mpromonet/v4l2tools)
 - Implement more ONVIF calls (Events, Analytics)
 - Test with ONVIF's own test tools (need a sponsor for this as we do not have funds to buy it)
