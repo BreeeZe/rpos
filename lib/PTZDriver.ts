@@ -386,6 +386,7 @@ class PTZDriver {
       v4l2ctl.SetBrightness(data.value);
     }
     else if (command==='focus') {
+      console.log("Focus "+ data.value);
       if (this.pelcod) {
         if (data.value < 0) this.pelcod.focusNear(true);
         else if (data.value > 0) this.pelcod.focusFar(true);
@@ -397,6 +398,7 @@ class PTZDriver {
       }
     }
     else if (command==='focusstop') {
+      console.log("Focus Stop");
       if (this.pelcod) {
         this.pelcod.focusNear(false);
         this.pelcod.focusFar(false);
