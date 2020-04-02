@@ -4,6 +4,7 @@
   "ServicePort" : 8081,
   "Username" : "",
   "Password" : "",
+  "CameraType" : "picam",
   "RTSPAddress" : "", "//":"Normally left blank. Used to set RTSP Server Address",
   "RTSPPort" : 8554,
   "RTSPName" : "h264",

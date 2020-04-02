@@ -16,19 +16,20 @@
     "url": "https://github.com/Breeeze/rpos.git"
   },
   "dependencies": {
-    "soap": "git://github.com/BreeeZe/node-soap.git",
+    "@types/node": "^13.1.5",
+    "body-parser": "1.18.2",
     "cli-color": "1.2.0",
     "express": "4.16.2",
-    "body-parser": "1.18.2",
-    "node-uuid": "1.4.8",
-    "xml2js": "0.4.19",
-    "tenx-usb-missile-launcher-driver": "^0.2.0",
-    "node-pelcod": "^0.3.0",
-    "pan-tilt-hat": "^1.2.1",
-    "serialport": "^6.0.4",
     "ip": "^1.1.5",
+    "macos-release": "~2.0.0",
+    "node-pelcod": "^0.3.0",
+    "node-uuid": "1.4.8",
+    "pan-tilt-hat": "^1.2.1",
     "rpi-version": "^1.4.1",
-    "macos-release": "~2.0.0"
+    "serialport": "^6.0.4",
+    "soap": "git://github.com/BreeeZe/node-soap.git",
+    "tenx-usb-missile-launcher-driver": "^0.2.0",
+    "xml2js": "0.4.19"
   },
   "devDependencies": {
     "gulp": "^3.9.1",
