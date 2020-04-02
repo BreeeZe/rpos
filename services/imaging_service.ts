@@ -36,9 +36,9 @@ class ImagingService extends SoapService {
 
     this.brightness = 50;  // range is 0..100
     this.autoFocusMode = "MANUAL"; // MANUAL or AUTO
-    this.focusDefaultSpeed = 0.5; // range 0.0 to 1.0
-    this.focusNearLimit = 1.0;  // range 0.1 to 3.0
-    this.focusFarLimit = 0.0; // range 0.0 to 0.0
+    this.focusDefaultSpeed = 0.5; // range 0.1 to 1.0. See GetMoveOptions valid range
+    this.focusNearLimit = 1.0;  // range 0.1 to 3.0 in Metres
+    this.focusFarLimit = 0.0; // range 0.0 to 0.0.  0=Infinity
 
     this.extendService();
   }
@@ -139,7 +139,7 @@ class ImagingService extends SoapService {
             Focus : { 
               AutoFocusModes : ['AUTO','MANUAL'],
               DefaultSpeed : { 
-                Min : 0.0,
+                Min : 0.1,
                 Max : 1.0
               },
               NearLimit : { 
@@ -411,7 +411,7 @@ class ImagingService extends SoapService {
             //},
             Continuous : {
               Speed : {
-                Min : 0.0,
+                Min : -1.0,
                 Max : 1.0
               }
             }

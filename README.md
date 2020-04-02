@@ -142,7 +142,7 @@ Note: The choice of RTSP Server is made in rposConfig.json
 
 #### STEP 5.a - OPTION 1: USING PRE-COMPILED ARM BINARY
 
-RPOS comes with a pre-compiled ARM binary for a simple RTSP server. The source is in the ‘cpp’ folder. No action required to use, this is pre-selected in `rpos_config.json`
+RPOS comes with a pre-compiled ARM binary for a simple RTSP server. The source is in the ‘cpp’ folder. No action required to use, this is pre-selected in `rposConfig.json`
 
 Note that this option can be unstable, recommend option 2 or 3.
 
@@ -224,8 +224,6 @@ Note: You do not need to load V4L2 modules when using rpicamsrc (option 3).
 ### STEP 6 - EDIT CONFIG
 
 Rename or copy `rposConfig.sample-*.json` to `rposConfig.json`. (Choosing the appropriate sample to start with)
-
-Edit `rposConfig.json` to fit your application. Options include:
 
 - Add a Username and Password for ONVIF access
 - Change the TCP Port for the Camera configuration and the ONVIF Services
