@@ -140,8 +140,9 @@ Mac users can use the ffserver script.
 
 Note: The choice of RTSP Server is made in rposConfig.json
 
-#### STEP 5.a - OPTION 1: USING PRE-COMPILED ARM BINARY
+#### STEP 5.a - OPTION 1: USING PRE-COMPILED ARM BINARY (deprecated)
 
+This option is not recommended now. Please use Option 2 or Option 3
 RPOS comes with a pre-compiled ARM binary for a simple RTSP server. The source is in the ‘cpp’ folder. No action required to use, this is pre-selected in `rposConfig.json`
 
 Note that this option can be unstable, recommend option 2 or 3.
