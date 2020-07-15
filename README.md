@@ -4,7 +4,7 @@ Node.js based ONVIF Camera/NVT software that turns a Raspberry Pi, Windows, Linu
 
 RPOS won an award in the 2018 ONVIF Open Source Challenge competition.
 
-## History
+## History and Contributors
 
 The initial goal (by @BreeeZe) was to provide a ONVIF Media service which is compatible with Synology Surveillance Station to allow the Raspberry Pi to be used as a surveillance camera without the need for adding any custom camera files to your Synology NAS.
 First demo video @ https://youtu.be/ZcZbF4XOH7E
@@ -19,23 +19,27 @@ Casper Meijn added Relative PTZ support
 
 Johnny Wan added limited USB Camera support for GStreamer RTSP server.
 
+If I've forgotten to put you in the list, please post an Issue Report and I can add you in.
+
 ## Features:
 
-- Streams H264 video over rtsp from the Official Raspberry Pi camera (the one that uses the ribbon cable)
-- Uses hardware H264 encoding (on the Pi)
-- Camera control (resolution and framerate) through ONVIF
-- Set other camera options through a web interface.
-- Discoverable (WS-Discovery) on Pi/Linux
+- Implements the ONVIF Standard for a CCTV Camera and NVT (Network Video Transmitter)
+- Streams H264 video over RTSP from the Official Raspberry Pi camera (the one that uses the ribbon cable) and some USB cameras
+- Uses hardware H264 encoding using the GPU on the Pi
+- Implements Camera control (resolution and framerate) through ONVIF
+- Can set other camera options through a web interface.
+- Discoverable (WS-Discovery) on Pi/Linux by CCTV Viewing Software
 - Works with ONVIF Device Manager (Windows) and ONVIF Device Tool (Linux)
-- Works with other CCTV Viewing Software that implements the ONVIF standard including Antrica Decoder, Avigilon Control Centre, Bosch BVMS, Milestone, ISpy (Opensource), BenSoft SecuritySpy (Mac)
+- Works with other CCTV Viewing Software that implements the ONVIF standard including Antrica Decoder, Avigilon Control Centre, Bosch BVMS, Milestone, ISpy (Opensource), BenSoft SecuritySpy (Mac), IndigoVision Control Centre
 - Implements ONVIF Authentication
-- Implements Absolute, Relative and Continuous PTZ service and controls the Pimononi Raspberry Pi Pan-Tilt HAT
+- Implements Absolute, Relative and Continuous PTZ and controls the Pimononi Raspberry Pi Pan-Tilt HAT
 - Also converts ONVIF PTZ commands into Pelco D and Visca telemetry on a serial port (UART) for other Pan/Tilt platforms
 - Implements Imaging service Brightness and Focus commands (for Profile T)
 - Implements Relay (digital output) function
 - Supports Unicast (UDP/TDP) and Multicast using mpromonet's RTSP server
-- Also runs on Mac and Windows and other Linux machines but you need to supply your own RTSP server. An example to use ffserver on the Mac is included.
-- Currently USB cameras only support GStreamer RTSP server with limited parameters available (Only tried with RasPI 3B (Debian Buster) and MJPEG USB HD camera, see Todo List)
+- Supports Unicast (UDP/TCP) RTSP using GStreamer
+- Also runs on Mac, Windows and other Linux machines but you need to supply your own RTSP server. An example to use ffserver on the Mac is included.
+- USB cameras supported via the GStreamer RTSP server with limited parameters available. Tested with JPEG USB HD camera
 
 ![Picture of RPOS running on a Pi with the PanTiltHAT and Pi Camera](RPOS_PanTiltHAT.jpg?raw=true "PanTiltHAT")
 Picture of RPOS running on a Pi 3 with the PiMoroni PanTiltHAT and Official Pi Camera
@@ -275,10 +279,10 @@ The default port for RPOS is 8081.
 ## ToDo's (Help is Required)
 
 - Add MJPEG (implemented in gst-rtsp-server but still needs to return the correct ONVIF XML for MJPEG)
-- Support more parameters for USB cameras with GStreamer RTSP server
-- Support USB cameras with the Pi's Hardware H264 encoder (OMX) (see https://github.com/mpromonet/v4l2tools)
+- Support more parameters for USB cameras with GStreamer RTSP server [work underway by RogerHardiman. Help needed]
+- Support USB cameras with the Pi's Hardware H264 encoder (OMX) and the mpromonet RTP server (see https://github.com/mpromonet/v4l2tools)
 - Implement more ONVIF calls (Events, Analytics)
-- Test with ONVIF's own test tools (need a sponsor for this as we do not have funds to buy it)
+- Test with ONVIF's own test tools (need a sponsor for this as we need to be ONVIF members to access the Test Tool)
 - Add GPIO digital input
-- Add two way audio
+- Add two way audio with ONVIF back channel. We understand GStreamer has some support for this now.
 - and more...
