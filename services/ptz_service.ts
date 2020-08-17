@@ -42,8 +42,13 @@ class PTZService extends SoapService {
     this.extendService();
   }
 
-
-
+  leftPad(number, targetLength) {
+    var output = number + '';
+    while (output.length < targetLength) {
+        output = '0' + output;
+    }
+    return output;
+  }
 
   extendService() {
     var port = this.ptz_service.PTZService.PTZ;
@@ -215,6 +220,21 @@ class PTZService extends SoapService {
     port.GetNodes = (args) => {
       var GetNodesResponse = { PTZNode: node };
       return GetNodesResponse;
+    };
+
+    port.GetStatus = (arg) => {
+      // ToDo. Check token and return a valid response or an error reponse
+
+      var now = new Date();
+      var utc = now.getUTCFullYear() + '-' + this.leftPad((now.getUTCMonth()+1),2) + '-' + this.leftPad(now.getUTCDate(),2) + 'T'
+            + this.leftPad(now.getUTCHours(),2) + ':' + this.leftPad(now.getUTCMinutes(),2) + ':' + this.leftPad(now.getUTCSeconds(),2) + 'Z';
+
+      var GetStatusResponse = { 
+	PTZStatus: {
+	  UtcTime: utc
+        }
+      };
+      return GetStatusResponse;
     };
 
     port.SetHomePosition = (args) => {

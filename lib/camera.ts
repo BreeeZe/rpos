@@ -155,7 +155,11 @@ class Camera {
         return html;
       }
 
-      var html = parseControls("", 'User Controls', 'UserControls', v4l2ctl.Controls.UserControls);
+      var html = "<h1>RPOS - ONVIF NVT Camera</h1>";
+      html += "<b>Video Stream:</b> rtsp://username:password@deviceIPaddress:" + this.config.RTSPPort.toString() + "/" + this.config.RTSPName.toString();
+      html += "<br>";
+
+      html = parseControls(html, 'User Controls', 'UserControls', v4l2ctl.Controls.UserControls);
       html = parseControls(html, 'Codec Controls', 'CodecControls', v4l2ctl.Controls.CodecControls);
       html = parseControls(html, 'Camera Controls', 'CameraControls', v4l2ctl.Controls.CameraControls);
       html = parseControls(html, 'JPG Compression Controls', 'JPEGCompressionControls', v4l2ctl.Controls.JPEGCompressionControls);
