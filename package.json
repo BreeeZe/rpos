@@ -25,6 +25,7 @@
     "tenx-usb-missile-launcher-driver": "^0.2.0",
     "node-pelcod": "^0.3.0",
     "pan-tilt-hat": "^1.2.1",
+    "simple-udp-stream": "^1.2.3",
     "serialport": "^6.0.4",
     "ip": "^1.1.5",
     "rpi-version": "^1.4.1",
