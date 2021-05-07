@@ -1,7 +1,8 @@
 ///<reference path="../typings/main.d.ts"/>
 ///<reference path="../rpos.d.ts"/>
 
-import { v4l2ctl } from "./v4l2ctl";
+//import { v4l2ctl } from "./v4l2ctl";
+var SimpleUdpStream = require('simple-udp-stream'); // .write() function wrapper for UDP
 
 // PTZDriver for RPOS (Raspberry Pi ONVIF Server)
 // (c) 2016, 2017, 2018 Roger Hardiman
@@ -34,6 +35,7 @@ class PTZDriver {
   tenx: any;
   pelcod: any;
   visca: any;
+  viscaSeqNum: any = 0;
   pan_tilt_hat: any;
   serialPort: any;
   stream: any;
@@ -144,7 +146,23 @@ class PTZDriver {
         }
         // Initialise other protocols here
       });
+    }
 
+    if (PTZOutput === 'udp') {
+
+      let host = config.PTZOutputURL.split(':')[0];
+      let port = config.PTZOutputURL.split(':')[1];
+
+      // Stream used to send to the VISCA camera
+      this.stream = new SimpleUdpStream({
+        destination: host,
+        port: port
+      });
+
+      if (parent.config.PTZDriver === 'visca') {
+        parent.visca = true;
+      }
+        // Initialise other protocols here
     }
   }
 
@@ -165,6 +183,13 @@ class PTZDriver {
       if (this.visca) {
         let data: number[] = [];
         data.push(0x81,0x01,0x06,0x04,0xff);
+
+
+        // Add VISCA over IP header
+
+
+
+
         this.stream.write(new Buffer(data));
       }
       if (this.pan_tilt_hat) {
@@ -315,6 +340,22 @@ class PTZDriver {
             data.push(0x81,0x01,0x06,0x01,0x00,0x00,0x03,0x03,0xff);
           }
 
+
+          let header: number[] = [];
+          header.push(0x01, 0x00, 0x00, data.length,
+            this.viscaSeqNum >> 24 & 0xff,
+            this.viscaSeqNum >> 16 & 0xff,
+            this.viscaSeqNum >> 8 & 0xff,
+            this.viscaSeqNum >> 0 & 0xff);
+          this.viscaSeqNum = (this.viscaSeqNum + 1) & 0xffff;
+          data = header.concat(data);
+
+          this.stream.write(new Buffer(data));
+
+
+
+          data = [];
+
           // Zoom
           if (z < 0) { // zoom out
             data.push(0x81,0x01,0x04,0x07,(0x30 + visca_zoom_speed),0xff);
@@ -324,6 +365,17 @@ class PTZDriver {
           } else { // zoom stop
             data.push(0x81,0x01,0x04,0x07,0x00,0xff);
           }
+
+
+          header = [];
+          header.push(0x01, 0x00, 0x00, data.length,
+            this.viscaSeqNum >> 24 & 0xff,
+            this.viscaSeqNum >> 16 & 0xff,
+            this.viscaSeqNum >> 8 & 0xff,
+            this.viscaSeqNum >> 0 & 0xff);
+          this.viscaSeqNum = (this.viscaSeqNum + 1) & 0xffff;
+          data = header.concat(data);
+
 
           this.stream.write(new Buffer(data));
         }
@@ -383,7 +435,7 @@ class PTZDriver {
     }
     else if (command==='brightness') {
       console.log("Set Brightness "+ data.value);
-      v4l2ctl.SetBrightness(data.value);
+      //v4l2ctl.SetBrightness(data.value);
     }
     else if (command==='focus') {
       console.log("Focus "+ data.value);
