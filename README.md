@@ -64,9 +64,16 @@ Add ‘gpu_mem=128’ in /boot/bootconf.txt and reboot
 
 NOTE: Node.js Version 6.x and 8.x have been tested with RPOS. Only a small amount of testing has been done with Node v10.
 
+UPDATE... MAY 2021. I've started using Node 12 on my Raspberry Pi, installed using the package called 'n'.
+This required me to upgrade Gulp v3 to Gulp v4
+
 #### STEP 2.1.a - INSTALL NODE USING NVM
 
 You may choose to use [Node Version Manager (NVM)](https://github.com/nvm-sh/nvm) to install & use a specific version of Node & NPM, such as `nvm install 8` instead of the latest. Follow the instructions on NVM's github page to install & use.
+
+UPDATE... MAY 2021. I've started using 'n' to install the Node Version ```npm install -g n```.
+nvm us a bash shell extension. 'n' replaces the binary on your path and I found it easier to use this to get a specific version of Node for 'root'
+
 
 #### STEP 2.1.b - INSTALL NODE USING APT
 
