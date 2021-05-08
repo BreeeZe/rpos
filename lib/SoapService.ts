@@ -70,6 +70,10 @@ class SoapService {
     };
     this.serviceInstance = soap.listen(this.webserver, this.serviceOptions);
 
+    if (this.config.Username) {
+      this.serviceInstance.authenticate = () => true;
+    }
+
     this.serviceInstance.on('headers', (headers, methodName) => {
       // Use the '=>' notation so 'this' refers to the class we are in
       // ONVIF allows GetSystemDateAndTime to be sent with no authenticaton header
