@@ -33,12 +33,11 @@
     "xml2js": "0.4.19"
   },
   "devDependencies": {
-    "gulp": "^3.9.1",
+    "gulp": "^4.0.2",
     "gulp-rename": "^1.2.2",
     "gulp-sourcemaps": "^1.6.0",
     "gulp-typescript": "^2.13.4",
     "gulp-zip": "^3.0.2",
-    "run-sequence": "^1.1.5",
     "typescript": "^1.8.10",
     "typings": "0.8.1"
   }
