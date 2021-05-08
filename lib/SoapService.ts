@@ -49,7 +49,7 @@ class SoapService {
       path: '',
       services: null,
       xml: null,
-      wsdlPath: '',
+      uri: '',
       onReady: () => { }
     };
 
@@ -69,6 +69,10 @@ class SoapService {
       onReady();
     };
     this.serviceInstance = soap.listen(this.webserver, this.serviceOptions);
+
+    this.serviceInstance.authorizeConnection = function (req) {
+      return true; // or false
+    };
 
     this.serviceInstance.on('headers', (headers, methodName) => {
       // Use the '=>' notation so 'this' refers to the class we are in

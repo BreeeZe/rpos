@@ -28,7 +28,7 @@
     "rpi-version": "^1.4.1",
     "serialport": "^6.0.4",
     "simple-udp-stream": "^1.2.3",
-    "soap": "git://github.com/BreeeZe/node-soap.git",
+    "soap": "^0.37.0",
     "tenx-usb-missile-launcher-driver": "^0.2.0",
     "xml2js": "0.4.19"
   },
@@ -38,7 +38,7 @@
     "gulp-sourcemaps": "^1.6.0",
     "gulp-typescript": "^2.13.4",
     "gulp-zip": "^3.0.2",
-    "typescript": "^1.8.10",
+    "typescript": "^4.2.4",
     "typings": "0.8.1"
   }
 }

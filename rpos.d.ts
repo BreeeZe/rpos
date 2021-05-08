@@ -49,7 +49,7 @@ interface SoapServiceOptions {
   path: string,
   services: any,
   xml: any,
-  wsdlPath: string,
+  uri: string,
   onReady: () => void;
 }
 
