@@ -70,7 +70,9 @@ class SoapService {
     };
     this.serviceInstance = soap.listen(this.webserver, this.serviceOptions);
 
-    this.serviceInstance.on('headers', (headers, methodName) => {
+    this.serviceInstance.on("request", (request: any, methodName: string) => {
+      utils.log.debug('%s received request %s', (<TypeConstructor>this.constructor).name, methodName);
+
       // Use the '=>' notation so 'this' refers to the class we are in
       // ONVIF allows GetSystemDateAndTime to be sent with no authenticaton header
       // So we check the header and check authentication in this function
@@ -79,7 +81,13 @@ class SoapService {
       if (methodName === "GetSystemDateAndTime") return;
 
       if (this.config.Username) {
-        var token = headers.Security.UsernameToken;
+        let token: any = null;
+        try {
+          token = request.Header.Security.UsernameToken;
+        } catch (err) {
+          utils.log.info('No Username/Password (ws-security) supplied for ' + methodName);
+          throw NOT_IMPLEMENTED;
+        }
         var user = token.Username;
         var password = (token.Password.$value || token.Password);
         var nonce = (token.Nonce.$value || token.Nonce); // handle 2 ways to map XML to the javascript data structure
@@ -104,10 +112,6 @@ class SoapService {
           throw NOT_IMPLEMENTED;
         }
       };
-    });
-    
-    this.serviceInstance.on("request", (request: any, methodName: string) => {
-      utils.log.debug('%s received request %s', (<TypeConstructor>this.constructor).name, methodName);
     });
 
     this.serviceInstance.log = (type: string, data: any) => {
