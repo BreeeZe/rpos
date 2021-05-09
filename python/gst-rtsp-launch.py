@@ -6,6 +6,7 @@ import argparse
 parser = argparse.ArgumentParser(description="gst-rtsp-launch-py V0.1")
 parser.add_argument('-v', '--verbose', action='store_true', help='Make script chatty')
 parser.add_argument('-f', '--file', action='store', default="v4l2ctl.json", help='Video Configuration file')
+parser.add_argument('-d', '--device', action='store', default="picam", help='Video Device Path')
 parser.add_argument('-P', '--rtspport', action='store', default=554, help='Set RTSP port')
 parser.add_argument('-u', '--rtspname', action='store', default="live", help='Set RTSP name')
 parser.add_argument('-W', '--rtspresolutionwidth', action='store', default=1280, help='Set RTSP resolution width')
@@ -52,13 +53,14 @@ cam_mutex = Lock()
 # -------------------
 
 class StreamServer:
-	def __init__(self, file, port, name, width, height, codec):
+	def __init__(self, device, file, port, name, width, height, codec):
 		signal.signal(signal.SIGTERM, self.exit_gracefully)
 		Gst.init(None)
 		self.mainloop = GObject.MainLoop()
 		self.server = GstRtspServer.RTSPServer()
 		self.mounts = self.server.get_mount_points()
 		
+		self.device = device
 		self.file = file
 		
 		self.port = port
@@ -271,26 +273,33 @@ class StreamServer:
 			log.debug("StreamServer.launch called on running instance.")
 			self.stop() # Need to stop any instances first
 		
-		launch_str = 	'( rpicamsrc preview=false bitrate='+str(self.bitrate)+' keyframe-interval='+str(self.h264_i_frame_period)+' drc='+str(self.drc)+ \
-							' image-effect=denoise shutter-speed='+str(self.shutter)+' iso='+str(self.iso)+ \
-							' brightness='+str(self.brightness)+' contrast='+str(self.contrast)+' saturation='+str(self.saturation)+ \
-							' sharpness='+str(self.sharpness)+' awb-mode='+str(self.white_balance)+ ' rotation='+str(self.rotation) + \
-							' hflip='+str(self.horizontal_mirroring)+' vflip='+str(self.vertical_mirroring) + ' video-stabilisation='+str(self.video_stabilisation)
-							
-		if self.white_balance == 0:
-			log.info("Using custom white balance settings")
-			launch_str = launch_str + 'awb-gain-red='+self.gain_red
-			launch_str = launch_str + 'awb-gain-green='+self.gain_green
-			launch_str = launch_str + 'awb-gain-blue='+self.gain_blue
-		
-		#Completing the pipe
-		if self.codec == 0:
-			launch_str = launch_str + ' ! video/x-h264, framerate='+str(self.fps)+'/1, width='+str(self.width)+', height='+str(self.height)+' ! h264parse ! rtph264pay name=pay0 pt=96 )'
-		elif self.codec == 1:
-			launch_str = launch_str + ' ! image/jpeg, framerate='+str(self.fps)+'/1, width='+str(self.width)+', height='+str(self.height)+' ! jpegparse ! rtpjpegpay name=pay0 pt=96 )'
-		else:
-			log.error("Illegal codec")
-		
+		if self.device == "picam":
+			launch_str = 	'( rpicamsrc preview=false bitrate='+str(self.bitrate)+' keyframe-interval='+str(self.h264_i_frame_period)+' drc='+str(self.drc)+ \
+								' image-effect=denoise shutter-speed='+str(self.shutter)+' iso='+str(self.iso)+ \
+								' brightness='+str(self.brightness)+' contrast='+str(self.contrast)+' saturation='+str(self.saturation)+ \
+								' sharpness='+str(self.sharpness)+' awb-mode='+str(self.white_balance)+ ' rotation='+str(self.rotation) + \
+								' hflip='+str(self.horizontal_mirroring)+' vflip='+str(self.vertical_mirroring) + ' video-stabilisation='+str(self.video_stabilisation)
+								
+			if self.white_balance == 0:
+				log.info("Using custom white balance settings")
+				launch_str = launch_str + 'awb-gain-red='+self.gain_red
+				launch_str = launch_str + 'awb-gain-green='+self.gain_green
+				launch_str = launch_str + 'awb-gain-blue='+self.gain_blue
+			
+			#Completing the pipe
+			if self.codec == 0:
+				launch_str = launch_str + ' ! video/x-h264, framerate='+str(self.fps)+'/1, width='+str(self.width)+', height='+str(self.height)+' ! h264parse ! rtph264pay name=pay0 pt=96 )'
+			elif self.codec == 1:
+				launch_str = launch_str + ' ! image/jpeg, framerate='+str(self.fps)+'/1, width='+str(self.width)+', height='+str(self.height)+' ! jpegparse ! rtpjpegpay name=pay0 pt=96 )'
+			else:
+				log.error("Illegal codec")
+
+		else: # USB Camera
+			# Ignore most of the parameters
+			log.info("USB camera ignored most of the parameters")
+			launch_str = '( v4l2src device='+self.device+' brightness='+str(self.brightness)+' contrast='+str(self.contrast)+' saturation='+str(self.saturation)
+			launch_str = launch_str + ' ! image/jpeg,width='+str(self.width)+',height='+str(self.height)+',framerate='+str(self.fps)+'/1 ! jpegdec ! clockoverlay ! omxh264enc target-bitrate='+str(self.bitrate)+' control-rate=variable ! video/x-h264,profile=baseline ! h264parse ! rtph264pay name=pay0 pt=96 )'
+
 		log.debug(launch_str)
 		cam_mutex.acquire()
 		try:
@@ -312,7 +321,7 @@ class StreamServer:
 	def start(self):
 		p = subprocess.Popen("ps -ax | grep rpos.js", shell=True, stdout=subprocess.PIPE)
 		output = p.stdout.read()
-		while self.stayAwake and "node rpos.js" in output:
+		while self.stayAwake and "node" in output:
 			if os.stat(self.file).st_mtime != self.configDate:
 				log.info("Updating stream settings")
 				self.readConfig()
@@ -348,7 +357,7 @@ if __name__ == '__main__':
 	codec = 0 		# Default to H264
 	if args.mjpeg:
 		codec = 1
-	streamServer = StreamServer(args.file, args.rtspport, args.rtspname, \
+	streamServer = StreamServer(args.device, args.file, args.rtspport, args.rtspname, \
 								args.rtspresolutionwidth, args.rtspresolutionheight,\
 								codec)
 	streamServer.readConfig()

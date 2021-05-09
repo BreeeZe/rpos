@@ -76,7 +76,7 @@ class DiscoveryService {
 
     discover_socket.on('message', (received_msg, rinfo) => {
 
-      utils.log.debug("Discovery received");
+      utils.log.debug("Discovery received from " + rinfo.address);
 
       // Filter xmlns namespaces from XML before calling XML2JS
       let filtered_msg = received_msg.toString().replace(/xmlns(.*?)=(".*?")/g, '');
