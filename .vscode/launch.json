@@ -1,35 +1,17 @@
 {
-	"version": "0.1.0",
-	// List of configurations. Add new configurations or edit existing ones.  
-	// ONLY "node" and "mono" are supported, change "type" to switch.
+	// Use IntelliSense to learn about possible attributes.
+	// Hover to view descriptions of existing attributes.
+	// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+	// changed prelaunch task from "tsc: build - tsconfig.json" to "npx gulp"
+	// added Out folder to tsconfig.json
+	"version": "0.2.0",
 	"configurations": [
-		{
-			// Name of configuration; appears in the launch configuration drop down menu.
-			"name": "Launch rpos",
-			// Type of configuration. Possible values: "node", "mono".
-			"type": "node",
-			// Request type
-			"request": "launch",
-			// Workspace relative or absolute path to the program.
-			"program": "${workspaceRoot}/rpos.js",
-			// Automatically stop program after launch.
-			"stopOnEntry": false,
-			// Command line arguments passed to the program.
-			"args": [],
-			// Workspace relative or absolute path to the working directory of the program being debugged. Default is the current workspace.
-			"cwd": "${workspaceRoot}",
-			// Workspace relative or absolute path to the runtime executable to be used. Default is the runtime executable on the PATH.
-			"runtimeExecutable": null,
-			// Environment variables passed to the program.
-			"env": { }
-		}, 
-		{
-			"name": "Attach",
-			"type": "node",
-			// TCP/IP address. Default is "localhost".
-			"address": "localhost",
-			// Port to attach to.
-			"port": 5858
-		}
+	{
+		"type": "node",
+		"request": "launch",
+		"name": "Run RPOS",
+		"program": "${workspaceFolder}/rpos.js",
+		"preLaunchTask": "tsc: build - tsconfig.json"
+	  }
 	]
 }
