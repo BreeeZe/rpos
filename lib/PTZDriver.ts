@@ -153,7 +153,7 @@ class PTZDriver {
       let host = config.PTZOutputURL.split(':')[0];
       let port = config.PTZOutputURL.split(':')[1];
 
-      // Stream used to send to the VISCA camera
+      // Stream used to send UDP packets to the VISCA camera
       this.stream = new SimpleUdpStream({
         destination: host,
         port: port
@@ -302,27 +302,28 @@ class PTZDriver {
       if (this.visca) {
         // Map ONVIF Pan and Tilt Speed 0 to 1 to VISCA Speed 1 to 0x18
         // Map ONVIF Zoom Speed (0 to 1) to VISCA Speed 0 to 7
-        let visca_pan_speed = ( Math.abs(p) * 0x18) / 1.0;
-        let visca_tilt_speed = ( Math.abs(t) * 0x18) / 1.0;
-        let visca_zoom_speed = ( Math.abs(z) * 0x07) / 1.0;
+        let visca_pan_speed = Math.round((Math.abs(p) * 0x18) / 1.0);
+        let visca_tilt_speed = Math.round(Math.abs(t) * 0x18) / 1.0);
+        let visca_zoom_speed = Math.round(Math.abs(z) * 0x07) / 1.0);
 
-        // rounding check. Visca Pan/Tilt to be in range 0x01 .. 0x18
-        if (visca_pan_speed === 0) visca_pan_speed = 1;
-        if (visca_tilt_speed === 0) visca_tilt_speed = 1;
+        // rounding check. Visca Pan/Tilt to be in range 0x01 .. 0x18 if the input speed was not zero
+        if (Math.abs(p) != 0 && visca_pan_speed === 0) visca_pan_speed = 1;
+        if (Math.abs(t) != 0 && visca_tilt_speed === 0) visca_tilt_speed = 1;
+        if (Math.abs(z) != 0 && visca_zoom_speed === 0) visca_zoom_speed = 1;
 
         if (this.config.PTZDriver === 'visca') {
           let data: number[] = [];
           if      (p < 0 && t > 0) { // upleft
-            data.push(0x81,0x01,0x06,0x01,visca_pan_speed,visca_zoom_speed,0x01,0x01,0xff);
+            data.push(0x81, 0x01, 0x06, 0x01, visca_pan_speed, visca_tilt_speed, 0x01, 0x01, 0xff);
           }
           else if (p > 0 && t > 0) { // upright
-            data.push(0x81,0x01,0x06,0x01,visca_pan_speed,visca_zoom_speed,0x02,0x01,0xff);
+            data.push(0x81, 0x01, 0x06, 0x01, visca_pan_speed, visca_tilt_speed, 0x02, 0x01, 0xff);
           }
           else if (p < 0 && t < 0) { // downleft;
-            data.push(0x81,0x01,0x06,0x01,visca_pan_speed,visca_zoom_speed,0x01,0x02,0xff);
+            data.push(0x81, 0x01, 0x06, 0x01, visca_pan_speed, visca_tilt_speed, 0x01, 0x02, 0xff);
           }
           else if (p >  0 && t < 0) { // downright;
-            data.push(0x81,0x01,0x06,0x01,visca_pan_speed,visca_zoom_speed,0x02,0x02,0xff);
+            data.push(0x81, 0x01, 0x06, 0x01, visca_pan_speed, visca_tilt_speed, 0x02, 0x02, 0xff);
           }
           else if (p > 0) { // right
             data.push(0x81,0x01,0x06,0x01,visca_pan_speed,0x00,0x02,0x03,0xff);
@@ -340,19 +341,19 @@ class PTZDriver {
             data.push(0x81,0x01,0x06,0x01,0x00,0x00,0x03,0x03,0xff);
           }
 
-
-          let header: number[] = [];
-          header.push(0x01, 0x00, 0x00, data.length,
-            this.viscaSeqNum >> 24 & 0xff,
-            this.viscaSeqNum >> 16 & 0xff,
-            this.viscaSeqNum >> 8 & 0xff,
-            this.viscaSeqNum >> 0 & 0xff);
-          this.viscaSeqNum = (this.viscaSeqNum + 1) & 0xffff;
-          data = header.concat(data);
+          // Add Sony UDP VISCA over IP header with sequence number
+          if (this.config.PTZOutput === 'udp') {
+            let header: number[] = [];
+            header.push(0x01, 0x00, 0x00, data.length,
+              this.viscaSeqNum >> 24 & 0xff,
+              this.viscaSeqNum >> 16 & 0xff,
+              this.viscaSeqNum >> 8 & 0xff,
+              this.viscaSeqNum >> 0 & 0xff);
+            this.viscaSeqNum = (this.viscaSeqNum + 1) & 0xffff;
+            data = header.concat(data);
+          }
 
           this.stream.write(new Buffer(data));
-
-
 
           data = [];
 
@@ -366,16 +367,17 @@ class PTZDriver {
             data.push(0x81,0x01,0x04,0x07,0x00,0xff);
           }
 
-
-          header = [];
-          header.push(0x01, 0x00, 0x00, data.length,
-            this.viscaSeqNum >> 24 & 0xff,
-            this.viscaSeqNum >> 16 & 0xff,
-            this.viscaSeqNum >> 8 & 0xff,
-            this.viscaSeqNum >> 0 & 0xff);
-          this.viscaSeqNum = (this.viscaSeqNum + 1) & 0xffff;
-          data = header.concat(data);
-
+          // Add Sony UDP VISCA over IP header with sequence number
+          if (this.config.PTZOutput === 'udp') {
+            let header: number[] = [];
+            header.push(0x01, 0x00, 0x00, data.length,
+              this.viscaSeqNum >> 24 & 0xff,
+              this.viscaSeqNum >> 16 & 0xff,
+              this.viscaSeqNum >> 8 & 0xff,
+              this.viscaSeqNum >> 0 & 0xff);
+            this.viscaSeqNum = (this.viscaSeqNum + 1) & 0xffff;
+            data = header.concat(data);
+          }
 
           this.stream.write(new Buffer(data));
         }
