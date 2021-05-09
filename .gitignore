@@ -28,8 +28,8 @@ bld/
 # Visual Studio 2015 cache/options directory
 .vs/
 
-# Visual Studio Code User Setting
-.vscode/
+###### Visual Studio Code User Setting
+###### .vscode/
 
 # MSTest test Results
 [Tt]est[Rr]esult*/
