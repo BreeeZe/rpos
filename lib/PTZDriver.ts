@@ -247,11 +247,17 @@ class PTZDriver {
         let data: number[] = [];
         data.push(0x81,0x01,0x06,0x04,0xff);
 
-
         // Add VISCA over IP header
-
-
-
+        if (this.config.PTZOutput === 'udp') {
+          let header: number[] = [];
+          header.push(0x01, 0x00, 0x00, data.length,
+            this.viscaSeqNum >> 24 & 0xff,
+            this.viscaSeqNum >> 16 & 0xff,
+            this.viscaSeqNum >> 8 & 0xff,
+            this.viscaSeqNum >> 0 & 0xff);
+          this.viscaSeqNum = (this.viscaSeqNum + 1) & 0xffff;
+          data = header.concat(data);
+        }
 
         this.stream.write(new Buffer(data));
       }
