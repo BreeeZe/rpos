@@ -3,7 +3,6 @@ var gulp = require('gulp'),
     zip = require('gulp-zip'),
     pkg = require('./package.json'),
     ts = require('gulp-typescript'),
-    typings = require('typings'),
     sourcemaps = require('gulp-sourcemaps')
 
 var version = 'rpos-' + pkg.version;
@@ -11,7 +10,7 @@ var releaseDir = 'release/' + version;
 
 
 //Compile task: compiles all .ts files to .js and generates sourcemaps to aid in debugging.
-gulp.task('compile', function () {
+gulp.task('default', function () {
     return gulp.src(["**/*.ts", "!./node_modules/**/*", "!./typings/**/*"])
         .pipe(sourcemaps.init())
         .pipe(ts('tsconfig.json'))
@@ -19,21 +18,6 @@ gulp.task('compile', function () {
         .pipe(sourcemaps.write("./"))
         .pipe(gulp.dest("./"));
 });
-
-//Typings task: Downloads all type definitions used for development.
-gulp.task('typings', function (done) {
-    var cwd = process.cwd();
-    typings.install({ cwd: cwd, production: false }).then(function (result) {
-        done();
-    })
-});
-
-//Default task: runs the typings and compile task, started when running "gulp" without any parameters.
-gulp.task('default', gulp.series('typings', 'compile', function (cb) {
-    cb();
-}));
-
-
 
 // --- all partial taks to generate a release.
 gulp.task('copy-release-js', function () {

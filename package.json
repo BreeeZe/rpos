@@ -8,37 +8,43 @@
     "name": "Jeroen Versteege",
     "email": "jeroen@versteege.com"
   },
-  "contributors": {
-    "name": "Roger Hardiman"
-  },
+  "contributors": [
+    {
+      "name": "Roger Hardiman"
+    }
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/Breeeze/rpos.git"
   },
   "dependencies": {
-    "@types/node": "^13.1.5",
-    "body-parser": "1.18.2",
-    "cli-color": "1.2.0",
-    "express": "4.16.2",
+    "body-parser": "1.19.0",
+    "cli-color": "2.0.0",
+    "express": "^4.17.1",
     "ip": "^1.1.5",
     "macos-release": "~2.0.0",
     "node-pelcod": "^0.3.0",
     "node-uuid": "1.4.8",
     "pan-tilt-hat": "^1.2.1",
-    "rpi-version": "^1.4.1",
-    "serialport": "^6.0.4",
+    "rpi-version": "^1.4.3",
+    "serialport": "^9.0.7",
     "simple-udp-stream": "^1.2.3",
     "soap": "git://github.com/BreeeZe/node-soap.git",
     "tenx-usb-missile-launcher-driver": "^0.2.0",
-    "xml2js": "0.4.19"
+    "xml2js": "0.4.23"
   },
   "devDependencies": {
+    "@types/body-parser": "^1.19.0",
+    "@types/cli-color": "^2.0.0",
+    "@types/express": "^4.17.11",
+    "@types/node": "^13.1.5",
+    "@types/node-uuid": "0.0.28",
+    "@types/xml2js": "^0.4.8",
     "gulp": "^4.0.2",
-    "gulp-rename": "^1.2.2",
-    "gulp-sourcemaps": "^1.6.0",
-    "gulp-typescript": "^2.13.4",
-    "gulp-zip": "^3.0.2",
-    "typescript": "^1.8.10",
-    "typings": "0.8.1"
+    "gulp-rename": "^2.0.0",
+    "gulp-sourcemaps": "^3.0.0",
+    "gulp-typescript": "^5.0.1",
+    "gulp-zip": "^5.1.0",
+    "typescript": "^4.2.4"
   }
 }

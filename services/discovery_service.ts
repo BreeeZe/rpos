@@ -1,5 +1,4 @@
 ﻿/// <reference path="../rpos.d.ts"/>
-/// <reference path="../typings/main.d.ts"/>
 
 /*
 The MIT License(MIT)
@@ -63,7 +62,7 @@ class DiscoveryService {
     //      utils.log.info("discovery_service not started (requires linux)");
     //      return;
     //    }
-    var opts = {
+    var opts: dgram.SocketOptions = {
       type: 'udp4',
       reuseAddr: true
     };

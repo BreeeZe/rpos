@@ -1,8 +1,8 @@
-///<reference path="../typings/main.d.ts"/>
 ///<reference path="../rpos.d.ts"/>
 
-//import { v4l2ctl } from "./v4l2ctl";
-var SimpleUdpStream = require('simple-udp-stream'); // .write() function wrapper for UDP
+import { v4l2ctl } from "./v4l2ctl";
+import dgram = require('dgram');
+import SimpleUdpStream = require('simple-udp-stream'); // .write() function wrapper for UDP
 
 // PTZDriver for RPOS (Raspberry Pi ONVIF Server)
 // (c) 2016, 2017, 2018 Roger Hardiman
@@ -36,6 +36,7 @@ class PTZDriver {
   pelcod: any;
   visca: any;
   viscaSeqNum: any = 0;
+  udpSocket: any = null;
   pan_tilt_hat: any;
   serialPort: any;
   stream: any;
@@ -153,7 +154,8 @@ class PTZDriver {
       let host = config.PTZOutputURL.split(':')[0];
       let port = config.PTZOutputURL.split(':')[1];
 
-      // Stream used to send UDP packets to the VISCA camera
+      // Stream used to send UDP packets. Each stream.write() will send one UDP packet
+      // When sending VISCA over UDP we need to add the VISCA UDP Header bytes
       this.stream = new SimpleUdpStream({
         destination: host,
         port: port
@@ -161,8 +163,69 @@ class PTZDriver {
 
       if (parent.config.PTZDriver === 'visca') {
         parent.visca = true;
+
+
+        const viscaUDPPort = 52381;
+        // List on port 52381 for VISCA over UDP replies from the camera.... ACK and COMPLETED with the Sequence Number
+        this.udpSocket = dgram.createSocket('udp4');
+
+        this.udpSocket.on('error', (err) => {
+          console.log(`Error with UDP Socket Listener:\n${err.stack}`);
+          this.udpSocket.close();
+        });
+
+        this.udpSocket.on('message', (msg, rinfo) => {
+          console.log('UDP Socket received: ' + msg.toString('hex') + ' from ' + rinfo.address + ':' + rinfo.port);
+          // Formatof Sony Visca over IP reply is
+          // 01 11 = VISCA Reply
+          // 00 03 is the length of the VISCA message (3 bytes)
+          // 00 00 00 09 is the 4 byte sequence number 
+          // 90 41 ff is the VISCA message. or 90 42 ff    or 90 52 ff  or 90 51 ff
+          // 01110003000000009041ff
+          // 01110003000000019042ff
+          // 01110003000000019052ff
+          // 01110003000000009051ff
+          let seqNum = -1;
+          let msgType = 'UNKNOWN';
+          let viscaReply = false;
+          try {
+            if (msg[0] == 0x01 && msg[1] == 0x11) {
+              let length = (msg[2] << 8) + msg[3];
+              if (2 + 2 + 4 + length != msg.byteLength) {
+                // length error
+              } else {
+                seqNum = (msg[4] << 24) + (msg[5] << 16) + (msg[6] << 8) + (msg[7] << 0);
+                if (msg[8] === 0x90 /*Visca over IP*/ && msg[10] === 0xFF) {
+                  if ((msg[9] & 0xF0) === 0x40) {
+                    msgType = 'ACK';
+                    viscaReply = true;
+                  }
+                  if ((msg[9] & 0xF0) === 0x50) {
+                    msgType = 'COMPLETION';
+                    viscaReply = true;
+                  }
+                }
+              }
+            }
+            if (viscaReply) console.log('VISCA OVER UDP Message Received: ' + seqNum + ' ' + msgType);
+          } catch (err) {
+            // ignore the error
+          }
+        });
+
+        this.udpSocket.on('listening', () => {
+          const address = this.udpSocket.address();
+          console.log(`UDP Socket server listening ${address.address}:${address.port}`);
+        });
+
+        // Bind and start to listen
+        this.udpSocket.bind(viscaUDPPort);
+
+
+
       }
-        // Initialise other protocols here
+
+      // Initialise other protocols here
     }
   }
 
@@ -303,8 +366,8 @@ class PTZDriver {
         // Map ONVIF Pan and Tilt Speed 0 to 1 to VISCA Speed 1 to 0x18
         // Map ONVIF Zoom Speed (0 to 1) to VISCA Speed 0 to 7
         let visca_pan_speed = Math.round((Math.abs(p) * 0x18) / 1.0);
-        let visca_tilt_speed = Math.round(Math.abs(t) * 0x18) / 1.0);
-        let visca_zoom_speed = Math.round(Math.abs(z) * 0x07) / 1.0);
+        let visca_tilt_speed = Math.round((Math.abs(t) * 0x18) / 1.0);
+        let visca_zoom_speed = Math.round((Math.abs(z) * 0x07) / 1.0);
 
         // rounding check. Visca Pan/Tilt to be in range 0x01 .. 0x18 if the input speed was not zero
         if (Math.abs(p) != 0 && visca_pan_speed === 0) visca_pan_speed = 1;
@@ -437,7 +500,7 @@ class PTZDriver {
     }
     else if (command==='brightness') {
       console.log("Set Brightness "+ data.value);
-      //v4l2ctl.SetBrightness(data.value);
+      v4l2ctl.SetBrightness(data.value);
     }
     else if (command==='focus') {
       console.log("Focus "+ data.value);
