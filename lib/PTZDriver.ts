@@ -322,6 +322,7 @@ class PTZDriver {
   // If any values have changed, we pass new values onto the camera
   // We wait for the VISCA Completed event and then check the values again
   checkPTZValues = async () => {
+    // take a snapshot of the current Pan, Tilt and Zoom value
     let p = this.requested_p;
     let t = this.requested_t;
     let z = this.requested_z;
@@ -387,9 +388,9 @@ class PTZDriver {
     if (this.onvif) {
       // send an new ONVIF PTZ command
       this.onvif.continuousMove({
-        x: this.requested_p.toString(),
-        y: this.requested_t.toString()
-        //zoom: this.requested_z
+        x: p.toString(),
+        y: t.toString()
+        //zoom: z
       },
         // completion callback function
         function (err: any, stream: any, xml: any) {
@@ -524,9 +525,9 @@ class PTZDriver {
     }
 
 
-    this.last_p = this.requested_p;
-    this.last_t = this.requested_t;
-    this.last_z = this.requested_z;
+    this.last_p = p;
+    this.last_t = t;
+    this.last_z = z;
 
     setTimeout(this.checkPTZValues, 20); // take another look in the future
   }
