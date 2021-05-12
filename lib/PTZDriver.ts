@@ -292,7 +292,7 @@ class PTZDriver {
     // This is used to allow rapid and frequently changing values to come in via ONVIF commands and to go into global variables, but to poll these global variables on a regular basis
     // and send out values to the physical device/motors/serial port.
     // This overcomes the issue where an ONVIf VMS or ODM can send out lots of very fast changing values, especially with a 3-axis PTZ joystick
-    setTimeout(this.checkPTZValues, 20);
+    setTimeout(this.checkPTZValues, 0);
 
   }
 
@@ -311,6 +311,42 @@ class PTZDriver {
         // We are now ready for the UDP reply, so send the UDP message
         console.log('VISCA OVER UDP Sending Message ' + seqNum)
         this.stream.write(msg);
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
+  sendOnvifPanTiltZoom(p: number, t: number, z: number) {
+    return new Promise((resolve, reject) => {
+      try {
+        let opts = {};
+        if (p != null && t != null) {
+          opts = {
+            x: p.toString(),
+            y: t.toString(),
+            onlySendXY: true // enable the ONVIF command where just X and Y are sent, and no Zoom value is transmitted (Sony e-PTZ camera requires this)
+            //zoom: z
+          };
+        } else {
+          opts = {
+            zoom: z,
+            onlySendZoom: true // enable the ONVIF command where just Zoom is sent
+          };
+        }
+
+        // send an new ONVIF PTZ command
+        this.onvif.continuousMove(opts,
+          // completion callback function
+          function (err: any, stream: any, xml: any) {
+            if (err) {
+              console.log("Error sending out an ONVIF PTZ command " + err);
+              reject(err);
+            } else {
+              console.log('ONVIF move command sent');
+              resolve('completed');
+            }
+          });
       } catch (err) {
         reject(err);
       }
@@ -386,20 +422,14 @@ class PTZDriver {
       this.pelcod.send();
     }
     if (this.onvif) {
-      // send an new ONVIF PTZ command
-      this.onvif.continuousMove({
-        x: p.toString(),
-        y: t.toString()
-        //zoom: z
-      },
-        // completion callback function
-        function (err: any, stream: any, xml: any) {
-          if (err) {
-            console.log("Error sending out an ONVIF PTZ command " + err);
-          } else {
-            console.log('ONVIF move command sent');
-          }
-        });
+      console.log("OUTPUT ONVIF " + p + " " + t + " " + z);
+      if (z != 0 || (z == 0 && this.last_z != 0))
+        // Sony camera only wants Zoom. pass null for Pan/Tilt so we don't include them in the XML
+        await this.sendOnvifPanTiltZoom(null, null, z);
+      else {
+        // Sony camera only wants PanTilt. pass null for the Zoom so we don't include it in the XML
+        await this.sendOnvifPanTiltZoom(p, t, null);
+      }
     }
     if (this.visca) {
       // Map ONVIF Pan and Tilt Speed 0 to 1 to VISCA Speed. Pan Speed 0 to 0x18. Tilt speed varies, 1 to 0x14 or to 0x17
