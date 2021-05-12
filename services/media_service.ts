@@ -61,7 +61,12 @@ class MediaService extends SoapService {
             if (error) {
               utils.log.warn('ffmpeg exec error: %s',error);
             }
-            this.ffmpeg_responses.forEach( (response) => { this.deliver_jpg(response); } );
+            // deliver the JPEG (or the logo jpeg file)
+            for (let responseItem of this.ffmpeg_responses) {
+              this.deliver_jpg(responseItem); // response.Write() and response.End()
+            }
+            // empty the list of responses
+            this.ffmpeg_responses = [];
             this.ffmpeg_process = null;
           });
         }
