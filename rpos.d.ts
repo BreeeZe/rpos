@@ -94,3 +94,10 @@ interface CameraSettingsBase {
   resolution: Resolution;
   framerate: number;
 }
+
+interface ONVIFPreset {
+  presetName: string;
+  presetToken: string;
+  profileToken: string;
+  used: boolean; // We have an array of Presets. This flag tells us this particular preset is unset
+}

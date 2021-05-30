@@ -6,20 +6,21 @@ import os = require('os');
 import SoapService = require('../lib/SoapService');
 import { Utils }  from '../lib/utils';
 import { Server } from 'http';
+import PTZDriver = require('../lib/PTZDriver');
 
 var utils = Utils.utils;
 
 class PTZService extends SoapService {
   ptz_service: any;
   callback: any;
-  ptz_driver: any;
+  ptz_driver: PTZDriver;
 
   presetArray = [];
 
   public ptzConfiguration: any;
 
 
-  constructor(config: rposConfig, server: Server, callback, ptz_driver) {
+  constructor(config: rposConfig, server: Server, callback, ptz_driver: PTZDriver) {
     super(config, server);
 
     this.ptz_service = require('./stubs/ptz_service.js').PTZService;
@@ -319,116 +320,263 @@ class PTZService extends SoapService {
       return SendAuxiliaryCommandResponse;
     };
 
-    port.GetPresets = (args) => {
-      var GetPresetsResponse = { Preset: [] };
-      var matching_profileToken = args.ProfileToken;
 
-      for (var i = 0 ; i < this.presetArray.length; i++) {
-        if (this.presetArray[i].profileToken === matching_profileToken
-        && this.presetArray[i].used == true) {
-          var p = {
-            attributes: {
-              token: this.presetArray[i].presetToken
-            },
-            Name: this.presetArray[i].presetName
-          };
-          GetPresetsResponse.Preset.push(p);
+
+
+    port.GetPresets = (args, soapCallback) => {
+      // soapCallback is used to pass the XML (in JSON format) back to the SOAP library
+      var GetPresetsResponse = { Preset: [] };
+
+      // If the backend PTZ driver is sending out ONVIF commands, then get the presets from the remote camera and pass them back in our RPOS reply
+      if (this.ptz_driver.presetPassthrough) {
+        try {
+          this.ptz_driver.onvif.getPresets({}, // use 'default' profileToken
+            // Completion callback function
+            // This callback is executed once we have a list of presets
+            function (err: any, presets: any, xml: string) {
+              if (err) {
+                console.log("GetPreset Error " + err);
+                soapCallback(GetPresetsResponse);
+                return;
+              } else {
+                // loop over the presets and build our ONVIF reply
+                for (const item in presets) {
+                  let _name = item;          //key
+                  let _token = presets[item]; //value
+
+                  let p = {
+                    attributes: {
+                      token: _token
+                    },
+                    Name: _name
+                  };
+                  GetPresetsResponse.Preset.push(p);
+                }
+              }
+              soapCallback(GetPresetsResponse);
+              return;
+            });
+        } catch (err) {
+          soapCallback(GetPresetsResponse);
+          return;
         }
       }
-      return GetPresetsResponse;
+      else {
+        var matching_profileToken = args.ProfileToken;
+
+        for (var i = 0; i < this.presetArray.length; i++) {
+          if (this.presetArray[i].profileToken === matching_profileToken
+            && this.presetArray[i].used == true) {
+            var p = {
+              attributes: {
+                token: this.presetArray[i].presetToken
+              },
+              Name: this.presetArray[i].presetName
+            };
+            GetPresetsResponse.Preset.push(p);
+          }
+        }
+        return GetPresetsResponse;
+      }
     };
 
 
-    port.GotoPreset = (args) => {
+    port.GotoPreset = (args, soapCallback) => {
       var GotoPresetResponse = { };
       var matching_profileToken = args.ProfileToken;
       var matching_presetToken = args.PresetToken;
 
-      for (var i = 0 ; i < this.presetArray.length; i++) {
-        if (matching_profileToken === this.presetArray[i].profileToken
-        && matching_presetToken === this.presetArray[i].presetToken
-        && this.presetArray[i].used == true) {
-          if (this.callback) this.callback('gotopreset', { name: this.presetArray[i].presetName,
-            value: this.presetArray[i].presetToken });
-          break;
+      if (this.ptz_driver.presetPassthrough) {
+        try {
+          let options = { preset: args.PresetToken }; // parameter is called preset: and not presetToken:
+          this.ptz_driver.onvif.gotoPreset(options, // use 'default' profileToken
+            // Completion callback function
+            // This callback is executed once we have a list of presets
+            function (err: any, preset: any, xml: string) {
+              if (err) {
+                console.log("GotoPreset Error " + err);
+                soapCallback(GotoPresetResponse);
+                return;
+              } else {
+                soapCallback(GotoPresetResponse);
+                return;
+              }
+            });
+        } catch (err) {
+          soapCallback(GotoPresetResponse);
+          return;
         }
       }
-      return GotoPresetResponse;
+      else {
+        for (var i = 0; i < this.presetArray.length; i++) {
+          if (matching_profileToken === this.presetArray[i].profileToken
+            && matching_presetToken === this.presetArray[i].presetToken
+            && this.presetArray[i].used == true) {
+            if (this.callback) this.callback('gotopreset', {
+              name: this.presetArray[i].presetName,
+              value: this.presetArray[i].presetToken
+            });
+            break;
+          }
+        }
+        return GotoPresetResponse;
+      }
     };
 
-    port.RemovePreset = (args) => {
+    port.RemovePreset = (args, soapCallback: Function) => {
       var RemovePresetResponse = { };
 
       var matching_profileToken = args.ProfileToken;
       var matching_presetToken = args.PresetToken;
 
-      for (var i = 0 ; i < this.presetArray.length; i++) {
-        if (matching_profileToken === this.presetArray[i].profileToken
-        && matching_presetToken === this.presetArray[i].presetToken) {
-          this.presetArray[i].used = false;
-          if (this.callback) this.callback('clearpreset', { name: this.presetArray[i].presetName,
-            value: this.presetArray[i].presetToken });
-          break;
+      if (this.ptz_driver.presetPassthrough) {
+        try {
+          let options = { presetToken: args.PresetToken };
+          this.ptz_driver.onvif.removePreset(options, // use 'default' profileToken
+            // Completion callback function
+            // This callback is executed once we have a list of presets
+            function (err: any, preset: any, xml: string) {
+              if (err) {
+                console.log("RemovePreset Error " + err);
+                soapCallback(RemovePresetResponse);
+                return;
+              } else {
+                soapCallback(RemovePresetResponse);
+                return;
+              }
+            });
+        } catch (err) {
+          soapCallback(RemovePresetResponse);
+          return;
         }
       }
+      else {
+        for (var i = 0; i < this.presetArray.length; i++) {
+          if (matching_profileToken === this.presetArray[i].profileToken
+            && matching_presetToken === this.presetArray[i].presetToken) {
+            this.presetArray[i].used = false;
+            if (this.callback) this.callback('clearpreset', {
+              name: this.presetArray[i].presetName,
+              value: this.presetArray[i].presetToken
+            });
+            break;
+          }
+        }
 
-      return RemovePresetResponse;
+        return RemovePresetResponse;
+      }
     };
 
-    port.SetPreset = (args) => {
+    port.SetPreset = (args, soapCallback, xml: string) => {
 
-      var SetPresetResponse;
+      let SetPresetResponse;
 
-      var profileToken = args.ProfileToken;
-      var presetName = args.PresetName;   // used when creating a preset 
-      var presetToken = args.PresetToken; // used when updating an existing preset
+      let profileToken = args.ProfileToken;
+      let presetName = args.PresetName;   // used when creating a preset or when updating (or renaming) a preset (as identified by the presetToken)
+      let presetToken = args.PresetToken; // used when updating an existing preset
 
-
-      if (presetToken) {
-        for (var i = 0; i < this.presetArray.length; i++) {
-          if (profileToken === this.presetArray[i]
-          && presetToken === this.presetArray[i]) {
-            this.presetArray[i].presetName = presetName;
-            this.presetArray[i].used = true;
-           if (this.callback) this.callback('setpreset', { name: presetName,
-            value: presetToken });
-          break;
-          }
-        SetPresetResponse = { PresetToken : presetToken};
-
-        return SetPresetResponse;
-        }
-      } else {
-        // Check if the preset name is a number (special case)
-        var special_case_name = false;
+      if (this.ptz_driver.presetPassthrough) {
         try {
-          var preset_name_value = parseInt(presetName);
-          if (preset_name_value > 0 && preset_name_value < 255) {
-            special_case_name = true;
+          // Check we have a name (The ONVIF standard says the name is Optional, but the library uses the name as the key of a key-value pair so needs a unique name)
+          if (presetName == undefined || presetName && presetName.length == 0) return SetPresetResponse;
+
+          // If name already exists and this is not a 'update the preset' [indicated by the presence of a presetToken] then abort
+          if (this.ptz_driver.onvif.presets && this.ptz_driver.onvif.presets.hasOwnProperty(presetName) && presetToken == undefined) {
+            return SetPresetResponse;
           }
-        } catch (err) {
-        }
-        if (special_case_name) {
-          if (this.callback) this.callback('setpreset', { name: presetName,
-              value: presetName });
-          SetPresetResponse = { PresetToken : presetName};
-          return SetPresetResponse;
-        } else {
-          // Find the first unused token and use it
-          var new_presetToken = '';
-          for (var i = 0; i < this.presetArray.length; i++) {
-            if (profileToken === this.presetArray[i].profileToken
-            && this.presetArray[i].used == false) {
-              this.presetArray[i].presetName = presetName;
-              this.presetArray[i].used = true;
-              new_presetToken = this.presetArray[i].presetToken;
-              if (this.callback) this.callback('setpreset', { name: presetName,
-                value: new_presetToken });
-              break;
+
+          // Check if the name already exists and we have not been passed a presetToken to 'replace' the existing position.
+          // We won't allow the user to re-use the name
+          /*
+          if (this.ptz_driver.onvif.presets.hasOwnProperty(presetName)) {
+            let existingPresetToken = this.ptz_driver.onvif.presets[presetName];
+
+            if (presetToken == undefined) {
+              // we have a name that matches an existing Preset, but the user did not tell us to Overwrite it (by specifying args.PresetToken). Abort
+              return SetPresetResponse;
+            }
+            if (presetToken != undefined && presetToken != existingPresetToken) {
+              // We have a problem. User has told us to overwrite a named preset but with a token that does not match the token we have cached. Abort
+              return SetPresetResponse;
             }
           }
-          SetPresetResponse = { PresetToken : new_presetToken};
-          return SetPresetResponse;
+          */
+
+          let options = { presetName: presetName };
+          if (presetToken) options['presetToken'] = presetToken; // used to replace an Existing Preset
+          this.ptz_driver.onvif.setPreset(options, // use 'default' profileToken
+            // Completion callback function
+            // This callback is executed once we have a list of presets
+            function (err: any, preset: any, xml: string) {
+              if (err) {
+                console.log("SetPreset Error " + err);
+                soapCallback(SetPresetResponse);
+                return;
+              } else {
+                // parse reply
+                SetPresetResponse = { PresetToken: preset[0].setPresetResponse[0].presetToken[0] };
+
+                soapCallback(SetPresetResponse);
+                return;
+              }
+            });
+        } catch (err) {
+          soapCallback(SetPresetResponse);
+          return;
+        }
+      } else {
+        if (presetToken) {
+          for (var i = 0; i < this.presetArray.length; i++) {
+            if (profileToken === this.presetArray[i]
+              && presetToken === this.presetArray[i]) {
+              this.presetArray[i].presetName = presetName;
+              this.presetArray[i].used = true;
+              if (this.callback) this.callback('setpreset', {
+                name: presetName,
+                value: presetToken
+              });
+              break;
+            }
+            SetPresetResponse = { PresetToken: presetToken };
+
+            return SetPresetResponse;
+          }
+        } else {
+          // Check if the preset name is a number (special case)
+          var special_case_name = false;
+          try {
+            var preset_name_value = parseInt(presetName);
+            if (preset_name_value > 0 && preset_name_value < 255) {
+              special_case_name = true;
+            }
+          } catch (err) {
+          }
+          if (special_case_name) {
+            if (this.callback) this.callback('setpreset', {
+              name: presetName,
+              value: presetName
+            });
+            SetPresetResponse = { PresetToken: presetName };
+            return SetPresetResponse;
+          } else {
+            // Find the first unused token and use it
+            var new_presetToken = '';
+            for (var i = 0; i < this.presetArray.length; i++) {
+              if (profileToken === this.presetArray[i].profileToken
+                && this.presetArray[i].used == false) {
+                this.presetArray[i].presetName = presetName;
+                this.presetArray[i].used = true;
+                new_presetToken = this.presetArray[i].presetToken;
+                if (this.callback) this.callback('setpreset', {
+                  name: presetName,
+                  value: new_presetToken
+                });
+                break;
+              }
+            }
+            SetPresetResponse = { PresetToken: new_presetToken };
+            return SetPresetResponse;
+          }
         }
       }
     };

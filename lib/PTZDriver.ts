@@ -46,6 +46,7 @@ class PTZDriver {
   supportsAbsolutePTZ: boolean = false;
   supportsRelativePTZ: boolean = false;
   supportsContinuousPTZ: boolean = false;
+  presetPassthrough: boolean = false;
   requested_p: number = 0;
   requested_t: number = 0;
   requested_z: number = 0;
@@ -139,6 +140,7 @@ class PTZDriver {
             return;
           }
           parent.onvif = this;
+          parent.presetPassthrough = true;
         });
     }
 
@@ -330,8 +332,8 @@ class PTZDriver {
           };
         } else {
           opts = {
-            zoom: z,
-            onlySendZoom: true // enable the ONVIF command where just Zoom is sent
+            zoom: z.toString(),
+            onlySendZ: true // enable the ONVIF command where just Zoom is sent
           };
         }
 
