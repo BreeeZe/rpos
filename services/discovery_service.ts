@@ -59,12 +59,15 @@ class DiscoveryService {
 
   start() {
 
-    if (process.platform != 'linux') {
-      utils.log.info("discovery_service not started (requires linux)");
-      return;
-    }
-
-    var discover_socket = dgram.createSocket('udp4');
+    //    if (process.platform != 'linux') {
+    //      utils.log.info("discovery_service not started (requires linux)");
+    //      return;
+    //    }
+    var opts = {
+      type: 'udp4',
+      reuseAddr: true
+    };
+    var discover_socket = dgram.createSocket(opts);
     var reply_socket    = dgram.createSocket('udp4');
 
     discover_socket.on('error', (err) => {
@@ -73,7 +76,7 @@ class DiscoveryService {
 
     discover_socket.on('message', (received_msg, rinfo) => {
 
-      utils.log.debug("Discovery received");
+      utils.log.debug("Discovery received from " + rinfo.address);
 
       // Filter xmlns namespaces from XML before calling XML2JS
       let filtered_msg = received_msg.toString().replace(/xmlns(.*?)=(".*?")/g, '');
@@ -123,8 +126,8 @@ class DiscoveryService {
       });
     });
 
-    discover_socket.bind(3702, '239.255.255.250', () => {
-      discover_socket.addMembership('239.255.255.250', utils.getIpAddress());
+    discover_socket.bind(3702, () => {
+      return discover_socket.addMembership('239.255.255.250');
     });
 
     utils.log.info("discovery_service started");

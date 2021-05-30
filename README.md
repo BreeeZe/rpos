@@ -1,10 +1,10 @@
 # rpos
 
-Node.js based ONVIF Camera/NVT software that turns a Raspberry Pi, Windows, Linux or Mac computer into an ONVIF Camera and RTSP Server. It implements the key parts of Profile S and Profile T (http://www.onvif.org). It has special support for the Raspberry Pi Camera and Pimoroni Pan-Tilt HAT
+Node.js based ONVIF Camera/NVT software that turns a Raspberry Pi, Windows, Linux or Mac computer into an ONVIF Camera and RTSP Server. It implements the key parts of Profile S and Profile T (http://www.onvif.org). It has special support for the Raspberry Pi Camera and Pimoroni Pan-Tilt HAT.
 
 RPOS won an award in the 2018 ONVIF Open Source Challenge competition.
 
-## History
+## History and Contributors
 
 The initial goal (by @BreeeZe) was to provide a ONVIF Media service which is compatible with Synology Surveillance Station to allow the Raspberry Pi to be used as a surveillance camera without the need for adding any custom camera files to your Synology NAS.
 First demo video @ https://youtu.be/ZcZbF4XOH7E
@@ -17,41 +17,63 @@ Oliver Schwaneberg added GStreamer gst-rtsp-server support as third RTSP Server 
 
 Casper Meijn added Relative PTZ support
 
+Johnny Wan added some USB Camera support for GStreamer RTSP server.
+
+If I've forgotten to put you in the list, please post an Issue Report and I can add you in.
+
 ## Features:
 
-- Streams H264 video over rtsp from the Official Raspberry Pi camera (the one that uses the ribbon cable)
-- Uses hardware H264 encoding (on the Pi)
-- Camera control (resolution and framerate) through ONVIF
-- Set other camera options through a web interface.
-- Discoverable (WS-Discovery) on Pi/Linux
+- Implements the ONVIF Standard for a CCTV Camera and NVT (Network Video Transmitter)
+- Streams H264 video over RTSP from the Official Raspberry Pi camera (the one that uses the ribbon cable) and some USB cameras
+- Uses hardware H264 encoding using the GPU on the Pi
+- Implements Camera control (resolution and framerate) through ONVIF
+- Can set other camera options through a web interface.
+- Discoverable (WS-Discovery) on Pi/Linux by CCTV Viewing Software
 - Works with ONVIF Device Manager (Windows) and ONVIF Device Tool (Linux)
-- Works with other CCTV Viewing Software that implements the ONVIF standard including Antrica Decoder, Avigilon Control Centre, Bosch BVMS, Milestone, ISpy (Opensource), BenSoft SecuritySpy (Mac)
+- Works with other CCTV Viewing Software that implements the ONVIF standard including Antrica Decoder, Avigilon Control Centre, Bosch BVMS, Milestone, ISpy (Opensource), BenSoft SecuritySpy (Mac), IndigoVision Control Centre and Genetec Security Centre (add camera as ONVIF-BASIC mode)
 - Implements ONVIF Authentication
-- Implements Absolute, Relative and Continuous PTZ service and controls the Pimononi Raspberry Pi Pan-Tilt HAT
-- Also converts ONVIF PTZ commands into Pelco D and Visca telemetry on a serial port (UART) for other Pan/Tilt platforms
+- Implements Absolute, Relative and Continuous PTZ and controls the Pimononi Raspberry Pi Pan-Tilt HAT
+- Can also use the Waveshare Pan-Tilt HAT with a custom driver for the PWM chip used but be aware the servos in their kit do not fit so we recommend the Pimoroni model
+- Also converts ONVIF PTZ commands into Pelco D and Visca telemetry on a serial port (UART) for other Pan/Tilt platforms (ie a PTZ Proxy or PTZ Protocol Converter)
+- Can reference other RTSP servers, which in turn can pull in the video via RTSP, other ONVIF sources, Desktop Capture, MJPEG allowing RPOS to be a Video Stream Proxy
 - Implements Imaging service Brightness and Focus commands (for Profile T)
 - Implements Relay (digital output) function
 - Supports Unicast (UDP/TDP) and Multicast using mpromonet's RTSP server
-- Also runs on Mac and Windows and other Linux machines but you need to supply your own RTSP server. An example to use ffserver on the Mac is included.
-- Currently does not support USB cameras (see Todo List)
+- Supports Unicast (UDP/TCP) RTSP using GStreamer
+- Works as a PTZ Proxy
+- Also runs on Mac, Windows and other Linux machines but you need to supply your own RTSP server. An example to use ffserver on the Mac is included.
+- USB cameras supported via the GStreamer RTSP server with limited parameters available. Tested with JPEG USB HD camera
 
 ![Picture of RPOS running on a Pi with the PanTiltHAT and Pi Camera](RPOS_PanTiltHAT.jpg?raw=true "PanTiltHAT")
 Picture of RPOS running on a Pi 3 with the PiMoroni PanTiltHAT and Official Pi Camera
 
 ## How to Install on a Raspberry Pi:
 
-### STEP 1 - ENABLE RASPBERRY PI CAMERA
-
-Pi users can run ‘raspi-config’ and enable the camera and reboot  
+### STEP 1 - CONFIG RASPBERRY PI
 Windows/Mac/Linux users can skip this step
+
+#### STEP 1.a - ENABLE RASPBERRY PI CAMERA
+(For Raspberry PI camera)
+Pi users can run ‘raspi-config’ and enable the camera and reboot  
+
+#### STEP 1.b - ADJUST GPU MEMORY
+(For USB camera, and need to use hardware encoding acceleration)
+Add ‘gpu_mem=128’ in /boot/bootconf.txt and reboot
 
 ### STEP 2 - INSTALL NODEJS AND NPM
 
 NOTE: Node.js Version 6.x and 8.x have been tested with RPOS. Only a small amount of testing has been done with Node v10.
 
+UPDATE... MAY 2021. I've started using Node 12 on my Raspberry Pi, installed using the package called 'n'.
+This required me to upgrade Gulp v3 to Gulp v4
+
 #### STEP 2.1.a - INSTALL NODE USING NVM
 
 You may choose to use [Node Version Manager (NVM)](https://github.com/nvm-sh/nvm) to install & use a specific version of Node & NPM, such as `nvm install 8` instead of the latest. Follow the instructions on NVM's github page to install & use.
+
+UPDATE... MAY 2021. I've started using 'n' to install the Node Version ```npm install -g n```.
+nvm us a bash shell extension. 'n' replaces the binary on your path and I found it easier to use this to get a specific version of Node for 'root'
+
 
 #### STEP 2.1.b - INSTALL NODE USING APT
 
@@ -125,14 +147,16 @@ RTSP Server options for Pi / Linux:
 1. GStreamer RTSP Server (option 3)
 
 RTSP Server options 2 & 3 offer more features, but require additional setup. See instructions below.
+Currently USB camera is only supported by GStreamer RTSP Server
 
 Windows users will need to run their own RTSP Server.
 Mac users can use the ffserver script.
 
 Note: The choice of RTSP Server is made in rposConfig.json
 
-#### STEP 5.a - OPTION 1: USING PRE-COMPILED ARM BINARY
+#### STEP 5.a - OPTION 1: USING PRE-COMPILED ARM BINARY (deprecated)
 
+This option is not recommended now. Please use Option 2 or Option 3
 RPOS comes with a pre-compiled ARM binary for a simple RTSP server. The source is in the ‘cpp’ folder. No action required to use, this is pre-selected in `rposConfig.json`
 
 Note that this option can be unstable, recommend option 2 or 3.
@@ -155,12 +179,26 @@ Installing the packages using apt saves a lot of time, but provides a rather old
 
 ##### 5.c.1a - INSTALL GSTREAMER USING APT:
 
+(For Raspberry PI camera)
 ```
 sudo apt install git gstreamer1.0-plugins-bad gstreamer1.0-plugins-base \
  gstreamer1.0-plugins-good gstreamer1.0-plugins-ugly \
  gstreamer1.0-tools libgstreamer1.0-dev libgstreamer1.0-0-dbg \
  libgstreamer1.0-0 gstreamer1.0-omx \
  libgstreamer-plugins-base1.0-dev gtk-doc-tools
+```
+
+(For USB camera, tested with Raspberry PI)
+The default pipeline takes MJPEG from USB camera, decode it to Raw using omxmjpegdec, then encode it to H.264 using omxh264enc
+
+Install GStreamer pipeline
+```
+sudo apt install gstreamer1.0-tools gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-omx-rpi gstreamer1.0-omx
+```
+
+Install Python Binding and gst-rtsp-server
+```
+sudo apt-get install python-gi gir1.2-gst-plugins-base-1.0 gir1.2-gst-rtsp-server-1.0
 ```
 
 ##### 5.c.1b - INSTALL GST-RPICAMSRC FROM SOURCE
@@ -200,7 +238,7 @@ Note: You do not need to load V4L2 modules when using rpicamsrc (option 3).
 
 ### STEP 6 - EDIT CONFIG
 
-Edit `rposConfig.json` to fit your application. Options include:
+Rename or copy `rposConfig.sample-*.json` to `rposConfig.json`. (Choosing the appropriate sample to start with)
 
 - Add a Username and Password for ONVIF access
 - Change the TCP Port for the Camera configuration and the ONVIF Services
@@ -212,7 +250,7 @@ Edit `rposConfig.json` to fit your application. Options include:
 
 ### STEP 7 - RUN RPOS.JS
 
-#### First run
+#### First run (Skip with USB camera)
 
 If you're using RTSP option 1 or 2, before you run RPOS for the first time you'll need to load the Pi V4L2 Camera Driver:
 
@@ -240,18 +278,21 @@ Goto the Web Page that runs with rpos `http://<CameraIP>:8081` and tick the hori
 You can set camera settings by browsing to : `http://CameraIP:Port/`
 These settings are then saved in a file called v4l2ctl.json and are persisted on rpos restart.
 The default port for RPOS is 8081.
+(Note that a lot of camera settings are now ignored by USB camera)
 
 ## Known Issues
 
 - 1920x1080 can cause hangs and crashes with the original RTSP server. The mpromonet one may work better.
+- 1920x1080 can cause encoding issue with USB camera pipeline. 1280x720 is recommended now.
 - Not all of the ONVIF standard is implemented.
 
 ## ToDo's (Help is Required)
 
 - Add MJPEG (implemented in gst-rtsp-server but still needs to return the correct ONVIF XML for MJPEG)
-- Support USB cameras with the Pi's Hardware H264 encoder (OMX) (see https://github.com/mpromonet/v4l2tools)
+- Support more parameters for USB cameras with GStreamer RTSP server [work underway by RogerHardiman. Help needed]
+- Support USB cameras with the Pi's Hardware H264 encoder (OMX) and the mpromonet RTP server (see https://github.com/mpromonet/v4l2tools)
 - Implement more ONVIF calls (Events, Analytics)
-- Test with ONVIF's own test tools (need a sponsor for this as we do not have funds to buy it)
+- Test with ONVIF's own test tools (need a sponsor for this as we need to be ONVIF members to access the Test Tool)
 - Add GPIO digital input
-- Add two way audio
+- Add two way audio with ONVIF back channel. We understand GStreamer has some support for this now.
 - and more...

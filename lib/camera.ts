@@ -1,5 +1,4 @@
-﻿///<reference path="../typings/main.d.ts"/>
-///<reference path="../rpos.d.ts"/>
+﻿///<reference path="../rpos.d.ts"/>
 import { Utils }  from './utils';
 import fs = require('fs');
 import parser = require('body-parser');
@@ -48,14 +47,27 @@ class Camera {
     this.config = config;
     this.rtspServer = null;
     if (this.config.RTSPServer != 0) {
-      if (!fs.existsSync("/dev/video0")) {
-        // this.loadDriver();
-        if (utils.isPi()) {
-          // Needs a V4L2 Driver to be installed
-          console.log('Use modprobe to load the Pi Camera V4L2 driver');
-          console.log('e.g.   sudo modprobe bcm2835-v4l2');
-          console.log('       or the uv4l driver');
+      if (this.config.CameraType == 'usbcam') {
+        if (this.config.RTSPServer != 3) {
+          // Only GStreamer RTSP is supported now
+          console.log('Only GStreamer RTSP is supported now');
           process.exit(1);
+        }
+        if (!fs.existsSync(this.config.CameraDevice)) {
+          // USB cam is not found
+          console.log(`USB Camera is not found at ${this.config.CameraDevice}`);
+          process.exit(1);
+        }
+      } else { // == 'picam' as default
+        if (!fs.existsSync("/dev/video0")) {
+          // this.loadDriver();
+          if (utils.isPi()) {
+            // Needs a V4L2 Driver to be installed
+            console.log('Use modprobe to load the Pi Camera V4L2 driver');
+            console.log('e.g.   sudo modprobe bcm2835-v4l2');
+            console.log('       or the uv4l driver');
+            process.exit(1);
+          }
         }
       }
     }
@@ -143,7 +155,11 @@ class Camera {
         return html;
       }
 
-      var html = parseControls("", 'User Controls', 'UserControls', v4l2ctl.Controls.UserControls);
+      var html = "<h1>RPOS - ONVIF NVT Camera</h1>";
+      html += "<b>Video Stream:</b> rtsp://username:password@deviceIPaddress:" + this.config.RTSPPort.toString() + "/" + this.config.RTSPName.toString();
+      html += "<br>";
+
+      html = parseControls(html, 'User Controls', 'UserControls', v4l2ctl.Controls.UserControls);
       html = parseControls(html, 'Codec Controls', 'CodecControls', v4l2ctl.Controls.CodecControls);
       html = parseControls(html, 'Camera Controls', 'CameraControls', v4l2ctl.Controls.CameraControls);
       html = parseControls(html, 'JPG Compression Controls', 'JPEGCompressionControls', v4l2ctl.Controls.JPEGCompressionControls);
@@ -155,7 +171,7 @@ class Camera {
 
   loadDriver() {
       try {
-          utils.execSync("sudo modprobe bcm2835-v4l2"); // only on PI
+          utils.execSync("sudo modprobe bcm2835-v4l2"); // only on PI, and not needed with USB Camera
       } catch (err) {}
   }
   
@@ -196,7 +212,7 @@ class Camera {
     } else {
         if (this.config.RTSPServer == 1) this.rtspServer = utils.spawn("./bin/rtspServer", ["/dev/video0", "2088960", this.config.RTSPPort.toString(), "0", this.config.RTSPName.toString()]);
         if (this.config.RTSPServer == 2) this.rtspServer = utils.spawn("v4l2rtspserver", ["-P",this.config.RTSPPort.toString(), "-u" , this.config.RTSPName.toString(),"-W",this.settings.resolution.Width.toString(),"-H",this.settings.resolution.Height.toString(),"/dev/video0"]);
-        if (this.config.RTSPServer == 3) this.rtspServer = utils.spawn("./python/gst-rtsp-launch.sh", ["-P",this.config.RTSPPort.toString(), "-u" , this.config.RTSPName.toString(),"-W",this.settings.resolution.Width.toString(),"-H",this.settings.resolution.Height.toString()]);
+        if (this.config.RTSPServer == 3) this.rtspServer = utils.spawn("./python/gst-rtsp-launch.sh", ["-P",this.config.RTSPPort.toString(), "-u" , this.config.RTSPName.toString(),"-W",this.settings.resolution.Width.toString(),"-H",this.settings.resolution.Height.toString(),"-d",((this.config.CameraType == 'picam')?('picam'):(this.config.CameraDevice))]);
     }
 
     if (this.rtspServer) {
