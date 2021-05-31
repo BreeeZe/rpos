@@ -469,57 +469,105 @@ class PTZService extends SoapService {
 
     port.SetPreset = (args, soapCallback, xml: string) => {
 
-      let SetPresetResponse;
+      let SetPresetResponse = {};
 
       let profileToken = args.ProfileToken;
       let presetName = args.PresetName;   // used when creating a preset or when updating (or renaming) a preset (as identified by the presetToken)
       let presetToken = args.PresetToken; // used when updating an existing preset
+
 
       if (this.ptz_driver.presetPassthrough) {
         try {
           // Check we have a name (The ONVIF standard says the name is Optional, but the library uses the name as the key of a key-value pair so needs a unique name)
           if (presetName == undefined || presetName && presetName.length == 0) return SetPresetResponse;
 
-          // If name already exists and this is not a 'update the preset' [indicated by the presence of a presetToken] then abort
-          if (this.ptz_driver.onvif.presets && this.ptz_driver.onvif.presets.hasOwnProperty(presetName) && presetToken == undefined) {
-            return SetPresetResponse;
-          }
+          // Get the current Presets. This is so we can avoid setting a Preset Name that clashes with an existing item. Sony allow this. But Indigo Vision gets in a mess with two
+          // profiles with the same Name.
 
-          // Check if the name already exists and we have not been passed a presetToken to 'replace' the existing position.
-          // We won't allow the user to re-use the name
-          /*
-          if (this.ptz_driver.onvif.presets.hasOwnProperty(presetName)) {
-            let existingPresetToken = this.ptz_driver.onvif.presets[presetName];
-
-            if (presetToken == undefined) {
-              // we have a name that matches an existing Preset, but the user did not tell us to Overwrite it (by specifying args.PresetToken). Abort
-              return SetPresetResponse;
-            }
-            if (presetToken != undefined && presetToken != existingPresetToken) {
-              // We have a problem. User has told us to overwrite a named preset but with a token that does not match the token we have cached. Abort
-              return SetPresetResponse;
-            }
-          }
-          */
-
-          let options = { presetName: presetName };
-          if (presetToken) options['presetToken'] = presetToken; // used to replace an Existing Preset
-          this.ptz_driver.onvif.setPreset(options, // use 'default' profileToken
+          this.ptz_driver.onvif.getPresets({}, // use 'default' profileToken
             // Completion callback function
             // This callback is executed once we have a list of presets
-            function (err: any, preset: any, xml: string) {
+            (err: any, preset: any, xml: string) => {
               if (err) {
-                console.log("SetPreset Error " + err);
+                console.log("SetPreset - Error calling GetPreset on remote camera " + err);
                 soapCallback(SetPresetResponse);
                 return;
               } else {
-                // parse reply
-                SetPresetResponse = { PresetToken: preset[0].setPresetResponse[0].presetToken[0] };
+                // the library updates the #presets data
 
-                soapCallback(SetPresetResponse);
-                return;
+                // Now continue on with the SetPreset code
+
+                // If name already exists and this is not a 'update the preset' [indicated by the presence of a presetToken] then abort
+                if (this.ptz_driver.onvif.presets && this.ptz_driver.onvif.presets.hasOwnProperty(presetName) && presetToken == undefined) {
+                  // return error env:Sender ter:InvalidArgVal ter:PresetExist
+                  var ERROR_PRESET_NAME_EXISTS = {
+                    Fault: {
+                      attributes: { // Add namespace here. Some ONVIF devices put the ter: namespace in the Soap Envelope but it should be valid in the soap:Fault tag
+                        'xmlns:ter': 'http://www.onvif.org/ver10/error',
+                      },
+                      Code: {
+                        Value: "soap:Sender",
+                        Subcode: {
+                          Value: "ter:InvalidArgVal",
+                          Subcode: {
+                            Value: "ter:PresetExists",
+                          },
+                        },
+                      },
+                      Reason: {
+                        Text: {
+                          attributes: {
+                            'xml:lang': 'en',
+                          },
+                          $value: 'The requested name already exist for another preset',
+                        }
+                      }
+                    }
+                  };
+                  soapCallback(SetPresetResponse);
+                  //throw ERROR_PRESET_NAME_EXISTS); // <- to send the fault we need to Throw, expect our exception is caught higher up. We need to make sure we re-throw it
+                  //                                    all the way back to Node SOAP
+                  return;
+                } // endif
+
+              // Check if the name already exists and we have not been passed a presetToken to 'replace' the existing position.
+              // We won't allow the user to re-use the name
+              /*
+              if (this.ptz_driver.onvif.presets.hasOwnProperty(presetName)) {
+                let existingPresetToken = this.ptz_driver.onvif.presets[presetName];
+
+                if (presetToken == undefined) {
+                  // we have a name that matches an existing Preset, but the user did not tell us to Overwrite it (by specifying args.PresetToken). Abort
+                  return SetPresetResponse;
+                }
+                if (presetToken != undefined && presetToken != existingPresetToken) {
+                  // We have a problem. User has told us to overwrite a named preset but with a token that does not match the token we have cached. Abort
+                  return SetPresetResponse;
+                }
               }
-            });
+              */
+
+                let options = { presetName: presetName };
+                if (presetToken) options['presetToken'] = presetToken; // used to replace an Existing Preset
+                this.ptz_driver.onvif.setPreset(options, // use 'default' profileToken
+                  // Completion callback function
+                  // This callback is executed once we have a list of presets
+                  (err: any, preset: any, xml: string) => {
+                    if (err) {
+                      console.log("SetPreset Error " + err);
+                      soapCallback(SetPresetResponse);
+                      return;
+                    } else {
+                      // parse reply
+                      SetPresetResponse = { PresetToken: preset[0].setPresetResponse[0].presetToken[0] };
+
+                      soapCallback(SetPresetResponse);
+                      return;
+                    }
+                  }); // end of setPreset
+
+              } // end if
+            }); // end of getPresets()
         } catch (err) {
           soapCallback(SetPresetResponse);
           return;
