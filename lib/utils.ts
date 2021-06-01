@@ -61,7 +61,7 @@ export module Utils {
         cpuserial = f.match(/Serial[\t]*: ([0-9a-f]{16})/)[1];
       } catch (ex) {
         this.log.error("Failed to read serial : %s", ex.message);
-        cpuserial = "ERROR000000000";
+        cpuserial = "000000000";
       }
       return cpuserial;
     }

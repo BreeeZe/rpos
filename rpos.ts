@@ -38,6 +38,7 @@ import DiscoveryService = require("./services/discovery_service");
 
 var utils = Utils.utils;
 let pjson = require("./package.json");
+const os = require('os');
 
 import fs = require('fs');
 let data = fs.readFileSync('./rposConfig.json', 'utf8');
@@ -48,22 +49,34 @@ let config = JSON.parse(data);
 
 utils.log.level = <Utils.logLevel>config.logLevel;
 
+
+// config.DeviceInformation has Manufacturer, Model, SerialNumer, FirmwareVersion, HardwareId
+// Probe hardware for values, unless they are given in rposConfig.json
+config.DeviceInformation = config.DeviceInformation || {};
+
 if (utils.isPi()) {
   var model = require('rpi-version')();
-  config.DeviceInformation.Manufacturer = 'RPOS Raspberry Pi';
-  config.DeviceInformation.Model = model; 
+  if (config.DeviceInformation.Manufacturer == undefined) config.DeviceInformation.Manufacturer = 'RPOS Raspberry Pi';
+  if (config.DeviceInformation.Model == undefined) config.DeviceInformation.Model = model;
 }
 
 if (utils.isMac()) {
-  const os = require('os');
   const macosRelease = require('macos-release');
-  config.DeviceInformation.Manufacturer = 'RPOS AppleMac';
-  config.DeviceInformation.Model = macosRelease()['name'] + ' ' + macosRelease()['version'];
+  if (config.DeviceInformation.Manufacturer == undefined) config.DeviceInformation.Manufacturer = 'RPOS AppleMac';
+  if (config.DeviceInformation.Model == undefined) config.DeviceInformation.Model = macosRelease()['name'] + ' ' + macosRelease()['version'];
 }
 
+if (utils.isWindows()) {
+  if (config.DeviceInformation.Manufacturer == undefined) config.DeviceInformation.Manufacturer = 'RPOS Windows';
+  if (config.DeviceInformation.Model == undefined) config.DeviceInformation.Model = os.version;
+}
 
-config.DeviceInformation.SerialNumber = utils.getSerial();
-config.DeviceInformation.FirmwareVersion = pjson.version;
+if (config.DeviceInformation.Manufacturer == undefined) config.DeviceInformation.Manufacturer = 'RPOS';
+if (config.DeviceInformation.Model == undefined) config.DeviceInformation.Model = 'RPOS';
+if (config.DeviceInformation.SerialNumber == undefined) config.DeviceInformation.SerialNumber = utils.getSerial();
+if (config.DeviceInformation.FirmwareVersion == undefined) config.DeviceInformation.FirmwareVersion = pjson.version;
+if (config.DeviceInformation.HardwareId == undefined) config.DeviceInformation.HardwareId = '1001';
+
 utils.setConfig(config);
 utils.testIpAddress();
 
