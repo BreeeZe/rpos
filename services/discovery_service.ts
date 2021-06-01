@@ -109,7 +109,13 @@ class DiscoveryService {
                     <wsa:Address>urn:uuid:${utils.uuid5(utils.getIpAddress() + this.config.ServicePort + this.config.RTSPPort)}</wsa:Address>
                   </wsa:EndpointReference>
                   <d:Types>dn:NetworkVideoTransmitter</d:Types>
-                  <d:Scopes>onvif://www.onvif.org/type/video_encoder onvif://www.onvif.org/type/ptz onvif://www.onvif.org/hardware/RaspberryPI onvif://www.onvif.org/name/PI onvif://www.onvif.org/location/</d:Scopes>
+                  <d:Scopes>
+                    onvif://www.onvif.org/type/video_encoder
+                    onvif://www.onvif.org/type/ptz
+                    onvif://www.onvif.org/hardware/${encodeURIComponent(this.config.DeviceInformation.Model)}
+                    onvif://www.onvif.org/name/${encodeURIComponent(this.config.DeviceInformation.Manufacturer + ' ' + this.config.DeviceInformation.Model)}
+                    onvif://www.onvif.org/location/
+                  </d:Scopes>
                   <d:XAddrs>http://${utils.getIpAddress()}:${this.config.ServicePort}/onvif/device_service</d:XAddrs>
                   <d:MetadataVersion>1</d:MetadataVersion>
               </d:ProbeMatch>
