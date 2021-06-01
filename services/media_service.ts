@@ -83,12 +83,22 @@ class MediaService extends SoapService {
       var img = fs.readFileSync('/dev/shm/snapshot.jpg');
       response.writeHead(200, { 'Content-Type': 'image/jpg' });
       response.end(img, 'binary');
+      return;
     } catch (err) {
       utils.log.debug("Error opening snapshot : %s", err);
-      var img = fs.readFileSync('web/snapshot.jpg');
+    }
+    try {
+      var img = fs.readFileSync('./web/snapshot.jpg');
       response.writeHead(200, { 'Content-Type': 'image/jpg' });
       response.end(img, 'binary');
+      return;
+    } catch (err) {
+      utils.log.debug("Error opening snapshot : %s", err);
     }
+
+    // Return 400 error
+    response.writeHead(400, { 'Content-Type': 'text/plain' });
+    response.end('JPEG unavailable');
   }
 
   started() {
