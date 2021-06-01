@@ -79,7 +79,7 @@ class PTZDriver {
     }
 
     if (config.PTZDriver === 'tenx') {
-      var TenxDriver = require('./tenx_driver');
+      var TenxDriver = require('tenx-usb-missile-launcher-driver');
       this.tenx = new TenxDriver();
       this.tenx.open();
       this.supportsContinuousPTZ = true;
