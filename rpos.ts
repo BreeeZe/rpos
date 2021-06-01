@@ -38,7 +38,13 @@ import DiscoveryService = require("./services/discovery_service");
 
 var utils = Utils.utils;
 let pjson = require("./package.json");
-let config = <rposConfig>require("./rposConfig.json");
+
+import fs = require('fs');
+let data = fs.readFileSync('./rposConfig.json', 'utf8');
+if (typeof data == 'string' && data.charCodeAt(0) === 0xFEFF) {
+  data = data.slice(1); // strip off the utf8 BO marker bytes
+}
+let config = JSON.parse(data);
 
 utils.log.level = <Utils.logLevel>config.logLevel;
 
