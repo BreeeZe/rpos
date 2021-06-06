@@ -6,6 +6,6 @@
         "removeComments": true,
         "preserveConstEnums": false,
         "sourceMap": true,
-        "watch": true
+        "watch": false
     }
 }

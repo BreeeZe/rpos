@@ -1,4 +1,3 @@
-///<reference path="../typings/main.d.ts" />
 ///<reference path="../rpos.d.ts" />
 
 import fs = require("fs");
@@ -7,20 +6,21 @@ import os = require('os');
 import SoapService = require('../lib/SoapService');
 import { Utils }  from '../lib/utils';
 import { Server } from 'http';
+import PTZDriver = require('../lib/PTZDriver');
 
 var utils = Utils.utils;
 
 class PTZService extends SoapService {
   ptz_service: any;
   callback: any;
-  ptz_driver: any;
+  ptz_driver: PTZDriver;
 
   presetArray = [];
 
   public ptzConfiguration: any;
 
 
-  constructor(config: rposConfig, server: Server, callback, ptz_driver) {
+  constructor(config: rposConfig, server: Server, callback, ptz_driver: PTZDriver) {
     super(config, server);
 
     this.ptz_service = require('./stubs/ptz_service.js').PTZService;
@@ -256,6 +256,8 @@ class PTZService extends SoapService {
 
     port.ContinuousMove = (args) =>  {
       // Update values or keep last known value
+      // ODM sends PanTilt OR Zoom but not both
+      // Other VMS systems can send PanTilt AND Zoom together
       try {pan = args.Velocity.PanTilt.attributes.x} catch (err){}; 
       try {tilt = args.Velocity.PanTilt.attributes.y} catch (err){}; 
       try {zoom = args.Velocity.Zoom.attributes.x} catch (err){}; 
@@ -287,6 +289,8 @@ class PTZService extends SoapService {
 
     port.Stop = (args) =>  {
       // Update values (to zero) or keep last known value
+      // ODM just sends Zoom:true or PanTilt:true
+      // Other VMS systems could stop Zoom and PanTilt in one command
       var pan_tilt_stop = false;
       var zoom_stop = false;
       try {pan_tilt_stop = args.PanTilt} catch (err){}; 

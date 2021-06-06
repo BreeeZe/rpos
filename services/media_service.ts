@@ -1,5 +1,5 @@
-///<reference path="../typings/main.d.ts" />
 ///<reference path="../rpos.d.ts" />
+
 import fs = require("fs");
 import util = require("util");
 import SoapService = require('../lib/SoapService');
@@ -47,23 +47,32 @@ class MediaService extends SoapService {
       var uri = url.parse(request.url, true);
       var action = uri.pathname;
       if (action == '/web/snapshot.jpg') {
-        if (this.ffmpeg_process != null) {
-          utils.log.info("ffmpeg - already running");
-          this.ffmpeg_responses.push(response);
-        } else {
-          var cmd = `ffmpeg -fflags nobuffer -probesize 256 -rtsp_transport tcp -i rtsp://127.0.0.1:${this.config.RTSPPort}/${this.config.RTSPName} -vframes 1  -r 1 -s 640x360 -y /dev/shm/snapshot.jpg`;
-          var options = { timeout: 15000 };
-          utils.log.info("ffmpeg - starting");
-          this.ffmpeg_responses.push(response);
-          this.ffmpeg_process = exec(cmd,options,(error,stdout,stderr) => {
-            // callback
-            utils.log.info("ffmpeg - finished");
-            if (error) {
-              utils.log.warn('ffmpeg exec error: %s',error);
-            }
-            this.ffmpeg_responses.forEach( (response) => { this.deliver_jpg(response); } );
-            this.ffmpeg_process = null;
-          });
+        try {
+          if (this.ffmpeg_process != null) {
+            utils.log.info("ffmpeg - already running");
+            this.ffmpeg_responses.push(response);
+          } else {
+            var cmd = `ffmpeg -fflags nobuffer -probesize 256 -rtsp_transport tcp -i rtsp://127.0.0.1:${this.config.RTSPPort}/${this.config.RTSPName} -vframes 1  -r 1 -s 640x360 -y /dev/shm/snapshot.jpg`;
+            var options = { timeout: 15000 };
+            utils.log.info("ffmpeg - starting");
+            this.ffmpeg_responses.push(response);
+            this.ffmpeg_process = exec(cmd, options, (error, stdout, stderr) => {
+              // callback
+              utils.log.info("ffmpeg - finished");
+              if (error) {
+                utils.log.warn('ffmpeg exec error: %s', error);
+              }
+              // deliver the JPEG (or the logo jpeg file)
+              for (let responseItem of this.ffmpeg_responses) {
+                this.deliver_jpg(responseItem); // response.Write() and response.End()
+              }
+              // empty the list of responses
+              this.ffmpeg_responses = [];
+              this.ffmpeg_process = null;
+            });
+          }
+        } catch (err) {
+          utils.log.warn('Error ' + err);
         }
       } else {
         for (var i = 0, len = listeners.length; i < len; i++) {
@@ -78,12 +87,22 @@ class MediaService extends SoapService {
       var img = fs.readFileSync('/dev/shm/snapshot.jpg');
       response.writeHead(200, { 'Content-Type': 'image/jpg' });
       response.end(img, 'binary');
+      return;
     } catch (err) {
       utils.log.debug("Error opening snapshot : %s", err);
-      var img = fs.readFileSync('web/snapshot.jpg');
+    }
+    try {
+      var img = fs.readFileSync('./web/snapshot.jpg');
       response.writeHead(200, { 'Content-Type': 'image/jpg' });
       response.end(img, 'binary');
+      return;
+    } catch (err) {
+      utils.log.debug("Error opening snapshot : %s", err);
     }
+
+    // Return 400 error
+    response.writeHead(400, { 'Content-Type': 'text/plain' });
+    response.end('JPEG unavailable');
   }
 
   started() {

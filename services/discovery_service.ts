@@ -1,5 +1,4 @@
 ﻿/// <reference path="../rpos.d.ts"/>
-/// <reference path="../typings/main.d.ts"/>
 
 /*
 The MIT License(MIT)
@@ -32,9 +31,8 @@ THE SOFTWARE.
  *
  * Raspberry Pi: Works fine.
 
- * Windows: Will not work. Windows claims 239.255.255.250:3702 for itself (to discover things
- * on the network) and so appliications need to use a Windows API to register for discovery
- * messages. There is an example of this in the ONVIF Device Manager source.
+ * Windows: Works, after I was able to make the UDP port non exclusive with reuseAddr
+ * as Winodws also listens on that port.
  *
  * Mac: OS 10.10 worked but only if you ran it as root. Seems that a process
  * called SpotlightNetHelper takes the address.
@@ -63,7 +61,7 @@ class DiscoveryService {
     //      utils.log.info("discovery_service not started (requires linux)");
     //      return;
     //    }
-    var opts = {
+    var opts: dgram.SocketOptions = {
       type: 'udp4',
       reuseAddr: true
     };
@@ -110,7 +108,13 @@ class DiscoveryService {
                     <wsa:Address>urn:uuid:${utils.uuid5(utils.getIpAddress() + this.config.ServicePort + this.config.RTSPPort)}</wsa:Address>
                   </wsa:EndpointReference>
                   <d:Types>dn:NetworkVideoTransmitter</d:Types>
-                  <d:Scopes>onvif://www.onvif.org/type/video_encoder onvif://www.onvif.org/type/ptz onvif://www.onvif.org/hardware/RaspberryPI onvif://www.onvif.org/name/PI onvif://www.onvif.org/location/</d:Scopes>
+                  <d:Scopes>
+                    onvif://www.onvif.org/type/video_encoder
+                    onvif://www.onvif.org/type/ptz
+                    onvif://www.onvif.org/hardware/${encodeURIComponent(this.config.DeviceInformation.Model)}
+                    onvif://www.onvif.org/name/${encodeURIComponent(this.config.DeviceInformation.Manufacturer + ' ' + this.config.DeviceInformation.Model)}
+                    onvif://www.onvif.org/location/
+                  </d:Scopes>
                   <d:XAddrs>http://${utils.getIpAddress()}:${this.config.ServicePort}/onvif/device_service</d:XAddrs>
                   <d:MetadataVersion>1</d:MetadataVersion>
               </d:ProbeMatch>
