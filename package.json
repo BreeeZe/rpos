@@ -25,6 +25,7 @@
     "macos-release": "~2.0.0",
     "node-pelcod": "^0.3.0",
     "node-uuid": "1.4.8",
+    "node-windows": "^0.1.14",
     "onvif": "git://github.com/agsh/onvif.git#5cf1652e597e5dc25089a3237905ffe36cfdffc3",
     "pan-tilt-hat": "^1.2.1",
     "rpi-version": "^1.4.3",
@@ -47,5 +48,8 @@
     "gulp-typescript": "^5.0.1",
     "gulp-zip": "^5.1.0",
     "typescript": "^4.2.4"
+  },
+  "pkg": {
+    "assets": "node_modules/node-windows/bin/**/*"
   }
 }
