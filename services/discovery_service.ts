@@ -31,9 +31,8 @@ THE SOFTWARE.
  *
  * Raspberry Pi: Works fine.
 
- * Windows: Will not work. Windows claims 239.255.255.250:3702 for itself (to discover things
- * on the network) and so appliications need to use a Windows API to register for discovery
- * messages. There is an example of this in the ONVIF Device Manager source.
+ * Windows: Works, after I was able to make the UDP port non exclusive with reuseAddr
+ * as Winodws also listens on that port.
  *
  * Mac: OS 10.10 worked but only if you ran it as root. Seems that a process
  * called SpotlightNetHelper takes the address.

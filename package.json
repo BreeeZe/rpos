@@ -1,6 +1,6 @@
 {
   "name": "rpos",
-  "version": "2.0.5",
+  "version": "2.1.0",
   "description": "rpos",
   "main": "rpos.js",
   "license": "MIT",
@@ -29,7 +29,7 @@
     "onvif": "git://github.com/agsh/onvif.git#5cf1652e597e5dc25089a3237905ffe36cfdffc3",
     "pan-tilt-hat": "^1.2.1",
     "rpi-version": "^1.4.3",
-    "serialport": "^9.0.7",
+    "serialport": "^9.1.0",
     "simple-udp-stream": "^1.2.3",
     "soap": "git://github.com/BreeeZe/node-soap.git",
     "tenx-usb-missile-launcher-driver": "^0.2.0",
@@ -47,7 +47,7 @@
     "gulp-sourcemaps": "^3.0.0",
     "gulp-typescript": "^5.0.1",
     "gulp-zip": "^5.1.0",
-    "typescript": "^4.2.4"
+    "typescript": "^4.3.2"
   },
   "pkg": {
     "assets": "node_modules/node-windows/bin/**/*"

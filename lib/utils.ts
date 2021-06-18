@@ -17,7 +17,7 @@ export module Utils {
     Debug = 4
   }
 
-  // Dummy Process is used when we don't want to spawn a local excutable, eg a local RTSP server
+  // Dummy Process is used when we don't want to spawn a local excutable, eg a dummy RTSP server
   class DummyProcess extends EventEmitter implements ChildProcess {
     stdin: Writable;
     stdout: Readable;
