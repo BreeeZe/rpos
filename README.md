@@ -62,28 +62,19 @@ Add ‘gpu_mem=128’ in /boot/bootconf.txt and reboot
 
 ### STEP 2 - INSTALL NODEJS AND NPM
 
-NOTE: Node.js Version 6.x and 8.x have been tested with RPOS. Only a small amount of testing has been done with Node v10.
-
-UPDATE... MAY 2021. I've started using Node 12 on my Raspberry Pi, installed using the package called 'n'.
-This required me to upgrade Gulp v3 to Gulp v4
-
-#### STEP 2.1.a - INSTALL NODE USING NVM
-
-You may choose to use [Node Version Manager (NVM)](https://github.com/nvm-sh/nvm) to install & use a specific version of Node & NPM, such as `nvm install 8` instead of the latest. Follow the instructions on NVM's github page to install & use.
-
-UPDATE... MAY 2021. I've started using 'n' to install the Node Version ```npm install -g n```.
-nvm us a bash shell extension. 'n' replaces the binary on your path and I found it easier to use this to get a specific version of Node for 'root'
-
-
-#### STEP 2.1.b - INSTALL NODE USING APT
-
-Pi and Linux users can install latest versions of Node and NPM together with this command:
-
+[This step was tested in Raspberry Pi OS from June 2021. Older Pis may need some manual steps]
+On the Pi you can install nodejs (ver10) and npm (5.8.0) with this command
 ```
-  sudo apt-get install npm
+sudo apt install nodejs npm
 ```
+Next we install 'n', a node version manager and install Node v12 and NPM v6
+```
+sudo npm install -g n
+sudo n install 12
+```
+Log out and log back in for the Path changes to take effect. You should now have Node v12 (check with node -v) and NPM v6 (check with npm -v)
 
-#### STEP 2.1.c - OTHER METHODS
+#### STEP 2.1.b - OTHER METHODS
 
 Windows and Mac users can install Node from the nodejs.org web site.
 
@@ -93,22 +84,6 @@ Older Raspbian users (eg those running Jessie) can install NodeJS and NPM with t
   curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
   sudo apt-get install nodejs
 ```
-
-#### STEP 2.2 - UPDATE NPM
-
-If using [`NVM`](https://github.com/nvm-sh/nvm) to manage your Node.js version, the following will update NPM to the latest supported on your version of Node.js:
-
-```
-nvm install-latest-npm
-```
-
-Otherwise you can use NPM to update itself with this command:
-
-```
-sudo npm install -g npm@latest
-```
-
-Note this seemed to fail first time and needed to be ran twice to get my onto NPM version 6.7.0
 
 ### STEP 3 - GET RPOS SOURCE, INSTALL DEPENDENCIES
 
@@ -122,18 +97,10 @@ npm install
 
 #### 4.1.a
 
-For NPM version 5.2 and up, use the `npx` command to run the 'gulp' script:
+Use the `npx` command to run the 'gulp' script: (works for NPM 5.2 and higher)
 
 ```
 npx gulp
-```
-
-#### 4.1.b
-
-For older versions of NPM without `npx`, run the gulp script directly:
-
-```
-./node_modules/gulp/bin/gulp.js
 ```
 
 ### STEP 5 - PICK YOUR RTSP SERVER
@@ -184,19 +151,19 @@ Installing the packages using apt saves a lot of time, but provides a rather old
 sudo apt install git gstreamer1.0-plugins-bad gstreamer1.0-plugins-base \
  gstreamer1.0-plugins-good gstreamer1.0-plugins-ugly \
  gstreamer1.0-tools libgstreamer1.0-dev libgstreamer1.0-0-dbg \
- libgstreamer1.0-0 gstreamer1.0-omx \
+ libgstreamer1.0-0 libgstrtspserver-1.0.0 gstreamer1.0-omx \
  libgstreamer-plugins-base1.0-dev gtk-doc-tools
 ```
 
 (For USB camera, tested with Raspberry PI)
-The default pipeline takes MJPEG from USB camera, decode it to Raw using omxmjpegdec, then encode it to H.264 using omxh264enc
+The default pipeline takes MJPEG from USB camera, decode it to Raw using jpegdec, then encode it to H.264 using omxh264enc
 
 Install GStreamer pipeline
 ```
 sudo apt install gstreamer1.0-tools gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-omx-rpi gstreamer1.0-omx
 ```
 
-Install Python Binding and gst-rtsp-server
+Install Python Binding, GIR Files (GObjectIntrospection Repository - makes APIs from C libraries) and gst-rtsp-server
 ```
 sudo apt-get install python-gi gir1.2-gst-plugins-base-1.0 gir1.2-gst-rtsp-server-1.0
 ```
@@ -223,16 +190,8 @@ gst-inspect-1.0 rpicamsrc
 
 ##### 5.c.2 - INSTALL GST-RTSP-SERVER FROM SOURCE
 
-Next, compile gst-rtsp-server v1.4.5 (newer versions require newer GStreamer libs than those installed by apt)
+.. No longer required. Raspberry Pi OS in June 2021 is shipping with GStreamer 1.14 and the Gst RTSP Server library v1.14
 
-```
-git clone git://anongit.freedesktop.org/gstreamer/gst-rtsp-server
-cd gst-rtsp-server
-git checkout 1.4.5
-./autogen.sh
-make
-sudo make install
-```
 
 Note: You do not need to load V4L2 modules when using rpicamsrc (option 3).
 
