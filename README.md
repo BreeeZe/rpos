@@ -146,29 +146,27 @@ Installing the packages using apt saves a lot of time, but provides a rather old
 
 ##### 5.c.1a - INSTALL GSTREAMER USING APT:
 
-(For Raspberry PI camera)
+We will install lots of GStreamer Libraries and then the Python and GIR libraries (GIR allow other languages to access the GStreamer C API)
+If you only use USB cameras, some may not be needed but for simplicity I'll install them all here.
+
 ```
-sudo apt install git gstreamer1.0-plugins-bad gstreamer1.0-plugins-base \
- gstreamer1.0-plugins-good gstreamer1.0-plugins-ugly \
+sudo apt install git gstreamer1.0-plugins-base \
+ gstreamer1.0-plugins-bad  gstreamer1.0-plugins-good gstreamer1.0-plugins-ugly \
  gstreamer1.0-tools libgstreamer1.0-dev libgstreamer1.0-0-dbg \
- libgstreamer1.0-0 libgstrtspserver-1.0.0 gstreamer1.0-omx \
- libgstreamer-plugins-base1.0-dev gtk-doc-tools
+ libgstreamer1.0-0 libgstrtspserver-1.0.0 \
+ libgstreamer-plugins-base1.0-dev gtk-doc-tools \
+ gstreamer1.0-omx-rpi gstreamer1.0-omx
 ```
 
-(For USB camera, tested with Raspberry PI)
-The default pipeline takes MJPEG from USB camera, decode it to Raw using jpegdec, then encode it to H.264 using omxh264enc
+You can check it is verson 1.14 with ```gst-launch-1.0 --version```
 
-Install GStreamer pipeline
-```
-sudo apt install gstreamer1.0-tools gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-omx-rpi gstreamer1.0-omx
-```
-
-Install Python Binding, GIR Files (GObjectIntrospection Repository - makes APIs from C libraries) and gst-rtsp-server
+Then install Python Binding, GIR Files (GObjectIntrospection Repository - makes APIs from C libraries)
 ```
 sudo apt-get install python-gi gir1.2-gst-plugins-base-1.0 gir1.2-gst-rtsp-server-1.0
 ```
 
 ##### 5.c.1b - INSTALL GST-RPICAMSRC FROM SOURCE
+Currently Raspberry Pi OS installs GStreamer 1.14 which does not include the 'rpicamsrc' module so we will build it from source.
 
 (starting in /rpos root directory)
 
@@ -187,15 +185,16 @@ Check successful plugin installation by executing
 ```
 gst-inspect-1.0 rpicamsrc
 ```
+Note: You do not need to load V4L2 modules when using rpicamsrc (option 3).
 
 ##### 5.c.2 - INSTALL GST-RTSP-SERVER FROM SOURCE
 
-.. No longer required. Raspberry Pi OS in June 2021 is shipping with GStreamer 1.14 and the Gst RTSP Server library v1.14
+No longer required. Raspberry Pi OS in June 2021 is shipping with GStreamer 1.14 and the Gst RTSP Server library is included
 
-
-Note: You do not need to load V4L2 modules when using rpicamsrc (option 3).
 
 ### STEP 6 - EDIT CONFIG
+Go back to the 'rpos' folder
+
 
 Rename or copy `rposConfig.sample-*.json` to `rposConfig.json`. (Choosing the appropriate sample to start with)
 
