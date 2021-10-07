@@ -316,11 +316,11 @@ class StreamServer:
 			else:
 				log.error("Illegal codec")
 
-		else: # USB Camera
+		else: # usbcam USB Camera
 			# Ignore most of the parameters
 			log.info("USB camera ignored most of the parameters")
-			launch_str = '( v4l2src device='+self.device+' brightness='+str(self.brightness)+' contrast='+str(self.contrast)+' saturation='+str(self.saturation)
-			launch_str = launch_str + ' ! image/jpeg,width='+str(self.width)+',height='+str(self.height)+',framerate='+str(self.fps)+'/1 ! jpegdec ! clockoverlay ! omxh264enc target-bitrate='+str(self.bitrate)+' control-rate=variable ! video/x-h264,profile=baseline ! h264parse ! rtph264pay name=pay0 pt=96 )'
+			launch_str = '( v4l2src is-live=true device='+self.device+' brightness='+str(self.brightness)+' contrast='+str(self.contrast)+' saturation='+str(self.saturation)
+			launch_str = launch_str + ' ! queue ! jpegdec ! clockoverlay ! queue ! x264enc tune=zerolatency ! h264parse ! rtph264pay name=pay0 pt=96 )'
 
 		log.debug(launch_str)
 		cam_mutex.acquire()
