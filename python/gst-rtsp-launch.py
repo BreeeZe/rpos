@@ -6,7 +6,8 @@ import argparse
 parser = argparse.ArgumentParser(description="gst-rtsp-launch-py V0.1")
 parser.add_argument('-v', '--verbose', action='store_true', help='Make script chatty')
 parser.add_argument('-f', '--file', action='store', default="v4l2ctl.json", help='Video Configuration file')
-parser.add_argument('-d', '--device', action='store', default="picam", help='Video Device Path')
+parser.add_argument('-t', '--type', action='store', default="picam", help='picam, test or usbcam')
+parser.add_argument('-d', '--device', action='store', default="/dev/video0", help='Video Device Path eg /dev/video0')
 parser.add_argument('-P', '--rtspport', action='store', default=554, help='Set RTSP port')
 parser.add_argument('-u', '--rtspname', action='store', default="live", help='Set RTSP name')
 parser.add_argument('-W', '--rtspresolutionwidth', action='store', default=1280, help='Set RTSP resolution width')
@@ -53,7 +54,7 @@ cam_mutex = Lock()
 # -------------------
 
 class StreamServer:
-	def __init__(self, device, file, port, name, width, height, codec):
+	def __init__(self, type, device, file, port, name, width, height, codec):
 		signal.signal(signal.SIGTERM, self.exit_gracefully)
 		Gst.init(None)
 		self.mainloop = GObject.MainLoop()
@@ -61,6 +62,7 @@ class StreamServer:
 		self.mounts = self.server.get_mount_points()
 		
 		self.device = device
+		self.type = type
 		self.file = file
 		
 		self.port = port
@@ -262,9 +264,9 @@ class StreamServer:
 				self.repeat_sequence_header = config["CodecControls"]["repeat_sequence_header"]
 				self.h264_level = config["CodecControls"]["h264_level"]
 				self.h264_profile = config["CodecControls"]["h264_profile"]
-		except Exception, e:
+		except Exception as e:
 			print ("Unable to read config!")
-			print str(e)
+			print (e)
 			
 	
 	def launch(self):
@@ -273,7 +275,11 @@ class StreamServer:
 			log.debug("StreamServer.launch called on running instance.")
 			self.stop() # Need to stop any instances first
 		
-		if self.device == "picam":
+		if self.type == "picam":
+                        # This asks the Pi GPU to generate H264 video data which is then passed out via RTSP
+                        # Because the pipleline receives H264 video data (NALs) is not possible to add the clock overlay
+                        # To add a clock, we must get raw video from the GPU and then add the clock, and then pass into the GPU to encode (or use libx264 to encode in software)
+
 			launch_str = 	'( rpicamsrc preview=false bitrate='+str(self.bitrate)+' keyframe-interval='+str(self.h264_i_frame_period)+' drc='+str(self.drc)+ \
 								' image-effect=denoise shutter-speed='+str(self.shutter)+' iso='+str(self.iso)+ \
 								' brightness='+str(self.brightness)+' contrast='+str(self.contrast)+' saturation='+str(self.saturation)+ \
@@ -287,10 +293,26 @@ class StreamServer:
 				launch_str = launch_str + 'awb-gain-blue='+self.gain_blue
 			
 			#Completing the pipe
+                        #By defining the video/x-264 or image/jpeg, the rpicamsrc module learns what output format to genrate
 			if self.codec == 0:
 				launch_str = launch_str + ' ! video/x-h264, framerate='+str(self.fps)+'/1, width='+str(self.width)+', height='+str(self.height)+' ! h264parse ! rtph264pay name=pay0 pt=96 )'
 			elif self.codec == 1:
 				launch_str = launch_str + ' ! image/jpeg, framerate='+str(self.fps)+'/1, width='+str(self.width)+', height='+str(self.height)+' ! jpegparse ! rtpjpegpay name=pay0 pt=96 )'
+			else:
+				log.error("Illegal codec")
+
+		elif self.type == "test":
+                        # Generate a test image, encoded to H264 using libx264. On a Pi this could have passed the raw image to the GPU (omxh264enc ?)
+
+			# Ignore most of the parameters
+			log.info("Test camera ignored most of the parameters")
+			launch_str = '( videotestsrc pattern=ball ! video/x-raw,width='+str(self.width)+',height='+str(self.height)+',framerate='+str(self.fps)+'/1 ! clockoverlay '
+
+			#Completing the pipe
+			if self.codec == 0:
+				launch_str = launch_str + ' ! x264enc ! h264parse ! rtph264pay name=pay0 pt=96 )'
+			elif self.codec == 1:
+				launch_str = launch_str + ' ! jpegenc ! jpegparse ! rtpjpegpay name=pay0 pt=96 )'
 			else:
 				log.error("Illegal codec")
 
@@ -320,8 +342,8 @@ class StreamServer:
 		
 	def start(self):
 		p = subprocess.Popen("ps -ax | grep rpos.js", shell=True, stdout=subprocess.PIPE)
-		output = p.stdout.read()
-		while self.stayAwake and "node" in output:
+		output = p.stdout.read().decode('utf-8')
+		while self.stayAwake and "rpos" in output:
 			if os.stat(self.file).st_mtime != self.configDate:
 				log.info("Updating stream settings")
 				self.readConfig()
@@ -357,7 +379,7 @@ if __name__ == '__main__':
 	codec = 0 		# Default to H264
 	if args.mjpeg:
 		codec = 1
-	streamServer = StreamServer(args.device, args.file, args.rtspport, args.rtspname, \
+	streamServer = StreamServer(args.type, args.device, args.file, args.rtspport, args.rtspname, \
 								args.rtspresolutionwidth, args.rtspresolutionheight,\
 								codec)
 	streamServer.readConfig()
