@@ -206,6 +206,24 @@ Rename or copy `rposConfig.sample-*.json` to `rposConfig.json`. (Choosing the ap
 - Switch to the mpromonet or GStreamer RTSP servers
 - Hardcode an IP address in the ONVIF SOAP messages
 
+### STEP 6 - CONFIG DETAILS
+The Configuation is split into several sections
+#### IP Address and Login Permissions
+- Network Adapters - Used by RPOS to probe network interfaces to try and work out its own IP Address
+- IPAddress - This can be used to override the auto detected IP address found by probing the Network Adapters list
+- Service Port - This is the TCP Port that RPOS listens on for ONVIF Connections
+- Username - The username used to connect to RPOS with
+- Password - The Password used to connect to RPOS with
+#### Camera Source
+This section helps RPOS know where to get live video from
+- Camera Type - Used to help RPOS automatically configure itself. Valid optins are "picam", "usbcam", "file", "test".  picam will select the Raspberry Pi camera on the ribbon cable, USB cam will select a USB camera, file will open a JPEG or PNG video file and test displays a bouncing ball with clock overlay
+- CameraDevice - Provides extra information to go with the Camera Type. For 'usbcam' se the Video4Linux address of the camera, eg /dev/video0.  For the 'file' cameraa type it contains the full path and filename of the jpeg or PNG file eg /home/pi/image.jpg
+#### RTSP Server
+This section helps RPOS know how to share the video via RTSP with viewers
+...
+...
+
+
 ### STEP 7 - RUN RPOS.JS
 
 #### First run (Skip with USB camera)
