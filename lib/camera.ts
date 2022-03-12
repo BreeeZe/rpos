@@ -51,7 +51,7 @@ class Camera {
       if (this.config.CameraType == 'usbcam') {
         if (this.config.RTSPServer != 3) {
           // Only GStreamer RTSP is supported now
-          console.log('Only GStreamer RTSP is supported now');
+          console.log('Only GStreamer RTSP mode is supported for USB Camera video');
           process.exit(1);
         }
         if (!fs.existsSync(this.config.CameraDevice)) {
@@ -59,7 +59,20 @@ class Camera {
           console.log(`USB Camera is not found at ${this.config.CameraDevice}`);
           process.exit(1);
         }
-      } else { // == 'picam' as default
+      }
+      if (this.config.CameraType == 'filesrc') {
+        if (this.config.RTSPServer != 3) {
+          // Only GStreamer RTSP is supported now
+          console.log('Only GStreamer RTSP mode is supported for File Source video');
+          process.exit(1);
+        }
+        if (!fs.existsSync(this.config.CameraDevice)) {
+          // USB cam is not found
+          console.log(`USB Camera is not found at ${this.config.CameraDevice}`);
+          process.exit(1);
+        }
+      }
+      if (this.config.CameraType == 'picam') {
         if (!fs.existsSync("/dev/video0")) {
           // this.loadDriver();
           if (utils.isPi()) {
