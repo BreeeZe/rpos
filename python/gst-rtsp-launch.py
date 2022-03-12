@@ -3,11 +3,11 @@
 # Supporting arguments
 # --------------------------------------------------------------------------- # 
 import argparse
-parser = argparse.ArgumentParser(description="gst-rtsp-launch-py V0.1")
+parser = argparse.ArgumentParser(description="gst-rtsp-launch-py V0.2")
 parser.add_argument('-v', '--verbose', action='store_true', help='Make script chatty')
 parser.add_argument('-f', '--file', action='store', default="v4l2ctl.json", help='Video Configuration file')
-parser.add_argument('-t', '--type', action='store', default="picam", help='picam, test or usbcam')
-parser.add_argument('-d', '--device', action='store', default="/dev/video0", help='Video Device Path eg /dev/video0')
+parser.add_argument('-t', '--type', action='store', default="picam", help='picam, usbcam, filesrc or testsrc')
+parser.add_argument('-d', '--device', action='store', default="/dev/video0", help='Video Device eg /dev/video0 or File eg /home/pi/testimage.jpg')
 parser.add_argument('-P', '--rtspport', action='store', default=554, help='Set RTSP port')
 parser.add_argument('-u', '--rtspname', action='store', default="live", help='Set RTSP name')
 parser.add_argument('-W', '--rtspresolutionwidth', action='store', default=1280, help='Set RTSP resolution width')
@@ -292,8 +292,8 @@ class StreamServer:
 				launch_str = launch_str + 'awb-gain-green='+self.gain_green
 				launch_str = launch_str + 'awb-gain-blue='+self.gain_blue
 			
-			#Completing the pipe
-                        #By defining the video/x-264 or image/jpeg, the rpicamsrc module learns what output format to genrate
+			# Completing the pipe
+			# By defining the video/x-264 or image/jpeg, the rpicamsrc module learns what output format to generate
 			if self.codec == 0:
 				launch_str = launch_str + ' ! video/x-h264, framerate='+str(self.fps)+'/1, width='+str(self.width)+', height='+str(self.height)+' ! h264parse ! rtph264pay name=pay0 pt=96 )'
 			elif self.codec == 1:
@@ -301,26 +301,50 @@ class StreamServer:
 			else:
 				log.error("Illegal codec")
 
-		elif self.type == "test":
-                        # Generate a test image, encoded to H264 using libx264. On a Pi this could have passed the raw image to the GPU (omxh264enc ?)
+		elif self.type == "testsrc":
+			# Generate a test image, encoded to H264 using libx264 or MJPEG. On a Pi this could have passed the raw image to the GPU (eg omxh264enc)
 
 			# Ignore most of the parameters
 			log.info("Test camera ignored most of the parameters")
-			launch_str = '( videotestsrc pattern=ball ! video/x-raw,width='+str(self.width)+',height='+str(self.height)+',framerate='+str(self.fps)+'/1 ! clockoverlay '
+			launch_str = '( videotestsrc pattern=ball ! video/x-raw,width='+str(self.width)+',height='+str(self.height)+',framerate='+str(self.fps)+'/1 '
+			launch_str = launch_str + ' ! clockoverlay '
 
-			#Completing the pipe
+			# Completing the pipe
 			if self.codec == 0:
-				launch_str = launch_str + ' ! x264enc ! h264parse ! rtph264pay name=pay0 pt=96 )'
+				launch_str = launch_str + ' ! x264enc tune=zerolatency ! h264parse ! rtph264pay name=pay0 pt=96 )'
 			elif self.codec == 1:
 				launch_str = launch_str + ' ! jpegenc ! jpegparse ! rtpjpegpay name=pay0 pt=96 )'
 			else:
 				log.error("Illegal codec")
+
+		elif self.type == "filesrc":
+			# Generate a black test image and overlay a jpeg (scaling to fit the image). Encoded to H264 using libx264.
+                        # On a Pi this could have passed the raw image to the GPU (omxh264enc)
+                        # I did try the videomixer/compositor and a filesrc plus imagefreeze but the only thing I could get working real-time was gdkpixbuffer
+
+			# Ignore most of the parameters
+			log.info("Test camera ignored most of the parameters")
+
+			launch_str = '( videotestsrc pattern=black is-live=true ! video/x-raw,width='+str(self.width)+',height='+str(self.height)+',framerate='+str(self.fps)+'/1 '
+			launch_str = launch_str + ' ! gdkpixbufoverlay location="' + self.device + '" overlay-width=' + str(self.width) + ' overlay-height=' + str(self.height) + ' '
+			launch_str = launch_str + ' ! clockoverlay '
+
+			# Completing the pipe
+			if self.codec == 0:
+				launch_str = launch_str + ' ! queue ! x264enc tune=zerolatency ! h264parse ! rtph264pay name=pay0 pt=96 '
+			elif self.codec == 1:
+				launch_str = launch_str + ' ! jpegenc ! jpegparse ! rtpjpegpay name=pay0 pt=96 '
+			else:
+				log.error("Illegal codec")
+			launch_str = launch_str + ' )'
 
 		else: # usbcam USB Camera
 			# Ignore most of the parameters
 			log.info("USB camera ignored most of the parameters")
 			launch_str = '( v4l2src is-live=true device='+self.device+' brightness='+str(self.brightness)+' contrast='+str(self.contrast)+' saturation='+str(self.saturation)
 			launch_str = launch_str + ' ! queue ! jpegdec ! clockoverlay ! queue ! x264enc tune=zerolatency ! h264parse ! rtph264pay name=pay0 pt=96 )'
+
+			# TODO .... allow MJPEG output codec
 
 		log.debug(launch_str)
 		cam_mutex.acquire()
