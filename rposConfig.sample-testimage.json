@@ -4,7 +4,7 @@
   "ServicePort" : 8081,
   "Username" : "admin",
   "Password" : "admin",
-  "CameraType" : "test",
+  "CameraType" : "testsrc",
   "CameraDevice" : "",
   "RTSPAddress" : "", "//":"Normally left blank. Used to set RTSP Server Address",
   "RTSPPort" : 8554,
