@@ -67,8 +67,15 @@ class Camera {
           process.exit(1);
         }
         if (!fs.existsSync(this.config.CameraDevice)) {
-          // USB cam is not found
-          console.log(`USB Camera is not found at ${this.config.CameraDevice}`);
+          // Filename of image to show in RTSP stream is not found
+          console.log(`Filesrc file is not found at ${this.config.CameraDevice}`);
+          process.exit(1);
+        }
+      }
+      if (this.config.CameraType == 'testsrc') {
+        if (this.config.RTSPServer != 3) {
+          // Only GStreamer RTSP is supported now
+          console.log('Only GStreamer RTSP mode is supported for Test Source video');
           process.exit(1);
         }
       }
