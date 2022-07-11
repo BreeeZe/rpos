@@ -216,8 +216,8 @@ The Configuation is split into several sections
 - Password - The Password used to connect to RPOS with
 #### Camera Source
 This section helps RPOS know where to get live video from
-- Camera Type - Used to help RPOS automatically configure itself. Valid optins are "picam", "usbcam", "file", "test".  picam will select the Raspberry Pi camera on the ribbon cable, USB cam will select a USB camera, file will open a JPEG or PNG video file and test displays a bouncing ball with clock overlay
-- CameraDevice - Provides extra information to go with the Camera Type. For 'usbcam' se the Video4Linux address of the camera, eg /dev/video0.  For the 'file' cameraa type it contains the full path and filename of the jpeg or PNG file eg /home/pi/image.jpg
+- Camera Type - Used to help RPOS automatically configure itself. Valid optins are "picam", "usbcam", "filesrc", "testsrc".  'picam' will select the Raspberry Pi camera on the ribbon cable, 'usbcam' will select a USB camera, 'filesrc' will open a JPEG or PNG video file and 'testsrc' displays a bouncing ball with clock overlay
+- CameraDevice - Provides extra information to go with the Camera Type. For 'usbcam' use the Video4Linux address of the camera, eg /dev/video0.  For the 'filesrc' camera type, use the full path and filename of the jpeg or PNG file eg /home/pi/image.jpg
 #### RTSP Server
 This section helps RPOS know how to share the video via RTSP with viewers
 ...
