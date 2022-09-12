@@ -5,6 +5,7 @@ interface rposConfig {
   ServicePort: number;
   Username: string;
   Password: string;
+  Cameras: CameraSettings[];
   CameraType: string;
   CameraDevice: string;
   RTSPAddress: string;
@@ -24,6 +25,20 @@ interface rposConfig {
   DeviceInformation: DeviceInformation;
   logLevel: number;
   logSoapCalls: Boolean;
+}
+
+interface CameraSettings {
+  CameraType: string;
+  CameraDevice: string;
+  RTSPAddress: string;
+  RTSPPort: number;
+  RTSPName: string;
+  RTSPServer: number;
+  MulticastEnabled: boolean;
+  RTSPMulticastName: string;
+  MulticastAddress: string;
+  MulticastPort: number;
+  PTZCameraAddress: number; // There is currently one global PTZ output. This defines the camera number
 }
 
 interface PTZSerialPortSettings {
@@ -94,3 +109,14 @@ interface CameraSettingsBase {
   resolution: Resolution;
   framerate: number;
 }
+
+type Profile = {
+  Name: string
+  attributes: {
+    token: string,
+    fixed: boolean
+  },
+  VideoSourceConfiguration?: any,
+  VideoEncoderConfiguration?: any,
+  PTZConfiguration?: any
+};

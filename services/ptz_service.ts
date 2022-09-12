@@ -14,15 +14,17 @@ class PTZService extends SoapService {
   ptz_service: any;
   callback: any;
   ptz_driver: PTZDriver;
+  profilesArray: Profile[];
 
   presetArray = [];
 
-  public ptzConfiguration: any;
+  public ptzConfigurationsArray: any[] = [];
 
 
-  constructor(config: rposConfig, server: Server, callback, ptz_driver: PTZDriver) {
+  constructor(config: rposConfig, server: Server, callback, ptz_driver: PTZDriver, profilesArray: Profile[]) {
     super(config, server);
 
+    this.profilesArray = profilesArray;
     this.ptz_service = require('./stubs/ptz_service.js').PTZService;
     this.callback = callback;
     this.ptz_driver = ptz_driver;
@@ -35,6 +37,7 @@ class PTZService extends SoapService {
       onReady: () => console.log('ptz_service started')
     };
 
+    // TODO Fix Presets. Need one for each PTZ Node
     for (var i = 1; i <=  255; i++) {
       this.presetArray.push({profileToken: 'profile_token', presetName: '', presetToken: i.toString(), used: false});
     }  
@@ -53,13 +56,16 @@ class PTZService extends SoapService {
   extendService() {
     var port = this.ptz_service.PTZService.PTZ;
     
-    var node = { 
+    let nodesArray = [];
+
+    for (let i = 1; i <= this.config.Cameras.length; i++) {
+      let newNode = { 
       attributes : {
-        token : 'ptz_node_token_0',
+          token: `ptz_node_token_${i.toString().padStart(2, '0')}`,
         FixedHomePosition: this.ptz_driver.hasFixedHomePosition,
         GeoMove: false
       },
-      Name : 'PTZ Node 0',
+        Name: `PTZ Node ${i}`,
       SupportedPTZSpaces : {},
       MaximumNumberOfPresets : 255,
       HomeSupported : this.ptz_driver.supportsGoToHome,
@@ -68,9 +74,9 @@ class PTZService extends SoapService {
       'AUX5on','AUX5off','AUX6on','AUX6off',
       'AUX7on','AUX7off','AUX8on','AUX8off']
     }
-    
+
     if (this.ptz_driver.supportsAbsolutePTZ) {
-      node.SupportedPTZSpaces['AbsolutePanTiltPositionSpace'] = [{
+      newNode.SupportedPTZSpaces['AbsolutePanTiltPositionSpace'] = [{
           URI : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/PositionGenericSpace',
           XRange : { 
             Min : -1.0,
@@ -83,7 +89,7 @@ class PTZService extends SoapService {
         }];
     }
     if (this.ptz_driver.supportsRelativePTZ) {
-      node.SupportedPTZSpaces['RelativePanTiltTranslationSpace'] = [{
+      newNode.SupportedPTZSpaces['RelativePanTiltTranslationSpace'] = [{
           URI : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/TranslationGenericSpace',
           XRange : { 
             Min : -1.0,
@@ -96,7 +102,7 @@ class PTZService extends SoapService {
         }];
     }
     if (this.ptz_driver.supportsContinuousPTZ) {
-      node.SupportedPTZSpaces['ContinuousPanTiltVelocitySpace'] = [{ 
+      newNode.SupportedPTZSpaces['ContinuousPanTiltVelocitySpace'] = [{ 
           URI : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/VelocityGenericSpace',
           XRange : { 
             Min : -1.0,
@@ -107,7 +113,7 @@ class PTZService extends SoapService {
             Max : 1.0
           }
         }];
-      node.SupportedPTZSpaces['ContinuousZoomVelocitySpace'] =  [{ 
+      newNode.SupportedPTZSpaces['ContinuousZoomVelocitySpace'] = [{ 
           URI : 'http://www.onvif.org/ver10/tptz/ZoomSpaces/VelocityGenericSpace',
           XRange : { 
             Min : -1.0,
@@ -116,14 +122,14 @@ class PTZService extends SoapService {
         }];
     }
     if (this.ptz_driver.supportsRelativePTZ || this.ptz_driver.supportsAbsolutePTZ) {
-      node.SupportedPTZSpaces['PanTiltSpeedSpace'] = [{ 
+      newNode.SupportedPTZSpaces['PanTiltSpeedSpace'] = [{ 
           URI : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/GenericSpeedSpace',
           XRange : { 
             Min : 0,
             Max : 1
           }
         }];
-      node.SupportedPTZSpaces['ZoomSpeedSpace'] = [{ 
+      newNode.SupportedPTZSpaces['ZoomSpeedSpace'] = [{ 
           URI : 'http://www.onvif.org/ver10/tptz/ZoomSpaces/ZoomGenericSpeedSpace',
           XRange : { 
             Min : 0,
@@ -131,30 +137,25 @@ class PTZService extends SoapService {
           }
         }];
     }
+      nodesArray.push(newNode);
+    }
 
-    // ptzConfigurations is an Array.
-    var ptzConfigurationOptions = {
-      Spaces: node.SupportedPTZSpaces,
-      PTZTimeout : { 
-        Min : 'PT0S',
-        Max : 'PT10S'
-      },
-    };
-    
-    this.ptzConfiguration = {
+    for (let i = 1; i <= this.config.Cameras.length; i++) {
+
+      let newItem = {
       attributes: {
-        token: "ptz_config_token_0"
+          token: `ptz_config_token_${i.toString().padStart(2, '0')}`
       },
-      Name: "PTZ Configuration",
+        Name: `PTZ Configuration ${i.toString()}`,
       UseCount: 1,
-      NodeToken: "ptz_node_token_0",
-      DefaultAbsolutePantTiltPositionSpace : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/PositionGenericSpace',
-      DefaultAbsoluteZoomPositionSpace : 'http://www.onvif.org/ver10/tptz/ZoomSpaces/PositionGenericSpace',
-      DefaultRelativePanTiltTranslationSpace : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/TranslationGenericSpace',
-      DefaultRelativeZoomTranslationSpace : 'http://www.onvif.org/ver10/tptz/ZoomSpaces/TranslationGenericSpace',
-      DefaultContinuousPanTiltVelocitySpace : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/VelocityGenericSpace',
-      DefaultContinuousZoomVelocitySpace : 'http://www.onvif.org/ver10/tptz/ZoomSpaces/VelocityGenericSpace',
-      DefaultPTZSpeed : { 
+        NodeToken: `ptz_node_token_${i.toString().padStart(2, '0')}`,
+        DefaultAbsolutePantTiltPositionSpace: 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/PositionGenericSpace',
+        DefaultAbsoluteZoomPositionSpace: 'http://www.onvif.org/ver10/tptz/ZoomSpaces/PositionGenericSpace',
+        DefaultRelativePanTiltTranslationSpace: 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/TranslationGenericSpace',
+        DefaultRelativeZoomTranslationSpace: 'http://www.onvif.org/ver10/tptz/ZoomSpaces/TranslationGenericSpace',
+        DefaultContinuousPanTiltVelocitySpace: 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/VelocityGenericSpace',
+        DefaultContinuousZoomVelocitySpace: 'http://www.onvif.org/ver10/tptz/ZoomSpaces/VelocityGenericSpace',
+        DefaultPTZSpeed: { 
         PanTilt : { 
           attributes : {
             x : 1.0,
@@ -172,6 +173,8 @@ class PTZService extends SoapService {
       DefaultPTZTimeout : 'PT5S'
     }
 
+      this.ptzConfigurationsArray.push(newItem);
+    }
     
     port.GetServiceCapabilities = (args) => {
       var GetServiceCapabilitiesResponse = { 
@@ -190,6 +193,15 @@ class PTZService extends SoapService {
 
     port.GetConfigurationOptions = (args) => {
       // ToDo. Check token and return a valid response or an error reponse
+
+      let ptzConfigurationOptions = {
+        Spaces: nodesArray[0].SupportedPTZSpaces, // TODO - Need to select corrct node from the Nodes Array. Hard coded to first item !!
+        PTZTimeout: {
+          Min: 'PT0S',
+          Max: 'PT10S'
+        },
+      };
+
       var GetConfigurationOptionsResponse = { PTZConfigurationOptions: ptzConfigurationOptions };
       return GetConfigurationOptionsResponse;
     };
@@ -197,12 +209,12 @@ class PTZService extends SoapService {
         
     port.GetConfiguration = (args) => {
       // ToDo. Check token and return a valid response or an error reponse
-      var GetConfigurationResponse = { PTZConfiguration: this.ptzConfiguration };
+      var GetConfigurationResponse = { PTZConfiguration: this.ptzConfigurationsArray[0] }; // TODO = get the correct config for the token provided
       return GetConfigurationResponse;
     };
 	
     port.GetConfigurations = (args) => {
-      var GetConfigurationsResponse = { PTZConfiguration: this.ptzConfiguration };
+      var GetConfigurationsResponse = { PTZConfiguration: this.ptzConfigurationsArray };
       return GetConfigurationsResponse;
     };
 
@@ -212,13 +224,18 @@ class PTZService extends SoapService {
 //    };
 
     port.GetNode = (args) => {
-	  // ToDo. Check token and return a valid response or an error reponse
-      var GetNodeResponse = { PTZNode: node };
+      let nodeToken = args.NodeToken;
+
+      let node = nodesArray.find(item => item.attributes.token == nodeToken);
+
+      // TODO Add error case where NodeToken is not found
+
+      let GetNodeResponse = { PTZNode: node };
       return GetNodeResponse;
     };
 
     port.GetNodes = (args) => {
-      var GetNodesResponse = { PTZNode: node };
+      let GetNodesResponse = { PTZNode: nodesArray };
       return GetNodesResponse;
     };
 
@@ -244,8 +261,14 @@ class PTZService extends SoapService {
     };
 
     port.GotoHomePosition = (args) => {
-      if (this.callback) this.callback('gotohome', {});
-      var GotoHomePositionResponse = { };
+
+      // Find the ProfileToken in the Profiles Array. Then get the PTZConfiguration
+      const profile = this.profilesArray.find(item => item.attributes.token == args.ProfileToken);
+      const camID = Number(profile.PTZConfiguration.NodeToken.substring(15));// Strip "ptz_node_token_" and we can use this to index into the config.Cameras Array
+      const cameraAddress = Number(this.config.Cameras[camID - 1].PTZCameraAddress) || 1; // array starts from Index 0. Default camera address is '1'
+
+      if (this.callback) this.callback('gotohome', { cameraAddress: cameraAddress });
+      let GotoHomePositionResponse = {};
       return GotoHomePositionResponse;
     };
 
@@ -258,11 +281,17 @@ class PTZService extends SoapService {
       // Update values or keep last known value
       // ODM sends PanTilt OR Zoom but not both
       // Other VMS systems can send PanTilt AND Zoom together
+
+      const profile = this.profilesArray.find(item => item.attributes.token == args.ProfileToken);
+      const camID = Number(profile.PTZConfiguration.NodeToken.substring(15));// Strip "ptz_node_token_" and we can use this to index into the config.Cameras Array
+      const cameraAddress = Number(this.config.Cameras[camID - 1].PTZCameraAddress) || 1; // array starts from Index 0. Default camera address is '1'
+
+
       try {pan = args.Velocity.PanTilt.attributes.x} catch (err){}; 
       try {tilt = args.Velocity.PanTilt.attributes.y} catch (err){}; 
       try {zoom = args.Velocity.Zoom.attributes.x} catch (err){}; 
       try {timeout = args.Timeout} catch (err){}; 
-      if (this.callback) this.callback('ptz', { pan: pan, tilt: tilt, zoom: zoom});
+      if (this.callback) this.callback('ptz', { pan: pan, tilt: tilt, zoom: zoom, cameraAddress: cameraAddress });
       var ContinuousMoveResponse = { };
       return ContinuousMoveResponse;
     };
@@ -291,6 +320,10 @@ class PTZService extends SoapService {
       // Update values (to zero) or keep last known value
       // ODM just sends Zoom:true or PanTilt:true
       // Other VMS systems could stop Zoom and PanTilt in one command
+      const profile = this.profilesArray.find(item => item.attributes.token == args.ProfileToken);
+      const camID = Number(profile.PTZConfiguration.NodeToken.substring(15));// Strip "ptz_node_token_" and we can use this to index into the config.Cameras Array
+      const cameraAddress = Number(this.config.Cameras[camID - 1].PTZCameraAddress) || 1; // array starts from Index 0. Default camera address is '1'
+
       var pan_tilt_stop = false;
       var zoom_stop = false;
       try {pan_tilt_stop = args.PanTilt} catch (err){}; 
@@ -302,7 +335,7 @@ class PTZService extends SoapService {
       if (zoom_stop) {
         zoom = 0;
       } 
-      if (this.callback) this.callback('ptz', { pan: pan, tilt: tilt, zoom: zoom});
+      if (this.callback) this.callback('ptz', { pan: pan, tilt: tilt, zoom: zoom, cameraAddress: cameraAddress });
       var StopResponse = { };
       return StopResponse;
     };
@@ -313,7 +346,11 @@ class PTZService extends SoapService {
     //  AuxiliaryData : { xs:string}
     //};
     port.SendAuxiliaryCommand = (args) => {
-      if (this.callback) this.callback('aux', { name: args.AuxiliaryData });
+      const profile = this.profilesArray.find(item => item.attributes.token == args.ProfileToken);
+      const camID = Number(profile.PTZConfiguration.NodeToken.substring(15));// Strip "ptz_node_token_" and we can use this to index into the config.Cameras Array
+      const cameraAddress = Number(this.config.Cameras[camID - 1].PTZCameraAddress) || 1; // array starts from Index 0. Default camera address is '1'
+
+      if (this.callback) this.callback('aux', { name: args.AuxiliaryData, cameraAddress: cameraAddress });
       var SendAuxiliaryCommandResponse = { 
         AuxiliaryResponse : true // no idea what the value should be
       };
@@ -321,6 +358,10 @@ class PTZService extends SoapService {
     };
 
     port.GetPresets = (args) => {
+
+
+      // TODO - look at the Profile Token and return the relevent list of presets
+
       var GetPresetsResponse = { Preset: [] };
       var matching_profileToken = args.ProfileToken;
 
@@ -341,6 +382,10 @@ class PTZService extends SoapService {
 
 
     port.GotoPreset = (args) => {
+      const profile = this.profilesArray.find(item => item.attributes.token == args.ProfileToken);
+      const camID = Number(profile.PTZConfiguration.NodeToken.substring(15));// Strip "ptz_node_token_" and we can use this to index into the config.Cameras Array
+      const cameraAddress = Number(this.config.Cameras[camID - 1].PTZCameraAddress) || 1; // array starts from Index 0. Default camera address is '1'
+
       var GotoPresetResponse = { };
       var matching_profileToken = args.ProfileToken;
       var matching_presetToken = args.PresetToken;
@@ -350,7 +395,8 @@ class PTZService extends SoapService {
         && matching_presetToken === this.presetArray[i].presetToken
         && this.presetArray[i].used == true) {
           if (this.callback) this.callback('gotopreset', { name: this.presetArray[i].presetName,
-            value: this.presetArray[i].presetToken });
+            value: this.presetArray[i].presetToken, cameraAddress: cameraAddress
+          });
           break;
         }
       }
@@ -358,6 +404,10 @@ class PTZService extends SoapService {
     };
 
     port.RemovePreset = (args) => {
+      const profile = this.profilesArray.find(item => item.attributes.token == args.ProfileToken);
+      const camID = Number(profile.PTZConfiguration.NodeToken.substring(15));// Strip "ptz_node_token_" and we can use this to index into the config.Cameras Array
+      const cameraAddress = Number(this.config.Cameras[camID - 1].PTZCameraAddress) || 1; // array starts from Index 0. Default camera address is '1'
+
       var RemovePresetResponse = { };
 
       var matching_profileToken = args.ProfileToken;
@@ -368,7 +418,8 @@ class PTZService extends SoapService {
         && matching_presetToken === this.presetArray[i].presetToken) {
           this.presetArray[i].used = false;
           if (this.callback) this.callback('clearpreset', { name: this.presetArray[i].presetName,
-            value: this.presetArray[i].presetToken });
+            value: this.presetArray[i].presetToken, cameraAddress: cameraAddress
+          });
           break;
         }
       }
@@ -377,6 +428,10 @@ class PTZService extends SoapService {
     };
 
     port.SetPreset = (args) => {
+      const profile = this.profilesArray.find(item => item.attributes.token == args.ProfileToken);
+      const camID = Number(profile.PTZConfiguration.NodeToken.substring(15));// Strip "ptz_node_token_" and we can use this to index into the config.Cameras Array
+      const cameraAddress = Number(this.config.Cameras[camID - 1].PTZCameraAddress) || 1; // array starts from Index 0. Default camera address is '1'
+
 
       var SetPresetResponse;
 
@@ -392,7 +447,8 @@ class PTZService extends SoapService {
             this.presetArray[i].presetName = presetName;
             this.presetArray[i].used = true;
            if (this.callback) this.callback('setpreset', { name: presetName,
-            value: presetToken });
+             value: presetToken, cameraAddress: cameraAddress
+           });
           break;
           }
         SetPresetResponse = { PresetToken : presetToken};
@@ -411,7 +467,8 @@ class PTZService extends SoapService {
         }
         if (special_case_name) {
           if (this.callback) this.callback('setpreset', { name: presetName,
-              value: presetName });
+            value: presetName, cameraAddress: cameraAddress
+          });
           SetPresetResponse = { PresetToken : presetName};
           return SetPresetResponse;
         } else {
@@ -424,7 +481,8 @@ class PTZService extends SoapService {
               this.presetArray[i].used = true;
               new_presetToken = this.presetArray[i].presetToken;
               if (this.callback) this.callback('setpreset', { name: presetName,
-                value: new_presetToken });
+                value: new_presetToken, cameraAddress: cameraAddress
+              });
               break;
             }
           }

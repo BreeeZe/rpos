@@ -18,13 +18,15 @@ class MediaService extends SoapService {
   ptz_service: PTZService;
   ffmpeg_process: any = null;
   ffmpeg_responses: any[] = [];
+  profilesArray: Profile[];
 
-  constructor(config: rposConfig, server: Server, camera: Camera, ptz_service: PTZService) {
+  constructor(config: rposConfig, server: Server, camera: Camera, ptz_service: PTZService, profilesArray: Profile[]) {
     super(config, server);
     this.media_service = require('./stubs/media_service.js').MediaService;
 
     this.camera = camera;
     this.ptz_service = ptz_service;
+    this.profilesArray = profilesArray;
     this.serviceOptions = {
       path: '/onvif/media_service',
       services: this.media_service,
@@ -44,9 +46,32 @@ class MediaService extends SoapService {
     this.webserver.addListener('request', (request, response, next) => {
       utils.log.debug('web request received : %s', request.url);
 
-      var uri = url.parse(request.url, true);
-      var action = uri.pathname;
+      let uri = url.parse(request.url, true);
+      let action = uri.pathname;
       if (action == '/web/snapshot.jpg') {
+        /*
+        // Open a TCP connection to the encoder board and request a JPEG
+        let net = require('net');
+
+        let client = new net.Socket();
+        client.connect(50013, '192.168.2.224', function () {
+          console.log('JPEG Server Connected');
+          client.write('640;480;50');
+        });
+
+        client.on('data', function (data) {
+          console.log('Received: ' + data);
+          client.destroy(); // kill client after server's response
+        });
+
+        client.on('close', function () {
+          console.log('Connection closed');
+        });
+
+
+        // this.deliver_jpg(response); // response.Write() and response.End()
+        */
+
         try {
           if (this.ffmpeg_process != null) {
             utils.log.info("ffmpeg - already running");
@@ -116,10 +141,13 @@ class MediaService extends SoapService {
     var cameraSettings = this.camera.settings;
     var camera = this.camera;
 
+    let _profilesArray = this.profilesArray;
+
     var h264Profiles = v4l2ctl.Controls.CodecControls.h264_profile.getLookupSet().map(ls=>ls.desc);
     h264Profiles.splice(1, 1);
 
-    var videoConfigurationOptions = {
+    // Video Configuration Options. Either take values from V4L2 or use Hardcoded values.
+    let videoConfigurationOptions = {
       QualityRange: {
         Min: 1,
         Max: 1
@@ -158,12 +186,21 @@ class MediaService extends SoapService {
       }
     };
 
-    var videoEncoderConfiguration = {
+
+    ///////////////////////////////////////////////////////
+    // Video Encoder configuration
+    // Create one Encoder Config per Camera
+    //////////////////////////////////////////////////////
+    var videoEncoderConfigurationsArray = []
+
+    for (let i = 1; i <= this.config.Cameras.length; i++) {
+      let newItem =
+      {
       attributes: {
-        token: "encoder_config_token"
+          token: `encoder_config_token_${i.toString().padStart(2, '0')}` // breaking change. encoder_config_token is now encoder_config_token_01
       },
-      Name: "PiCameraConfiguration",
-      UseCount: 0,
+        Name: `Video Encoder Configuration ${i}`,
+        UseCount: 1,
       Encoding: "H264",
       Resolution: {
         Width: cameraSettings.resolution.Width,
@@ -191,37 +228,84 @@ class MediaService extends SoapService {
       SessionTimeout: "PT1000S"
     };
 
-    var videoSource = {
+      videoEncoderConfigurationsArray.push(newItem)
+    }
+
+
+    ////////////////////////////////////////////////
+    // VideoSource is a Lens, or an Encoder Input
+    // Note: Does not have a "name" value. Looks to have been forgotten in the ONVIF Standard which is unfortunate as Analogue Encoders have lots of Sources
+    ////////////////////////////////////////////////
+    var videoSourcesArray = []
+
+    for (let i = 1; i <= this.config.Cameras.length; i++) {
+
+      let newItem = {
       attributes: {
-        token: "video_src_token"
+          token: `video_src_token_${i.toString().padStart(2, '0')}` // breaking change. token renamed from video_src_token to video_src_token_01 for first item
       },
       Framerate: 25,
       Resolution: { Width: 1920, Height: 1280 }
     };
 
-    var videoSourceConfiguration = {
-      Name: "Primary Source",
-      UseCount: 0,
+      videoSourcesArray.push(newItem);
+    }
+
+
+    ///////////////////////////////////////////////////////
+    // VideoSourceConfiguration
+    // allows for cropping of the image
+    // Links through to the Video Source Token
+    ///////////////////////////////////////////////////////
+    var videoSourceConfigurationsArray = [];
+
+    for (let i = 1; i <= this.config.Cameras.length; i++) {
+
+      let newItem = {
+        Name: `Video Source Configuration ${i.toString()}`,
+        UseCount: 1,
       attributes: {
-        token: "video_src_config_token"
+        token: `video_src_config_token_${i.toString().padStart(2, '0')}`
       },
-      SourceToken: "video_src_token",
+        SourceToken: `video_src_token_${i.toString().padStart(2, '0')}`,
       Bounds: { attributes: { x: 0, y: 0, width: 1920, height: 1080 } }
     };
 
-    var audioEncoderConfigurationOptions = {
-      Options: []
+      videoSourceConfigurationsArray.push(newItem);
+    }
+
+
+
+    //////////////////////////////////////////////////////
+    // A Profile connects
+    //    The VideoSourceConfiguration (and it's VideoSource),
+    //    The EncoderConfiguration
+    //    The PTZConfiguration (and it's PTZ node)
+    // The user can also create profiles and give them their own name
+    //////////////////////////////////////////////////////
+
+    // Autogeneate the default Profiles. These have fixed: true and cannot be changed or deleted. VMS created profiles can be added/changed/deleted
+
+    for (let i = 1; i <= this.config.Cameras.length; i++) {
+
+      let newItem: Profile = {
+        Name: `Cam ${i}`,
+      attributes: {
+        token: `profile_token_${i.toString().padStart(2, '0')}`,
+        fixed: true
+      },
+        VideoSourceConfiguration: videoSourceConfigurationsArray[i - 1],
+        VideoEncoderConfiguration: videoEncoderConfigurationsArray[i - 1],
+        PTZConfiguration: this.ptz_service.ptzConfigurationsArray[i - 1]
     };
 
-    var profile = {
-      Name: "CurrentProfile",
-      attributes: {
-        token: "profile_token"
-      },
-      VideoSourceConfiguration: videoSourceConfiguration,
-      VideoEncoderConfiguration: videoEncoderConfiguration,
-      PTZConfiguration: this.ptz_service.ptzConfiguration
-    };
+      _profilesArray.push(newItem);
+    }
+
+    //
+    //TODO Load any user defined ONVIF Profiles from the JSON file
+    //
+
 
     port.GetServiceCapabilities = (args /*, cb, headers*/) => {
       var GetServiceCapabilitiesResponse = {
@@ -234,7 +318,7 @@ class MediaService extends SoapService {
           },
           ProfileCapabilities: {
             attributes: {
-              MaximumNumberOfProfiles: 1
+              MaximumNumberOfProfiles: 32 // allow for user created profiles
             }
           },
           StreamingCapabilities: {
@@ -262,14 +346,51 @@ class MediaService extends SoapService {
 
      // Usually RTSP server is on same IP Address as the ONVIF Service
      // Setting RTSPAddress in the config file lets you to use another IP Address
-     let rtspAddress = utils.getIpAddress();
-     if (this.config.RTSPAddress.length > 0) rtspAddress = this.config.RTSPAddress;
 
-      var GetStreamUriResponse = {
+      // Check value of 'args.ProfileToken to find out which RTSP Stream we want
+      // Check value of 'args.StreamSetup' for unicast/TCP/multicast details
+
+
+      // Check the value of args.ProfileToken
+      // Get the Profile from the ProfilesArray
+      // Examine the Video Source / Video Encoder
+      // Generate the suitable RTSP string
+
+      const profileToken: String = args.ProfileToken;
+      const profile = _profilesArray.find(item => item.attributes.token == profileToken);
+
+      if (profile == null || profile == undefined) {
+        // Error. Profile invalid
+        let GetStreamUriResponse = {} // TODO Add error 
+        return GetStreamUriResponse;
+      }
+
+      // Each VideoEncoder has a RTSP URL associated with it
+      const videoEncoderConfigrationToken = profile.VideoEncoderConfiguration.attributes.token;
+
+      const videoEncoderConfiguration = videoEncoderConfigurationsArray.find(item => item.attributes.token == videoEncoderConfigrationToken);
+
+      if (videoEncoderConfiguration == null || videoEncoderConfiguration == undefined) {
+        // Error. Cannot find videoEncoderConfiguration
+        let GetStreamUriResponse = {} // TODO Add error 
+        return GetStreamUriResponse;
+      }
+
+      // Get the Index (trim "encoder_config_token_")
+      const index = Number(videoEncoderConfigrationToken.substring(21)) - 1; // -1 because array is Zero based but configs start from 1
+
+
+      //Use the Index to look into the CameraArray
+
+
+      let rtspAddress = utils.getIpAddress();
+      if (this.config.Cameras[index].RTSPAddress.length > 0) rtspAddress = this.config.Cameras[index].RTSPAddress;
+
+      let GetStreamUriResponse = {
         MediaUri: {
-          Uri: (args.StreamSetup.Stream == "RTP-Multicast" && this.config.MulticastEnabled ? 
-            `rtsp://${rtspAddress}:${this.config.RTSPPort}/${this.config.RTSPMulticastName}` :
-            `rtsp://${rtspAddress}:${this.config.RTSPPort}/${this.config.RTSPName}`),
+          Uri: (args.StreamSetup.Stream == "RTP-Multicast" && this.config.Cameras[index].MulticastEnabled ?
+            `rtsp://${rtspAddress}:${this.config.Cameras[index].RTSPPort}/${this.config.Cameras[index].RTSPMulticastName}` :
+            `rtsp://${rtspAddress}:${this.config.Cameras[index].RTSPPort}/${this.config.Cameras[index].RTSPName}`),
           InvalidAfterConnect: false,
           InvalidAfterReboot: false,
           Timeout: "PT30S"
@@ -279,51 +400,93 @@ class MediaService extends SoapService {
     };
 
     port.GetProfile = (args) => {
-      var GetProfileResponse = { Profile: profile };
+      let profile = _profilesArray.find(item => item.attributes.token == args.ProfileToken);
+      let GetProfileResponse = { Profile: profile };
       return GetProfileResponse;
     };
 
     port.GetProfiles = (args) => {
-      var GetProfilesResponse = { Profiles: [profile] };
+      let GetProfilesResponse = { Profiles: _profilesArray };
       return GetProfilesResponse;
     };
 
     port.CreateProfile = (args) => {
-      var CreateProfileResponse = { Profile: profile };
+
+      // We are passed the new Profile's name
+      // Generate a token ID and ensure it is unique
+      let newTokenID = new Date().getTime().toString();
+      while (_profilesArray.findIndex(item => item.attributes.token == newTokenID) >= 0) {
+        // if already in use (eg 2 Creates within 1ms) add '0's on the end until it is unique
+        newTokenID = newTokenID + '0';
+      }
+      let newProfile: Profile = {
+        Name: args.Name,
+        attributes: {
+          token: newTokenID,
+          fixed: false
+        }//,
+        //VideoSourceConfiguration: null,
+        //VideoEncoderConfiguration: null,
+        //PTZConfiguration: null
+      };
+
+      _profilesArray.push(newProfile);
+
+      let CreateProfileResponse = {
+        Profile: {
+          Name: args.Name,
+          attributes: {
+            token: newTokenID
+          }
+        }
+      };
       return CreateProfileResponse;
     };
 
     port.DeleteProfile = (args) => {
-      var DeleteProfileResponse = {};
+      // cannot delete 'fixed' profiles
+      let profileIndex = _profilesArray.findIndex(item => item.attributes.token == args.ProfileToken);
+
+      if (profileIndex >= 0 && _profilesArray[profileIndex].attributes.fixed == false) {
+        // remove item at profileIndex
+        _profilesArray.splice(profileIndex, 1); // remove 1 item from position 'profileIndex'
+      }
+
+      // add error results
+
+      let DeleteProfileResponse = {};
       return DeleteProfileResponse;
     };
 
     port.GetVideoSources = (args) => {
-        var GetVideoSourcesResponse = { VideoSources: [videoSource] };
+      let GetVideoSourcesResponse = { VideoSources: videoSourcesArray };
         return GetVideoSourcesResponse;
     }
 
     port.GetVideoSourceConfigurations = (args) => {
-      var GetVideoSourceConfigurationsResponse = { Configurations: [videoSourceConfiguration] };
+      let GetVideoSourceConfigurationsResponse = { Configurations: videoSourceConfigurationsArray };
       return GetVideoSourceConfigurationsResponse;
     };
 
     port.GetVideoSourceConfiguration = (args) => {
-        var GetVideoSourceConfigurationResponse = { Configurations: videoSourceConfiguration };
+      let configuration = videoSourceConfigurationsArray.find(item => item.attributes.token == args.ConfigurationToken);
+      let GetVideoSourceConfigurationResponse = { Configurations: configuration };
         return GetVideoSourceConfigurationResponse;
     };
 
     port.GetVideoEncoderConfigurations = (args) => {
-      var GetVideoEncoderConfigurationsResponse = { Configurations: [videoEncoderConfiguration] };
+      let GetVideoEncoderConfigurationsResponse = { Configurations: videoEncoderConfigurationsArray };
       return GetVideoEncoderConfigurationsResponse;
     };
 
     port.GetVideoEncoderConfiguration = (args) => {
-      var GetVideoEncoderConfigurationResponse = { Configuration: videoEncoderConfiguration };
+      let configuration = videoEncoderConfigurationsArray.find(item => item.attributes.token == args.token)
+      let GetVideoEncoderConfigurationResponse = { Configuration: configuration };
       return GetVideoEncoderConfigurationResponse;
     };
 
     port.SetVideoEncoderConfiguration = (args) => {
+      /*
       var settings = {
         bitrate: args.Configuration.RateControl.BitrateLimit,
         framerate: args.Configuration.RateControl.FrameRateLimit,
@@ -333,20 +496,32 @@ class MediaService extends SoapService {
         resolution: args.Configuration.Resolution
       };
       camera.setSettings(settings);
+      */
 
-      var SetVideoEncoderConfigurationResponse = {};
+      // Update the Array and push to the camera
+      let index = videoEncoderConfigurationsArray.findIndex(item => item.attributes.token == args.Configuration.attributes.token);
+
+      if (index >= 0) {
+        videoEncoderConfigurationsArray[index].Encoding = args.Configuration.Encoding;
+        videoEncoderConfigurationsArray[index].H264 = args.Configuration.H264;
+        videoEncoderConfigurationsArray[index].Multicast = args.Configuration.Multicast;
+        videoEncoderConfigurationsArray[index].Quality = args.Configuration.Quality;
+        videoEncoderConfigurationsArray[index].RateControl = args.Configuration.RateControl;
+        videoEncoderConfigurationsArray[index].Resolution = args.Configuration.Resolution;
+      }
+      let SetVideoEncoderConfigurationResponse = {};
       return SetVideoEncoderConfigurationResponse;
     };
 
     port.GetVideoEncoderConfigurationOptions = (args) => {
-      var GetVideoEncoderConfigurationOptionsResponse = { Options: videoConfigurationOptions };
+      let GetVideoEncoderConfigurationOptionsResponse = { Options: videoConfigurationOptions };
       return GetVideoEncoderConfigurationOptionsResponse;
     };
 
     port.GetGuaranteedNumberOfVideoEncoderInstances = (args) => {
       var GetGuaranteedNumberOfVideoEncoderInstancesResponse = {
-        TotalNumber: 1,
-        H264: 1
+        TotalNumber: 16,
+        H264: 16
       }
       return GetGuaranteedNumberOfVideoEncoderInstancesResponse;
     };
@@ -367,6 +542,63 @@ class MediaService extends SoapService {
       var GetAudioEncoderConfigurationOptionsResponse = { Options: [{}] };
       return GetAudioEncoderConfigurationOptionsResponse;
     };
+
+
+    port.AddVideoSourceConfiguration = (args) => {
+      // pass in ProfileToken and ConfigurationToken
+      let profile = _profilesArray.find(item => item.attributes.token == args.ProfileToken);
+      let configuration = videoSourceConfigurationsArray.find(item => item.attributes.token == args.ConfigurationToken)
+
+      profile.VideoSourceConfiguration = configuration;
+
+      let AddVideoSourceConfigurationResponse = {};
+      return AddVideoSourceConfigurationResponse;
+    };
+
+
+    port.AddVideoEncoderConfiguration = (args) => {
+      // pass in ProfileToken and ConfigurationToken
+      let profile = _profilesArray.find(item => item.attributes.token == args.ProfileToken);
+      let configuration = videoEncoderConfigurationsArray.find(item => item.attributes.token == args.ConfigurationToken)
+
+      profile.VideoEncoderConfiguration = configuration;
+
+      let AddVideoEncoderConfigurationResponse = {};
+      return AddVideoEncoderConfigurationResponse;
+    };
+
+    port.AddPTZConfiguration = (args) => {
+      // pass in ProfileToken and ConfigurationToken
+      let profile = _profilesArray.find(item => item.attributes.token == args.ProfileToken);
+      let configuration = this.ptz_service.ptzConfigurationsArray.find(item => item.attributes.token == args.ConfigurationToken)
+
+      profile.PTZConfiguration = configuration;
+
+      let AddPTZConfigurationResponse = {};
+      return AddPTZConfigurationResponse;
+    }
+
+    // Get the encoder configurations that are compatible to the Profile parameter
+    // If there is a VideoSource already configured on the Profile, it
+    // may limit which Encoder Configurations we can return (eg if particular Encoder DSP
+    // is physically wired to a Video Sources like a lens or an analogue encoder input)
+    port.GetCompatibleVideoEncoderConfigurations = (args) => {
+
+      // TODO - check the arg Profile is in the Profiles list
+      // return all encoders for now but a different project may have restrictions
+
+
+      let GetCompatibleVideoEncoderConfigurationsResponse = {
+        Configurations: videoEncoderConfigurationsArray // TODO. Could filter this list
+      }
+      return GetCompatibleVideoEncoderConfigurationsResponse;
+    };
+
+
+    port.GetCompatibleMetadataConfigurations = (args) => {
+      let GetCompatibleMetadataConfigurationsResponse = {};
+      return GetCompatibleMetadataConfigurationsResponse;
+    }
   }
 }
 export = MediaService;

@@ -169,6 +169,9 @@ class PTZDriver {
   hasFixedHomePosition: boolean = true;
 
   constructor(config: rposConfig) {
+
+    // RPOS from mid 2022 supports multiple cameras and multiple PTZ addreses
+    // so a new cameraAddress parameter is passed in the 'data' object
     this.config = config;
     let parent = this;
 
@@ -282,7 +285,10 @@ class PTZDriver {
     if (command==='gotohome') {
       console.log("Goto Home");
       if (this.rposAscii) this.stream.write(command + '\n');
-      if (this.pelcod) this.pelcod.sendGotoPreset(1); // use preset 1 for Home
+      if (this.pelcod) {
+        this.pelcod.setAddress(data.cameraAddress);
+        this.pelcod.sendGotoPreset(1); // use preset 1 for Home
+      }
       if (this.visca) {
         let data: number[] = [];
         data.push(0x81,0x01,0x06,0x04,0xff);
@@ -295,28 +301,41 @@ class PTZDriver {
     else if (command==='sethome') {
       console.log("SetHome ");
       if (this.rposAscii) this.stream.write(command + '\n');
-      if (this.pelcod) this.pelcod.sendSetPreset(1); // use preset 1 for Home
+      if (this.pelcod) {
+        this.pelcod.setAddress(data.cameraAddress);
+        this.pelcod.sendSetPreset(1); // use preset 1 for Home
+      }
     }
     else if (command==='gotopreset') {
       console.log("Goto Preset "+ data.name + ' / ' + data.value);
       if (this.rposAscii) this.stream.write(command + '\t' + data.name + '\t' + data.value + '\n');
       if (this.tenx) this.tenx.fire();
-      if (this.pelcod) this.pelcod.sendGotoPreset(parseInt(data.value));
+      if (this.pelcod) {
+        this.pelcod.setAddress(data.cameraAddress);
+        this.pelcod.sendGotoPreset(parseInt(data.value));
+      }
     }
     else if (command==='setpreset') {
       console.log("Set Preset "+ data.name + ' / ' + data.value);
       if (this.rposAscii) this.stream.write(command + '\t' + data.name + '\t' + data.value + '\n');
-      if (this.pelcod) this.pelcod.sendSetPreset(parseInt(data.value));
+      if (this.pelcod) {
+        this.pelcod.setAddress(data.cameraAddress);
+        this.pelcod.sendSetPreset(parseInt(data.value));
+      }
     }
     else if (command==='clearpreset') {
       console.log("Clear Preset "+ data.name + ' / ' + data.value);
       if (this.rposAscii) this.stream.write(command + '\t' + data.name + '\t' + data.value + '\n');
-      if (this.pelcod) this.pelcod.sendClearPreset(parseInt(data.value));
+      if (this.pelcod) {
+        this.pelcod.setAddress(data.cameraAddress);
+        this.pelcod.sendClearPreset(parseInt(data.value));
+      }
     }
     else if (command==='aux') {
       console.log("Aux "+ data.name);
       if (this.rposAscii) this.stream.write(command + '\t' + data.name + '\n');
       if (this.pelcod) {
+        this.pelcod.setAddress(data.cameraAddress);
         if (data.name === 'AUX1on') this.pelcod.sendSetAux(1);
         if (data.name === 'AUX1off') this.pelcod.sendClearAux(1);
         if (data.name === 'AUX2on') this.pelcod.sendSetAux(2);
@@ -344,7 +363,7 @@ class PTZDriver {
       if (this.rposAscii) this.stream.write(command + '\t' + data.name + '\n');
     }
     else if (command==='ptz') {
-      console.log("Continuous PTZ "+ data.pan + '\t' + data.tilt + '\t' + data.zoom + '\n');
+      console.log("Continuous PTZ [Cam " + data.cameraAddress + "] " + data.pan + '\t' + data.tilt + '\t' + data.zoom + '\n');
       var p=0.0;
       var t=0.0;
       var z=0.0;
@@ -364,6 +383,7 @@ class PTZDriver {
         else this.tenx.stop();
       }
       if (this.pelcod) {
+        this.pelcod.setAddress(data.cameraAddress);
         this.pelcod.up(false).down(false).left(false).right(false);
         if      (p < 0 && t > 0) this.pelcod.up(true).left(true);
         else if (p > 0 && t > 0) this.pelcod.up(true).right(true);
@@ -521,6 +541,7 @@ class PTZDriver {
       console.log("Focus "+ data.value);
       if (this.rposAscii) this.stream.write(command + '\t' + data.value + '\n');
       if (this.pelcod) {
+        this.pelcod.setAddress(data.cameraAddress);
         if (data.value < 0) this.pelcod.focusNear(true);
         else if (data.value > 0) this.pelcod.focusFar(true);
         else {
@@ -534,6 +555,7 @@ class PTZDriver {
       console.log("Focus Stop");
       if (this.rposAscii) this.stream.write(command + '\n');
       if (this.pelcod) {
+        this.pelcod.setAddress(data.cameraAddress);
         this.pelcod.focusNear(false);
         this.pelcod.focusFar(false);
         this.pelcod.send();
