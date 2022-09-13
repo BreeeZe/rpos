@@ -40,6 +40,24 @@ class MediaService extends SoapService {
     this.extendService();
   }
 
+  saveProfiles() {
+    let output = [];
+    this.profilesArray.map(item => {
+      if (item.attributes.fixed == false) {
+        let newItem = {};
+        newItem['name'] = item.Name;
+        newItem['token'] = item.attributes.token;
+        newItem['videoSourceConfigurationToken'] = (item.VideoSourceConfiguration != null ? item.VideoSourceConfiguration.attributes.token : '');
+        newItem['videoEncoderConfigurationToken'] = (item.VideoEncoderConfiguration != null ? item.VideoEncoderConfiguration.attributes.token : '');
+        newItem['ptzConfigurationToken'] = (item.PTZConfiguration != null ? item.PTZConfiguration.attributes.token : '');
+        output.push(newItem);
+      }
+    });
+    fs.writeFileSync('userProfiles.json', JSON.stringify(output));
+  }
+
+
+
   starting() {
     var listeners = this.webserver.listeners('request').slice();
     this.webserver.removeAllListeners('request');
@@ -236,11 +254,11 @@ class MediaService extends SoapService {
     // VideoSource is a Lens, or an Encoder Input
     // Note: Does not have a "name" value. Looks to have been forgotten in the ONVIF Standard which is unfortunate as Analogue Encoders have lots of Sources
     ////////////////////////////////////////////////
-    var videoSourcesArray = []
+    var videoSourcesArray: VideoSource[] = []
 
     for (let i = 1; i <= this.config.Cameras.length; i++) {
 
-      let newItem = {
+      let newItem: VideoSource = {
       attributes: {
           token: `video_src_token_${i.toString().padStart(2, '0')}` // breaking change. token renamed from video_src_token to video_src_token_01 for first item
       },
@@ -257,11 +275,11 @@ class MediaService extends SoapService {
     // allows for cropping of the image
     // Links through to the Video Source Token
     ///////////////////////////////////////////////////////
-    var videoSourceConfigurationsArray = [];
+    var videoSourceConfigurationsArray: VideoSourceConfiguration[] = [];
 
     for (let i = 1; i <= this.config.Cameras.length; i++) {
 
-      let newItem = {
+      let newItem: VideoSourceConfiguration = {
         Name: `Video Source Configuration ${i.toString()}`,
         UseCount: 1,
       attributes: {
@@ -303,9 +321,29 @@ class MediaService extends SoapService {
     }
 
     //
-    //TODO Load any user defined ONVIF Profiles from the JSON file
-    //
+    // ADD USER DEFINED PROFILESfrom the JSON file
+    // JSON file stores the token names, so find those tokens from the Array of Configuration Objects
+    try {
+      if (fs.existsSync('userProfiles.json')) {
+        const raw = fs.readFileSync('userProfiles.json', 'utf-8');
+        const data: SavedProfile[] = JSON.parse(raw);
 
+        for (const userProfile of data) {
+          let newItem: Profile = {
+            Name: userProfile.name,
+            attributes: { token: userProfile.token, fixed: false },
+            VideoSourceConfiguration: (userProfile.videoSourceConfigurationToken != '' ? videoSourceConfigurationsArray.find(item => item.attributes.token == userProfile.videoSourceConfigurationToken) : undefined),
+            VideoEncoderConfiguration: (userProfile.videoEncoderConfigurationToken != '' ? videoEncoderConfigurationsArray.find(item => item.attributes.token == userProfile.videoEncoderConfigurationToken) : undefined),
+            PTZConfiguration: (userProfile.videoEncoderConfigurationToken != '' ? this.ptz_service.ptzConfigurationsArray.find(item => item.attributes.token == userProfile.ptzConfigurationToken) : undefined)
+          }
+          utils.log.info("Adding User Defined ONVIF Profile " + userProfile.name);
+          _profilesArray.push(newItem);
+        }
+      }
+
+    } catch (e) {
+      utils.log.error('Could not load User Defined ONVIF Profiles');
+    }
 
     port.GetServiceCapabilities = (args /*, cb, headers*/) => {
       var GetServiceCapabilitiesResponse = {
@@ -425,12 +463,15 @@ class MediaService extends SoapService {
           token: newTokenID,
           fixed: false
         }//,
-        //VideoSourceConfiguration: null,
+        //VideoSourceConfiguration: null,    // The JSOB Object to XML converter requires thee fields to be absent (undefined) if they are not set. Do not set them to NULL
         //VideoEncoderConfiguration: null,
         //PTZConfiguration: null
       };
 
       _profilesArray.push(newProfile);
+
+      // Save all the user defined profiles to a .JSON file
+      this.saveProfiles();
 
       let CreateProfileResponse = {
         Profile: {
@@ -453,6 +494,8 @@ class MediaService extends SoapService {
       }
 
       // add error results
+
+      this.saveProfiles();
 
       let DeleteProfileResponse = {};
       return DeleteProfileResponse;
@@ -551,6 +594,8 @@ class MediaService extends SoapService {
 
       profile.VideoSourceConfiguration = configuration;
 
+      this.saveProfiles();
+
       let AddVideoSourceConfigurationResponse = {};
       return AddVideoSourceConfigurationResponse;
     };
@@ -563,6 +608,8 @@ class MediaService extends SoapService {
 
       profile.VideoEncoderConfiguration = configuration;
 
+      this.saveProfiles();
+
       let AddVideoEncoderConfigurationResponse = {};
       return AddVideoEncoderConfigurationResponse;
     };
@@ -573,6 +620,8 @@ class MediaService extends SoapService {
       let configuration = this.ptz_service.ptzConfigurationsArray.find(item => item.attributes.token == args.ConfigurationToken)
 
       profile.PTZConfiguration = configuration;
+
+      this.saveProfiles();
 
       let AddPTZConfigurationResponse = {};
       return AddPTZConfigurationResponse;

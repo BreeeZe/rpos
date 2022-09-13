@@ -110,13 +110,49 @@ interface CameraSettingsBase {
   framerate: number;
 }
 
+type VideoSource = {
+  attributes: {
+    token: string
+  },
+  Framerate: number,
+  Resolution: {
+    Width: number,
+    Height: number
+  }
+}
+
+type VideoSourceConfiguration = {
+  Name: string
+  attributes: {
+    token: string
+  },
+  UseCount: number,
+  SourceToken: string,
+  Bounds: {
+    attributes: {
+      x: number,
+      y: number,
+      width: number,
+      height: number
+    }
+  }
+}
+
+type SavedProfile = {
+  name: string,
+  token: string,
+  videoSourceConfigurationToken: string,
+  videoEncoderConfigurationToken: string,
+  ptzConfigurationToken: string
+}
+
 type Profile = {
   Name: string
   attributes: {
     token: string,
     fixed: boolean
   },
-  VideoSourceConfiguration?: any,
+  VideoSourceConfiguration?: VideoSourceConfiguration,
   VideoEncoderConfiguration?: any,
   PTZConfiguration?: any
 };

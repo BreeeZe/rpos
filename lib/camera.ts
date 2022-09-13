@@ -19,7 +19,7 @@ class Camera {
       { Width: 1640, Height: 1232 },
       { Width: 1920, Height: 1080 }
     ],
-    framerates: [2, 5, 10, 15, 25, 30],
+    framerates: [1, 2, 5, 10, 15, 25, 30],
     bitrates: [
       250,
       500,
