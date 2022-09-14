@@ -3,7 +3,7 @@
 import fs = require("fs");
 import util = require("util");
 import SoapService = require('../lib/SoapService');
-import { Utils }  from '../lib/utils';
+import { Utils } from '../lib/utils';
 import url = require('url');
 import { Server } from 'http';
 import Camera = require('../lib/camera');
@@ -16,8 +16,8 @@ class MediaService extends SoapService {
   media_service: any;
   camera: Camera;
   ptz_service: PTZService;
-  ffmpeg_process: any = null;
-  ffmpeg_responses: any[] = [];
+  ffmpeg_process: any[] = []; // array of each ffmpeg process, one per VideoSource
+  ffmpeg_responses: any[] = []; // list of HTTP responses still to send
   profilesArray: Profile[];
 
   constructor(config: rposConfig, server: Server, camera: Camera, ptz_service: PTZService, profilesArray: Profile[]) {
@@ -32,11 +32,10 @@ class MediaService extends SoapService {
       services: this.media_service,
       xml: fs.readFileSync('./wsdl/media_service.wsdl', 'utf8'),
       wsdlPath: 'wsdl/media_service.wsdl',
-      onReady: function() {
+      onReady: function () {
         utils.log.info('media_service started');
       }
     };
-    
     this.extendService();
   }
 
@@ -62,61 +61,14 @@ class MediaService extends SoapService {
     var listeners = this.webserver.listeners('request').slice();
     this.webserver.removeAllListeners('request');
     this.webserver.addListener('request', (request, response, next) => {
+      // NOTE the 'this' in this callback will not be the same as the outer 'this'
       utils.log.debug('web request received : %s', request.url);
 
       let uri = url.parse(request.url, true);
       let action = uri.pathname;
-      if (action == '/web/snapshot.jpg') {
-        /*
-        // Open a TCP connection to the encoder board and request a JPEG
-        let net = require('net');
-
-        let client = new net.Socket();
-        client.connect(50013, '192.168.2.224', function () {
-          console.log('JPEG Server Connected');
-          client.write('640;480;50');
-        });
-
-        client.on('data', function (data) {
-          console.log('Received: ' + data);
-          client.destroy(); // kill client after server's response
-        });
-
-        client.on('close', function () {
-          console.log('Connection closed');
-        });
-
-
-        // this.deliver_jpg(response); // response.Write() and response.End()
-        */
-
-        try {
-          if (this.ffmpeg_process != null) {
-            utils.log.info("ffmpeg - already running");
-            this.ffmpeg_responses.push(response);
-          } else {
-            var cmd = `ffmpeg -fflags nobuffer -probesize 256 -rtsp_transport tcp -i rtsp://127.0.0.1:${this.config.RTSPPort}/${this.config.RTSPName} -vframes 1  -r 1 -s 640x360 -y /dev/shm/snapshot.jpg`;
-            var options = { timeout: 15000 };
-            utils.log.info("ffmpeg - starting");
-            this.ffmpeg_responses.push(response);
-            this.ffmpeg_process = exec(cmd, options, (error, stdout, stderr) => {
-              // callback
-              utils.log.info("ffmpeg - finished");
-              if (error) {
-                utils.log.warn('ffmpeg exec error: %s', error);
-              }
-              // deliver the JPEG (or the logo jpeg file)
-              for (let responseItem of this.ffmpeg_responses) {
-                this.deliver_jpg(responseItem); // response.Write() and response.End()
-              }
-              // empty the list of responses
-              this.ffmpeg_responses = [];
-              this.ffmpeg_process = null;
-            });
-          }
-        } catch (err) {
-          utils.log.warn('Error ' + err);
-        }
+      // look for /web/snapshot01.jpg or /web/snapshot02.jpg etc
+      if (action.startsWith('/web/snapshot') && action.endsWith('.jpg')) {
+        this.make_jpeg(request, response); // by calling an outer function we can make assign 'this' to the MediaService class
       } else {
         for (var i = 0, len = listeners.length; i < len; i++) {
           listeners[i].call(this, request, response, next);
@@ -125,17 +77,81 @@ class MediaService extends SoapService {
     });
   }
 
-  deliver_jpg(response: any){
+  make_jpeg(request: any, response: any) {
+    let uri = url.parse(request.url, true);
+    let action = uri.pathname;
+  /*
+    // Open a TCP connection to the encoder board and request a JPEG
+    let net = require('net');
+
+    let client = new net.Socket();
+    client.connect(50013, '192.168.2.224', function () {
+      console.log('JPEG Server Connected');
+      client.write('640;480;50');
+    });
+
+    client.on('data', function (data) {
+      console.log('Received: ' + data);
+      client.destroy(); // kill client after server's response
+    });
+
+    client.on('close', function () {
+      console.log('Connection closed');
+    });
+
+
+    // this.deliver_jpg(response); // response.Write() and response.End()
+    */
+
+
+
+    // Make a RTSP connection to the camera and get 1 frame of video to use as the JPEG
     try {
-      var img = fs.readFileSync('/dev/shm/snapshot.jpg');
-      response.writeHead(200, { 'Content-Type': 'image/jpg' });
-      response.end(img, 'binary');
-      return;
+      const camID = Number(action.slice(13, -4)); // 13 = length of /web/snapshot. -4 = reverse length of '.jpg'
+
+      // If ffmpeg is already running to get a JPEG from the selected Video Source (via 'index'), then we add the respose to the queue of HTTP responses to send
+      // once the JPEG has been received
+      if (this.ffmpeg_process[camID] != null) {
+        utils.log.info(`ffmpeg - already running for camera ${camID}`);
+        this.ffmpeg_responses.push({ camID, response }); // add to list of pending responses
+      } else {
+
+        // Start ffmpeg
+        let rtspAddress = "";
+        const arrayIndex = camID - 1; // Index is 1,2,3, array is 0,1,2 etc
+
+        if (this.config.Cameras[arrayIndex].RTSPAddress.length > 0)
+          rtspAddress = `rtsp://${this.config.Cameras[arrayIndex].RTSPAddress}:${this.config.Cameras[arrayIndex].RTSPPort}/${this.config.Cameras[arrayIndex].RTSPName}`;
+        else
+          rtspAddress = `rtsp://127.0.0.1:${this.config.Cameras[arrayIndex].RTSPPort}/${this.config.Cameras[arrayIndex].RTSPName}`;
+
+        let cmd = `ffmpeg -fflags nobuffer -probesize 256 -rtsp_transport tcp -i ${rtspAddress} -vframes 1  -r 1 -s 640x360 -y /tmp/snapshot${camID.toString().padStart(2, '0')}.jpg`;
+        let options = { timeout: 15000 };
+        utils.log.info("ffmpeg - starting for camera " + (camID).toString());
+        this.ffmpeg_responses.push({ camID, response });
+        this.ffmpeg_process[camID] = exec(cmd, options, (error, stdout, stderr) => {
+          // callback
+          utils.log.info(`ffmpeg - finished for camera ${camID}`);
+          if (error) {
+            utils.log.warn('ffmpeg exec error: %s', error);
+          }
+          // deliver the JPEG (or the logo jpeg file)
+          for (let responseItem of this.ffmpeg_responses) {
+            if (responseItem.camID == camID) this.deliver_jpg(responseItem.camID, responseItem.response); // response.Write() and response.End()
+          }
+          // empty the list of responses for 'camID'
+          this.ffmpeg_responses = this.ffmpeg_responses.filter(item => item.camID != camID)
+          this.ffmpeg_process[camID] = null;
+        });
+      }
     } catch (err) {
-      utils.log.debug("Error opening snapshot : %s", err);
+      utils.log.warn('Error ' + err);
     }
+  }
+
+  deliver_jpg(ID: number, response: any) {
     try {
-      var img = fs.readFileSync('./web/snapshot.jpg');
+      var img = fs.readFileSync(`/tmp/snapshot${ID.toString().padStart(2, '0')}.jpg`);
       response.writeHead(200, { 'Content-Type': 'image/jpg' });
       response.end(img, 'binary');
       return;
@@ -161,7 +177,7 @@ class MediaService extends SoapService {
 
     let _profilesArray = this.profilesArray;
 
-    var h264Profiles = v4l2ctl.Controls.CodecControls.h264_profile.getLookupSet().map(ls=>ls.desc);
+    var h264Profiles = v4l2ctl.Controls.CodecControls.h264_profile.getLookupSet().map(ls => ls.desc);
     h264Profiles.splice(1, 1);
 
     // Video Configuration Options. Either take values from V4L2 or use Hardcoded values.
@@ -214,37 +230,37 @@ class MediaService extends SoapService {
     for (let i = 1; i <= this.config.Cameras.length; i++) {
       let newItem =
       {
-      attributes: {
+        attributes: {
           token: `encoder_config_token_${i.toString().padStart(2, '0')}` // breaking change. encoder_config_token is now encoder_config_token_01
-      },
+        },
         Name: `Video Encoder Configuration ${i}`,
         UseCount: 1,
-      Encoding: "H264",
-      Resolution: {
-        Width: cameraSettings.resolution.Width,
-        Height: cameraSettings.resolution.Height
-      },
-      Quality: v4l2ctl.Controls.CodecControls.video_bitrate.value ? 1 : 1,
-      RateControl: {
-        FrameRateLimit: cameraSettings.framerate,
-        EncodingInterval: 1,
-        BitrateLimit: v4l2ctl.Controls.CodecControls.video_bitrate.value / 1000
-      },
-      H264: {
-        GovLength: v4l2ctl.Controls.CodecControls.h264_i_frame_period.value,
-        H264Profile: v4l2ctl.Controls.CodecControls.h264_profile.desc
-      },
-      Multicast: {
-        Address: {
-          Type: "IPv4",
-          IPv4Address: "0.0.0.0"
+        Encoding: "H264",
+        Resolution: {
+          Width: cameraSettings.resolution.Width,
+          Height: cameraSettings.resolution.Height
         },
-        Port: 0,
-        TTL:  1,
-        AutoStart: false
-      },
-      SessionTimeout: "PT1000S"
-    };
+        Quality: v4l2ctl.Controls.CodecControls.video_bitrate.value ? 1 : 1,
+        RateControl: {
+          FrameRateLimit: cameraSettings.framerate,
+          EncodingInterval: 1,
+          BitrateLimit: v4l2ctl.Controls.CodecControls.video_bitrate.value / 1000
+        },
+        H264: {
+          GovLength: v4l2ctl.Controls.CodecControls.h264_i_frame_period.value,
+          H264Profile: v4l2ctl.Controls.CodecControls.h264_profile.desc
+        },
+        Multicast: {
+          Address: {
+            Type: "IPv4",
+            IPv4Address: "0.0.0.0"
+          },
+          Port: 0,
+          TTL: 1,
+          AutoStart: false
+        },
+        SessionTimeout: "PT1000S"
+      };
 
       videoEncoderConfigurationsArray.push(newItem)
     }
@@ -259,12 +275,12 @@ class MediaService extends SoapService {
     for (let i = 1; i <= this.config.Cameras.length; i++) {
 
       let newItem: VideoSource = {
-      attributes: {
+        attributes: {
           token: `video_src_token_${i.toString().padStart(2, '0')}` // breaking change. token renamed from video_src_token to video_src_token_01 for first item
-      },
-      Framerate: 25,
-      Resolution: { Width: 1920, Height: 1280 }
-    };
+        },
+        Framerate: 25,
+        Resolution: { Width: 1920, Height: 1280 }
+      };
 
       videoSourcesArray.push(newItem);
     }
@@ -282,12 +298,12 @@ class MediaService extends SoapService {
       let newItem: VideoSourceConfiguration = {
         Name: `Video Source Configuration ${i.toString()}`,
         UseCount: 1,
-      attributes: {
-        token: `video_src_config_token_${i.toString().padStart(2, '0')}`
-      },
+        attributes: {
+          token: `video_src_config_token_${i.toString().padStart(2, '0')}`
+        },
         SourceToken: `video_src_token_${i.toString().padStart(2, '0')}`,
-      Bounds: { attributes: { x: 0, y: 0, width: 1920, height: 1080 } }
-    };
+        Bounds: { attributes: { x: 0, y: 0, width: 1920, height: 1080 } }
+      };
 
       videoSourceConfigurationsArray.push(newItem);
     }
@@ -308,14 +324,14 @@ class MediaService extends SoapService {
 
       let newItem: Profile = {
         Name: `Cam ${i}`,
-      attributes: {
-        token: `profile_token_${i.toString().padStart(2, '0')}`,
-        fixed: true
-      },
+        attributes: {
+          token: `profile_token_${i.toString().padStart(2, '0')}`,
+          fixed: true
+        },
         VideoSourceConfiguration: videoSourceConfigurationsArray[i - 1],
         VideoEncoderConfiguration: videoEncoderConfigurationsArray[i - 1],
         PTZConfiguration: this.ptz_service.ptzConfigurationsArray[i - 1]
-    };
+      };
 
       _profilesArray.push(newItem);
     }
@@ -382,8 +398,8 @@ class MediaService extends SoapService {
     //};
     port.GetStreamUri = (args /*, cb, headers*/) => {
 
-     // Usually RTSP server is on same IP Address as the ONVIF Service
-     // Setting RTSPAddress in the config file lets you to use another IP Address
+      // Usually RTSP server is on same IP Address as the ONVIF Service
+      // Setting RTSPAddress in the config file lets you to use another IP Address
 
       // Check value of 'args.ProfileToken to find out which RTSP Stream we want
       // Check value of 'args.StreamSetup' for unicast/TCP/multicast details
@@ -415,7 +431,7 @@ class MediaService extends SoapService {
       }
 
       // Get the Index (trim "encoder_config_token_")
-      const index = Number(videoEncoderConfigrationToken.substring(21)) - 1; // -1 because array is Zero based but configs start from 1
+      let index = Number(videoEncoderConfigrationToken.substring(21)) - 1; // -1 because array is Zero based but configs start from 1
 
 
       //Use the Index to look into the CameraArray
@@ -503,7 +519,7 @@ class MediaService extends SoapService {
 
     port.GetVideoSources = (args) => {
       let GetVideoSourcesResponse = { VideoSources: videoSourcesArray };
-        return GetVideoSourcesResponse;
+      return GetVideoSourcesResponse;
     }
 
     port.GetVideoSourceConfigurations = (args) => {
@@ -514,7 +530,7 @@ class MediaService extends SoapService {
     port.GetVideoSourceConfiguration = (args) => {
       let configuration = videoSourceConfigurationsArray.find(item => item.attributes.token == args.ConfigurationToken);
       let GetVideoSourceConfigurationResponse = { Configurations: configuration };
-        return GetVideoSourceConfigurationResponse;
+      return GetVideoSourceConfigurationResponse;
     };
 
     port.GetVideoEncoderConfigurations = (args) => {
@@ -570,12 +586,36 @@ class MediaService extends SoapService {
     };
 
     port.GetSnapshotUri = (args) => {
-      var GetSnapshotUriResponse = {
-        MediaUri : {
-          Uri : "http://" + utils.getIpAddress() + ":" + this.config.ServicePort + "/web/snapshot.jpg",
-          InvalidAfterConnect : false,
-          InvalidAfterReboot : false,
-          Timeout : "PT30S"
+      // The URL returned depends on the ProfileToken passed via 'args'
+      const profileToken: String = args.ProfileToken;
+      const profile = _profilesArray.find(item => item.attributes.token == profileToken);
+
+      if (profile == null || profile == undefined) {
+        // Error. Profile invalid
+        let GetSnapshotUriResponse = {} // TODO Add error 
+        return GetSnapshotUriResponse;
+      }
+
+      // Find the VideoEncoder from the Profile Token
+      const videoEncoderConfigrationToken = profile.VideoEncoderConfiguration.attributes.token;
+
+      const videoEncoderConfiguration = videoEncoderConfigurationsArray.find(item => item.attributes.token == videoEncoderConfigrationToken);
+
+      if (videoEncoderConfiguration == null || videoEncoderConfiguration == undefined) {
+        // Error. Cannot find videoEncoderConfiguration
+        let GetSnapshotUriResponse = {} // TODO Add error 
+        return GetSnapshotUriResponse;
+      }
+
+      // Get the Index (trim "encoder_config_token_")
+      let index = Number(videoEncoderConfigrationToken.substring(21));
+
+      let GetSnapshotUriResponse = {
+        MediaUri: {
+          Uri: "http://" + utils.getIpAddress() + ":" + this.config.ServicePort + `/web/snapshot${index.toString().padStart(2, '0')}.jpg`, // snapshot01.jpg, snapshot02.jgp etc
+          InvalidAfterConnect: false,
+          InvalidAfterReboot: false,
+          Timeout: "PT30S"
         }
       };
       return GetSnapshotUriResponse;
