@@ -1,26 +1,19 @@
-///<reference path="../rpos.d.ts" />
-
-import fs = require("fs");
-import util = require("util");
-import os = require('os');
-import SoapService = require('../lib/SoapService');
-import { Utils }  from '../lib/utils';
 import { Server } from 'http';
-import PTZDriver = require('../lib/PTZDriver');
+import { SoapService } from "../lib/SoapService";
+import { RposConfig } from "../lib/config";
+import { PTZDriver } from "../lib/PTZDriver";
+import { readFileSync } from 'fs';
 
-var utils = Utils.utils;
-
-class PTZService extends SoapService {
+export class PTZService extends SoapService {
   ptz_service: any;
   callback: any;
-  ptz_driver: PTZDriver;
 
   presetArray = [];
 
   public ptzConfiguration: any;
 
 
-  constructor(config: rposConfig, server: Server, callback, ptz_driver: PTZDriver) {
+  constructor(config: RposConfig, server: Server, callback, private ptz_driver: PTZDriver) {
     super(config, server);
 
     this.ptz_service = require('./stubs/ptz_service.js').PTZService;
@@ -30,7 +23,7 @@ class PTZService extends SoapService {
     this.serviceOptions = {
       path: '/onvif/ptz_service',
       services: this.ptz_service,
-      xml: fs.readFileSync('./wsdl/ptz_service.wsdl', 'utf8'),
+      xml: readFileSync('./wsdl/ptz_service.wsdl', 'utf8'),
       wsdlPath: 'wsdl/ptz_service.wsdl',
       onReady: () => console.log('ptz_service started')
     };
@@ -435,4 +428,3 @@ class PTZService extends SoapService {
     };
   }
 }
-export = PTZService;

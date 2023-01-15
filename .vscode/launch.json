@@ -6,12 +6,33 @@
 	// added Out folder to tsconfig.json
 	"version": "0.2.0",
 	"configurations": [
-	{
-		"type": "node",
-		"request": "launch",
-		"name": "Run RPOS",
-		"program": "${workspaceFolder}/rpos.js",
-		"preLaunchTask": "tsc: build - tsconfig.json"
-	  }
+		{
+			"console": "integratedTerminal",
+			"internalConsoleOptions": "neverOpen",
+			"name": "Debug RPOS",
+			"request": "launch",
+			"restart": true,
+			"runtimeExecutable": "npx",
+			"cwd":"${workspaceRoot}",
+			"args":[
+				"tsnd",
+				"--files",
+				"./src/rpos.ts",
+				"--inspect",
+				//"--ignore-watch",
+				//"node_modules",
+				"--project",
+				"./ts-config.json",
+				"--respawn",
+				"--transpile-only",
+				"-r",
+				"tsconfig-paths/register",
+				"--trace-deprecation"
+			 ],
+			"skipFiles": [
+				"<node_internals>/**"
+			],
+			"type": "node"
+		}
 	]
 }

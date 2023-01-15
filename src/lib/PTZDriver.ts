@@ -1,11 +1,9 @@
-///<reference path="../rpos.d.ts"/>
-
 import { Stream } from "stream";
 import { v4l2ctl } from "./v4l2ctl";
-import net = require('net');
 import { setImmediate } from "timers";
-import events = require("events");
-
+import { EventEmitter } from "events";
+import { Socket } from "net";
+import { RposConfig } from "./config";
 /*
 PTZDriver for RPOS (Raspberry Pi ONVIF Server)
 (c) 2016, 2017, 2018, 2021 Roger Hardiman
@@ -97,9 +95,9 @@ ONVIF Imaging Service
 
 */
 
-class ReconnectingStream extends events.EventEmitter {
+class ReconnectingStream extends EventEmitter {
   hostname: string;
-  port: number|string;
+  port: number | string;
   stream: any = null; // the currently open network socket
 
   constructor() {
@@ -111,22 +109,22 @@ class ReconnectingStream extends events.EventEmitter {
     this.connect(this.hostname, this.port);
   }
 
-  connect(hostname: string, port: number|string) {
+  connect(hostname: string, port: number | string) {
     this.hostname = hostname;
     this.port = port;
 
-    this.stream = new net.Socket();
-    
-    this.stream.on('connect', function() {
+    this.stream = new Socket();
+
+    this.stream.on('connect', function () {
       console.log('PTZ Driver - Socket connected');
     })
-    this.stream.on('data', (data) => {  
-        console.log('PTZ Driver received socket data ' + data);
+    this.stream.on('data', (data) => {
+      console.log('PTZ Driver received socket data ' + data);
     });
     this.stream.on('close', () => {
       console.log('PTZ Driver - Socket closed');
       // schedule a reconnect in 1 second (TODO - add backoff strategy)
-      setTimeout(() => {this.reconnect()}, 1000); // use => to make timeout function bind to this instance
+      setTimeout(() => { this.reconnect() }, 1000); // use => to make timeout function bind to this instance
     });
     this.stream.on('error', () => {
       console.log('PTZ Driver - Socket error');
@@ -143,7 +141,7 @@ class ReconnectingStream extends events.EventEmitter {
   }
 
 
-  write(data: string|Buffer) {
+  write(data: string | Buffer) {
     // pass the Write through to the socket. If the socket is null, we throw away the data
     try {
       this.stream.write(data);
@@ -152,9 +150,8 @@ class ReconnectingStream extends events.EventEmitter {
     }
   }
 }
-class PTZDriver {
+export class PTZDriver {
 
-  config: rposConfig;
   rposAscii: any;
   tenx: any;
   pelcod: any;
@@ -168,8 +165,7 @@ class PTZDriver {
   supportsGoToHome: boolean = false;
   hasFixedHomePosition: boolean = true;
 
-  constructor(config: rposConfig) {
-    this.config = config;
+  constructor(private config: RposConfig) {
     let parent = this;
 
     // Sanity checks. Do not open serial or socket if using USB Tenx driver
@@ -187,30 +183,30 @@ class PTZDriver {
     // Open the OUTPUT STREAM
     if (PTZOutput === 'serial') {
       var SerialPort = require('serialport');
-      this.serialPort = new SerialPort(config.PTZSerialPort, 
+      this.serialPort = new SerialPort(config.PTZSerialPort,
         {
-        baudRate: config.PTZSerialPortSettings.baudRate,
-        parity:   config.PTZSerialPortSettings.parity,
-        dataBits: config.PTZSerialPortSettings.dataBits,
-        stopBits: config.PTZSerialPortSettings.stopBits,
+          baudRate: config.PTZSerialPortSettings.baudRate,
+          parity: config.PTZSerialPortSettings.parity,
+          dataBits: config.PTZSerialPortSettings.dataBits,
+          stopBits: config.PTZSerialPortSettings.stopBits,
         }
       );
- 
-      this.stream = this.serialPort.on("open", function(err){
-          if (err) {
-            console.log('Error: '+err);
-            return;
-          }
+
+      this.stream = this.serialPort.on("open", function (err) {
+        if (err) {
+          console.log('Error: ' + err);
+          return;
+        }
       });
     }
 
     if (PTZOutput === 'tcp') {
       let host = config.PTZOutputURL.split(':')[0];
-      let port = config.PTZOutputURL.split(':')[1];      
+      let port = config.PTZOutputURL.split(':')[1];
 
       this.stream = new ReconnectingStream();
-      this.stream.on('data', function(data) {  
-          console.log('PTZ Driver received socket data ' + data);
+      this.stream.on('data', function (data) {
+        console.log('PTZ Driver received socket data ' + data);
       });
 
       console.log('PTZ Driver connecting to ' + host + ':' + port);
@@ -244,7 +240,7 @@ class PTZDriver {
       this.supportsContinuousPTZ = true;
       this.supportsGoToHome = true;
     }
-    
+
     if (config.PTZDriver === 'pelcod') {
       var PelcoD = require('node-pelcod');
       this.pelcod = new PelcoD(this.stream);
@@ -262,59 +258,59 @@ class PTZDriver {
   }
 
 
-// Data messages have the following format
-//   command
-//   OR
-//   command data
-// 
-//   Data can contain one or more of the following fields 
-//     name:
-//     value:
-//     pan:
-//     tilt:
-//     zoom:
-// JSON is used so that spaces and commas in names (eg Preset Names) is supported
+  // Data messages have the following format
+  //   command
+  //   OR
+  //   command data
+  // 
+  //   Data can contain one or more of the following fields 
+  //     name:
+  //     value:
+  //     pan:
+  //     tilt:
+  //     zoom:
+  // JSON is used so that spaces and commas in names (eg Preset Names) is supported
 
-// Use 'arrow functions' (instead of bind) to ensure the 'this' refers to the
-// class and not to the caller's 'this'. This is required when process_ptz_command
-// is used in a callback function.
+  // Use 'arrow functions' (instead of bind) to ensure the 'this' refers to the
+  // class and not to the caller's 'this'. This is required when process_ptz_command
+  // is used in a callback function.
   process_ptz_command = (command: string, data: any) => {
-    if (command==='gotohome') {
+    if (command === 'gotohome') {
       console.log("Goto Home");
       if (this.rposAscii) this.stream.write(command + '\n');
       if (this.pelcod) this.pelcod.sendGotoPreset(1); // use preset 1 for Home
       if (this.visca) {
         let data: number[] = [];
-        data.push(0x81,0x01,0x06,0x04,0xff);
+        data.push(0x81, 0x01, 0x06, 0x04, 0xff);
         this.stream.write(new Buffer(data));
       }
       if (this.panTiltHat) {
         this.panTiltHat.goto_home();
       }
     }
-    else if (command==='sethome') {
+    else if (command === 'sethome') {
       console.log("SetHome ");
       if (this.rposAscii) this.stream.write(command + '\n');
       if (this.pelcod) this.pelcod.sendSetPreset(1); // use preset 1 for Home
     }
-    else if (command==='gotopreset') {
-      console.log("Goto Preset "+ data.name + ' / ' + data.value);
+    else if (command === 'gotopreset') {
+      console.log("Goto Preset " + data.name + ' / ' + data.value);
       if (this.rposAscii) this.stream.write(command + '\t' + data.name + '\t' + data.value + '\n');
       if (this.tenx) this.tenx.fire();
       if (this.pelcod) this.pelcod.sendGotoPreset(parseInt(data.value));
     }
-    else if (command==='setpreset') {
-      console.log("Set Preset "+ data.name + ' / ' + data.value);
+    else if (command === 'setpreset') {
+      console.log("Set Preset " + data.name + ' / ' + data.value);
       if (this.rposAscii) this.stream.write(command + '\t' + data.name + '\t' + data.value + '\n');
       if (this.pelcod) this.pelcod.sendSetPreset(parseInt(data.value));
     }
-    else if (command==='clearpreset') {
-      console.log("Clear Preset "+ data.name + ' / ' + data.value);
+    else if (command === 'clearpreset') {
+      console.log("Clear Preset " + data.name + ' / ' + data.value);
       if (this.rposAscii) this.stream.write(command + '\t' + data.name + '\t' + data.value + '\n');
       if (this.pelcod) this.pelcod.sendClearPreset(parseInt(data.value));
     }
-    else if (command==='aux') {
-      console.log("Aux "+ data.name);
+    else if (command === 'aux') {
+      console.log("Aux " + data.name);
       if (this.rposAscii) this.stream.write(command + '\t' + data.name + '\n');
       if (this.pelcod) {
         if (data.name === 'AUX1on') this.pelcod.sendSetAux(1);
@@ -335,37 +331,37 @@ class PTZDriver {
         if (data.name === 'AUX8off') this.pelcod.sendClearAux(8);
       }
     }
-    else if (command==='relayactive') {
-      console.log("Relay Active "+ data.name);
+    else if (command === 'relayactive') {
+      console.log("Relay Active " + data.name);
       if (this.rposAscii) this.stream.write(command + '\t' + data.name + '\n');
     }
-    else if (command==='relayinactive') {
-      console.log("Relay Inactive "+ data.name);
+    else if (command === 'relayinactive') {
+      console.log("Relay Inactive " + data.name);
       if (this.rposAscii) this.stream.write(command + '\t' + data.name + '\n');
     }
-    else if (command==='ptz') {
-      console.log("Continuous PTZ "+ data.pan + '\t' + data.tilt + '\t' + data.zoom + '\n');
-      var p=0.0;
-      var t=0.0;
-      var z=0.0;
-      try {p = parseFloat(data.pan)} catch (err) {}
-      try {t = parseFloat(data.tilt)} catch (err) {}
-      try {z = parseFloat(data.zoom)} catch (err) {}
+    else if (command === 'ptz') {
+      console.log("Continuous PTZ " + data.pan + '\t' + data.tilt + '\t' + data.zoom + '\n');
+      var p = 0.0;
+      var t = 0.0;
+      var z = 0.0;
+      try { p = parseFloat(data.pan) } catch (err) { }
+      try { t = parseFloat(data.tilt) } catch (err) { }
+      try { z = parseFloat(data.zoom) } catch (err) { }
       if (this.rposAscii) this.stream.write(command + '\t' + p + '\t' + t + '\t' + z + '\n');
       if (this.tenx) {
-        if      (p < -0.1 && t >  0.1) this.tenx.upleft();
-        else if (p >  0.1 && t >  0.1) this.tenx.upright();
+        if (p < -0.1 && t > 0.1) this.tenx.upleft();
+        else if (p > 0.1 && t > 0.1) this.tenx.upright();
         else if (p < -0.1 && t < -0.1) this.tenx.downleft();
-        else if (p >  0.1 && t < -0.1) this.tenx.downright();
-        else if (p >  0.1) this.tenx.right();
+        else if (p > 0.1 && t < -0.1) this.tenx.downright();
+        else if (p > 0.1) this.tenx.right();
         else if (p < -0.1) this.tenx.left();
-        else if (t >  0.1) this.tenx.up();
+        else if (t > 0.1) this.tenx.up();
         else if (t < -0.1) this.tenx.down()
         else this.tenx.stop();
       }
       if (this.pelcod) {
         this.pelcod.up(false).down(false).left(false).right(false);
-        if      (p < 0 && t > 0) this.pelcod.up(true).left(true);
+        if (p < 0 && t > 0) this.pelcod.up(true).left(true);
         else if (p > 0 && t > 0) this.pelcod.up(true).right(true);
         else if (p < 0 && t < 0) this.pelcod.down(true).left(true);
         else if (p > 0 && t < 0) this.pelcod.down(true).right(true);
@@ -376,16 +372,16 @@ class PTZDriver {
 
         // Set Pan/Tilt speed
         // scale speeds from 0..1 to 0..63
-        var pan_speed = Math.round(Math.abs(p) * 63.0 );
-        var tilt_speed = Math.round(Math.abs(t) * 63.0 );
+        var pan_speed = Math.round(Math.abs(p) * 63.0);
+        var tilt_speed = Math.round(Math.abs(t) * 63.0);
 
         this.pelcod.setPanSpeed(pan_speed);
         this.pelcod.setTiltSpeed(tilt_speed);
 
 
         this.pelcod.zoomIn(false).zoomOut(false);
-        if (z>0) this.pelcod.zoomIn(true);
-        if (z<0) this.pelcod.zoomOut(true);
+        if (z > 0) this.pelcod.zoomIn(true);
+        if (z < 0) this.pelcod.zoomOut(true);
 
         // Set Zoom speed
         // scale speeds from 0..1 to 0 (slow), 1 (low med), 2 (high med), 3 (fast)
@@ -399,16 +395,16 @@ class PTZDriver {
         // sendSetZoomSpeed is not in node-pelcod yet so wrap with try/catch
         try {
           if (z != 0) this.pelcod.sendSetZoomSpeed(zoom_speed);
-        } catch (err) {}
+        } catch (err) { }
 
         this.pelcod.send();
       }
       if (this.visca) {
         // Map ONVIF Pan and Tilt Speed 0 to 1 to VISCA Speed 1 to 0x18
         // Map ONVIF Zoom Speed (0 to 1) to VISCA Speed 0 to 7
-        let visca_pan_speed = ( Math.abs(p) * 0x18) / 1.0;
-        let visca_tilt_speed = ( Math.abs(t) * 0x18) / 1.0;
-        let visca_zoom_speed = ( Math.abs(z) * 0x07) / 1.0;
+        let visca_pan_speed = (Math.abs(p) * 0x18) / 1.0;
+        let visca_tilt_speed = (Math.abs(t) * 0x18) / 1.0;
+        let visca_zoom_speed = (Math.abs(z) * 0x07) / 1.0;
 
         // rounding check. Visca Pan/Tilt to be in range 0x01 .. 0x18
         if (visca_pan_speed === 0) visca_pan_speed = 1;
@@ -416,42 +412,42 @@ class PTZDriver {
 
         if (this.config.PTZDriver === 'visca') {
           let data: number[] = [];
-          if      (p < 0 && t > 0) { // upleft
-            data.push(0x81,0x01,0x06,0x01,visca_pan_speed,visca_zoom_speed,0x01,0x01,0xff);
+          if (p < 0 && t > 0) { // upleft
+            data.push(0x81, 0x01, 0x06, 0x01, visca_pan_speed, visca_zoom_speed, 0x01, 0x01, 0xff);
           }
           else if (p > 0 && t > 0) { // upright
-            data.push(0x81,0x01,0x06,0x01,visca_pan_speed,visca_zoom_speed,0x02,0x01,0xff);
+            data.push(0x81, 0x01, 0x06, 0x01, visca_pan_speed, visca_zoom_speed, 0x02, 0x01, 0xff);
           }
           else if (p < 0 && t < 0) { // downleft;
-            data.push(0x81,0x01,0x06,0x01,visca_pan_speed,visca_zoom_speed,0x01,0x02,0xff);
+            data.push(0x81, 0x01, 0x06, 0x01, visca_pan_speed, visca_zoom_speed, 0x01, 0x02, 0xff);
           }
-          else if (p >  0 && t < 0) { // downright;
-            data.push(0x81,0x01,0x06,0x01,visca_pan_speed,visca_zoom_speed,0x02,0x02,0xff);
+          else if (p > 0 && t < 0) { // downright;
+            data.push(0x81, 0x01, 0x06, 0x01, visca_pan_speed, visca_zoom_speed, 0x02, 0x02, 0xff);
           }
           else if (p > 0) { // right
-            data.push(0x81,0x01,0x06,0x01,visca_pan_speed,0x00,0x02,0x03,0xff);
+            data.push(0x81, 0x01, 0x06, 0x01, visca_pan_speed, 0x00, 0x02, 0x03, 0xff);
           }
           else if (p < 0) { // left
-            data.push(0x81,0x01,0x06,0x01,visca_pan_speed,0x00,0x01,0x03,0xff);
+            data.push(0x81, 0x01, 0x06, 0x01, visca_pan_speed, 0x00, 0x01, 0x03, 0xff);
           }
           else if (t > 0) { // up
-            data.push(0x81,0x01,0x06,0x01,0x00,visca_tilt_speed,0x03,0x01,0xff);
+            data.push(0x81, 0x01, 0x06, 0x01, 0x00, visca_tilt_speed, 0x03, 0x01, 0xff);
           }
           else if (t < 0) { // down
-            data.push(0x81,0x01,0x06,0x01,0x00,visca_tilt_speed,0x03,0x02,0xff);
+            data.push(0x81, 0x01, 0x06, 0x01, 0x00, visca_tilt_speed, 0x03, 0x02, 0xff);
           }
           else { // stop 
-            data.push(0x81,0x01,0x06,0x01,0x00,0x00,0x03,0x03,0xff);
+            data.push(0x81, 0x01, 0x06, 0x01, 0x00, 0x00, 0x03, 0x03, 0xff);
           }
 
           // Zoom
           if (z < 0) { // zoom out
-            data.push(0x81,0x01,0x04,0x07,(0x30 + visca_zoom_speed),0xff);
+            data.push(0x81, 0x01, 0x04, 0x07, (0x30 + visca_zoom_speed), 0xff);
           }
           else if (z > 0) { // zoom in
-            data.push(0x81,0x01,0x04,0x07,(0x20 + visca_zoom_speed),0xff);
+            data.push(0x81, 0x01, 0x04, 0x07, (0x20 + visca_zoom_speed), 0xff);
           } else { // zoom stop
-            data.push(0x81,0x01,0x04,0x07,0x00,0xff);
+            data.push(0x81, 0x01, 0x04, 0x07, 0x00, 0xff);
           }
 
           this.stream.write(new Buffer(data));
@@ -459,8 +455,8 @@ class PTZDriver {
       }
       if (this.panTiltHat) {
         // Map ONVIF Pan and Tilt Speed 0 to 1 to Speed 0 to 15
-        let pan_speed  = ( Math.abs(p) * 15) / 1.0;
-        let tilt_speed = ( Math.abs(t) * 15) / 1.0;
+        let pan_speed = (Math.abs(p) * 15) / 1.0;
+        let tilt_speed = (Math.abs(t) * 15) / 1.0;
 
         // rounding check.
         if (pan_speed > 15) pan_speed = 15;
@@ -468,57 +464,57 @@ class PTZDriver {
         if (pan_speed < 0) pan_speed = 0;
         if (tilt_speed < 0) tilt_speed = 0;
 
-        if (p < 0)  this.panTiltHat.pan_left(pan_speed);
-        if (p > 0)  this.panTiltHat.pan_right(pan_speed);
+        if (p < 0) this.panTiltHat.pan_left(pan_speed);
+        if (p > 0) this.panTiltHat.pan_right(pan_speed);
         if (p == 0) this.panTiltHat.pan_right(0); // stop
-        if (t < 0)  this.panTiltHat.tilt_down(tilt_speed);
-        if (t > 0)  this.panTiltHat.tilt_up(tilt_speed);
+        if (t < 0) this.panTiltHat.tilt_down(tilt_speed);
+        if (t > 0) this.panTiltHat.tilt_up(tilt_speed);
         if (t == 0) this.panTiltHat.tilt_down(0); // stop
       }
     }
-    else if (command==='absolute-ptz') {
-      console.log("Absolute PTZ "+ data.pan + '\t' + data.tilt + '\t' + data.zoom);
-      var p=0.0;
-      var t=0.0;
-      var z=0.0;
-      try {p = parseFloat(data.pan)} catch (err) {}
-      try {t = parseFloat(data.tilt)} catch (err) {}
-      try {z = parseFloat(data.zoom)} catch (err) {}
+    else if (command === 'absolute-ptz') {
+      console.log("Absolute PTZ " + data.pan + '\t' + data.tilt + '\t' + data.zoom);
+      var p = 0.0;
+      var t = 0.0;
+      var z = 0.0;
+      try { p = parseFloat(data.pan) } catch (err) { }
+      try { t = parseFloat(data.tilt) } catch (err) { }
+      try { z = parseFloat(data.zoom) } catch (err) { }
       if (this.rposAscii) this.stream.write(command + '\t' + p + '\t' + t + '\t' + z + '\n');
       if (this.panTiltHat) {
-          let new_pan_angle = p * 90.0
-          this.panTiltHat.pan(Math.round(new_pan_angle));
-          
-          let new_tilt_angle = t * 80.0
-          this.panTiltHat.tilt(Math.round(new_tilt_angle));
+        let new_pan_angle = p * 90.0
+        this.panTiltHat.pan(Math.round(new_pan_angle));
+
+        let new_tilt_angle = t * 80.0
+        this.panTiltHat.tilt(Math.round(new_tilt_angle));
       }
     }
-    else if (command==='relative-ptz') {
-      console.log("Relative PTZ "+ data.pan + '\t' + data.tilt + '\t' + data.zoom);
-      var p=0.0;
-      var t=0.0;
-      var z=0.0;
-      try {p = parseFloat(data.pan)} catch (err) {}
-      try {t = parseFloat(data.tilt)} catch (err) {}
-      try {z = parseFloat(data.zoom)} catch (err) {}
+    else if (command === 'relative-ptz') {
+      console.log("Relative PTZ " + data.pan + '\t' + data.tilt + '\t' + data.zoom);
+      var p = 0.0;
+      var t = 0.0;
+      var z = 0.0;
+      try { p = parseFloat(data.pan) } catch (err) { }
+      try { t = parseFloat(data.tilt) } catch (err) { }
+      try { z = parseFloat(data.zoom) } catch (err) { }
       if (this.rposAscii) this.stream.write(command + '\t' + p + '\t' + t + '\t' + z + '\n');
       if (this.panTiltHat) {
-          let pan_degrees = p * 90.0
-          let new_pan_angle = this.panTiltHat.pan_position - pan_degrees;
-          this.panTiltHat.pan(Math.round(new_pan_angle));
-          
-          let tilt_degrees = t * 80.0
-          let new_tilt_angle = this.panTiltHat.tilt_position - tilt_degrees;
-          this.panTiltHat.tilt(Math.round(new_tilt_angle));
+        let pan_degrees = p * 90.0
+        let new_pan_angle = this.panTiltHat.pan_position - pan_degrees;
+        this.panTiltHat.pan(Math.round(new_pan_angle));
+
+        let tilt_degrees = t * 80.0
+        let new_tilt_angle = this.panTiltHat.tilt_position - tilt_degrees;
+        this.panTiltHat.tilt(Math.round(new_tilt_angle));
       }
     }
-    else if (command==='brightness') {
-      console.log("Set Brightness "+ data.value);
+    else if (command === 'brightness') {
+      console.log("Set Brightness " + data.value);
       if (this.rposAscii) this.stream.write(command + '\t' + data.value + '\n');
       v4l2ctl.SetBrightness(data.value);
     }
-    else if (command==='focus') {
-      console.log("Focus "+ data.value);
+    else if (command === 'focus') {
+      console.log("Focus " + data.value);
       if (this.rposAscii) this.stream.write(command + '\t' + data.value + '\n');
       if (this.pelcod) {
         if (data.value < 0) this.pelcod.focusNear(true);
@@ -530,7 +526,7 @@ class PTZDriver {
         this.pelcod.send();
       }
     }
-    else if (command==='focusstop') {
+    else if (command === 'focusstop') {
       console.log("Focus Stop");
       if (this.rposAscii) this.stream.write(command + '\n');
       if (this.pelcod) {
@@ -548,5 +544,3 @@ class PTZDriver {
     }
   }
 }
-
-export = PTZDriver;

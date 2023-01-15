@@ -1,19 +1,16 @@
-///<reference path="../rpos.d.ts" />
-
-import fs = require("fs");
-import util = require("util");
-import os = require('os');
-import SoapService = require('../lib/SoapService');
-import { Utils }  from '../lib/utils';
+import { SoapService } from "../lib/SoapService";
+import { Utils } from '../lib/utils';
 import { Server } from 'http';
-import ip = require('ip');
-var utils = Utils.utils;
+import { RposConfig } from "../lib/config";
+import { readFileSync } from "fs";
+import { hostname, networkInterfaces } from "os";
+import { subnet } from "ip";
 
-class DeviceService extends SoapService {
+export class DeviceService extends SoapService {
   device_service: any;
   callback: any;
 
-  constructor(config: rposConfig, server: Server, callback) {
+  constructor(config: RposConfig, server: Server, callback) {
     super(config, server);
 
     this.device_service = require('./stubs/device_service.js').DeviceService;
@@ -22,7 +19,7 @@ class DeviceService extends SoapService {
     this.serviceOptions = {
       path: '/onvif/device_service',
       services: this.device_service,
-      xml: fs.readFileSync('./wsdl/device_service.wsdl', 'utf8'),
+      xml: readFileSync('./wsdl/device_service.wsdl', 'utf8'),
       wsdlPath: 'wsdl/device_service.wsdl',
       onReady: () => console.log('device_service started')
     };
@@ -84,7 +81,7 @@ class DeviceService extends SoapService {
 
     port.SystemReboot = (args /*, cb, headers*/) => {
       var SystemRebootResponse = {
-        Message: utils.execSync("sudo reboot")
+        Message: Utils.execSync("sudo reboot")
       };
       return SystemRebootResponse;
     };
@@ -93,39 +90,39 @@ class DeviceService extends SoapService {
       // ToDo. Check value of args.IncludeCapability
 
       var GetServicesResponse = {
-        Service : [
-        {
-          Namespace : "http://www.onvif.org/ver10/device/wsdl",
-          XAddr : `http://${utils.getIpAddress() }:${this.config.ServicePort}/onvif/device_service`,
-          Version : { 
-            Major : 2,
-            Minor : 5,
-          }
-        },
-        { 
-          Namespace : "http://www.onvif.org/ver20/imaging/wsdl",
-          XAddr : `http://${utils.getIpAddress() }:${this.config.ServicePort}/onvif/imaging_service`,
-          Version : { 
-            Major : 2,
-            Minor : 5,
-          }
-        },
-        { 
-          Namespace : "http://www.onvif.org/ver10/media/wsdl",
-          XAddr : `http://${utils.getIpAddress() }:${this.config.ServicePort}/onvif/media_service`,
-          Version : { 
-            Major : 2,
-            Minor : 5,
-          }
-        },
-        { 
-          Namespace : "http://www.onvif.org/ver20/ptz/wsdl",
-          XAddr : `http://${utils.getIpAddress() }:${this.config.ServicePort}/onvif/ptz_service`,
-          Version : { 
-            Major : 2,
-            Minor : 5,
+        Service: [
+          {
+            Namespace: "http://www.onvif.org/ver10/device/wsdl",
+            XAddr: `http://${Utils.getIpAddress()}:${this.config.ServicePort}/onvif/device_service`,
+            Version: {
+              Major: 2,
+              Minor: 5,
+            }
           },
-        }]
+          {
+            Namespace: "http://www.onvif.org/ver20/imaging/wsdl",
+            XAddr: `http://${Utils.getIpAddress()}:${this.config.ServicePort}/onvif/imaging_service`,
+            Version: {
+              Major: 2,
+              Minor: 5,
+            }
+          },
+          {
+            Namespace: "http://www.onvif.org/ver10/media/wsdl",
+            XAddr: `http://${Utils.getIpAddress()}:${this.config.ServicePort}/onvif/media_service`,
+            Version: {
+              Major: 2,
+              Minor: 5,
+            }
+          },
+          {
+            Namespace: "http://www.onvif.org/ver20/ptz/wsdl",
+            XAddr: `http://${Utils.getIpAddress()}:${this.config.ServicePort}/onvif/ptz_service`,
+            Version: {
+              Major: 2,
+              Minor: 5,
+            },
+          }]
       };
 
       return GetServicesResponse;
@@ -141,7 +138,7 @@ class DeviceService extends SoapService {
 
       if (category === undefined || category == "All" || category == "Device") {
         GetCapabilitiesResponse.Capabilities["Device"] = {
-          XAddr: `http://${utils.getIpAddress() }:${this.config.ServicePort}/onvif/device_service`,
+          XAddr: `http://${Utils.getIpAddress()}:${this.config.ServicePort}/onvif/device_service`,
           Network: {
             IPFilter: false,
             ZeroConfiguration: false,
@@ -202,7 +199,7 @@ class DeviceService extends SoapService {
       }
       if (category == undefined || category == "All" || category == "Events") {
         GetCapabilitiesResponse.Capabilities["Events"] = {
-          XAddr: `http://${utils.getIpAddress() }:${this.config.ServicePort}/onvif/events_service`,
+          XAddr: `http://${Utils.getIpAddress()}:${this.config.ServicePort}/onvif/events_service`,
           WSSubscriptionPolicySupport: false,
           WSPullPointSupport: false,
           WSPausableSubscriptionManagerInterfaceSupport: false
@@ -210,12 +207,12 @@ class DeviceService extends SoapService {
       }
       if (category === undefined || category == "All" || category == "Imaging") {
         GetCapabilitiesResponse.Capabilities["Imaging"] = {
-          XAddr: `http://${utils.getIpAddress() }:${this.config.ServicePort}/onvif/imaging_service`
+          XAddr: `http://${Utils.getIpAddress()}:${this.config.ServicePort}/onvif/imaging_service`
         }
       }
       if (category === undefined || category == "All" || category == "Media") {
         GetCapabilitiesResponse.Capabilities["Media"] = {
-          XAddr: `http://${utils.getIpAddress() }:${this.config.ServicePort}/onvif/media_service`,
+          XAddr: `http://${Utils.getIpAddress()}:${this.config.ServicePort}/onvif/media_service`,
           StreamingCapabilities: {
             RTPMulticast: this.config.MulticastEnabled,
             RTP_TCP: true,
@@ -231,7 +228,7 @@ class DeviceService extends SoapService {
       }
       if (category === undefined || category == "All" || category == "PTZ") {
         GetCapabilitiesResponse.Capabilities["PTZ"] = {
-          XAddr: `http://${utils.getIpAddress() }:${this.config.ServicePort}/onvif/ptz_service`
+          XAddr: `http://${Utils.getIpAddress()}:${this.config.ServicePort}/onvif/ptz_service`
         }
       }
       return GetCapabilitiesResponse;
@@ -241,7 +238,7 @@ class DeviceService extends SoapService {
       var GetHostnameResponse = {
         HostnameInformation: {
           FromDHCP: false,
-          Name: os.hostname(),
+          Name: hostname(),
           Extension: {}
         }
       };
@@ -263,8 +260,8 @@ class DeviceService extends SoapService {
     port.GetScopes = (args) => {
       var GetScopesResponse = { Scopes: [] };
       GetScopesResponse.Scopes.push({
-          ScopeDef: "Fixed",
-          ScopeItem: "onvif://www.onvif.org/location/unknow"
+        ScopeDef: "Fixed",
+        ScopeItem: "onvif://www.onvif.org/location/unknow"
       });
 
       GetScopesResponse.Scopes.push({
@@ -357,14 +354,14 @@ class DeviceService extends SoapService {
       var GetNetworkInterfacesResponse = {
         NetworkInterfaces: []
       };
-      var nwifs = os.networkInterfaces();
+      var nwifs = networkInterfaces();
       for (var nwif in nwifs) {
         for (var addr in nwifs[nwif]) {
-           if (nwifs[nwif][addr].family === 'IPv4' && nwif !== 'lo0' && nwif !== 'lo') {
-            var mac = (nwifs[nwif][addr].mac).replace(/:/g,'-');
+          if (nwifs[nwif][addr].family === 'IPv4' && nwif !== 'lo0' && nwif !== 'lo') {
+            var mac = (nwifs[nwif][addr].mac).replace(/:/g, '-');
             var ipv4_addr = nwifs[nwif][addr].address;
             var netmask = nwifs[nwif][addr].netmask;
-            var prefix_len = ip.subnet(ipv4_addr,netmask).subnetMaskLength;
+            var prefix_len = subnet(ipv4_addr, netmask).subnetMaskLength;
             GetNetworkInterfacesResponse.NetworkInterfaces.push({
               attributes: {
                 token: nwif
@@ -378,11 +375,11 @@ class DeviceService extends SoapService {
               IPv4: {
                 Enabled: true,
                 Config: {
-                   Manual: {
-                     Address: ipv4_addr,
-                     PrefixLength: prefix_len
-                   },
-                   DHCP: false
+                  Manual: {
+                    Address: ipv4_addr,
+                    PrefixLength: prefix_len
+                  },
+                  DHCP: false
                 }
               }
             });
@@ -409,7 +406,7 @@ class DeviceService extends SoapService {
           attributes: {
             token: "relay1"
           },
-          Properties : {
+          Properties: {
             Mode: "Bistable",
             // DelayTime: "",
             IdleState: "open"
@@ -430,11 +427,11 @@ class DeviceService extends SoapService {
 
     port.GetUsers = (args /*, cb, headers*/) => {
       var GetUsersResponse = {
-//        User : [{
-//          Username : '',
-//          Password : '',
-//          UserLevel : 'Administrator',
-//        }]
+        //        User : [{
+        //          Username : '',
+        //          Password : '',
+        //          UserLevel : 'Administrator',
+        //        }]
       };
       return GetUsersResponse;
     }
@@ -442,4 +439,3 @@ class DeviceService extends SoapService {
 
   }
 }
-export = DeviceService;

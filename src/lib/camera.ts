@@ -1,14 +1,29 @@
-﻿///<reference path="../rpos.d.ts"/>
-
-import { Utils }  from './utils';
+﻿import { Utils } from './utils';
 import fs = require('fs');
 import parser = require('body-parser');
 import { ChildProcess } from 'child_process';
 import { v4l2ctl } from './v4l2ctl';
+import { RposConfig } from './config';
 
-var utils = Utils.utils;
+export interface Resolution {
+  Width: number;
+  Height: number;
+}
+export interface CameraSettingsParameter {
+  gop: number; //keyframe every X sec.
+  resolution: Resolution;
+  framerate: number;
+  bitrate: number;
+  profile: string;
+  quality: number;
+}
+export interface CameraSettingsBase {
+  forceGop: boolean; // Use iframe interval setting from v4l2ctl.json instead of Onvif
+  resolution: Resolution;
+  framerate: number;
+}
 
-class Camera {
+export class Camera {
   options = {
     resolutions: <Resolution[]>[
       { Width: 640, Height: 480 },
@@ -39,12 +54,12 @@ class Camera {
     resolution: <Resolution>{ Width: 1280, Height: 720 },
     framerate: 25,
   }
-  
-  config: rposConfig;
+
+  config: RposConfig;
   rtspServer: ChildProcess;
   webserver: any;
 
-  constructor(config: rposConfig, webserver: any) {
+  constructor(config: RposConfig, webserver: any) {
     this.config = config;
     this.rtspServer = null;
     if (this.config.RTSPServer != 0) {
@@ -82,7 +97,7 @@ class Camera {
       if (this.config.CameraType == 'picam') {
         if (!fs.existsSync("/dev/video0")) {
           // this.loadDriver();
-          if (utils.isPi()) {
+          if (Utils.isPi()) {
             // Needs a V4L2 Driver to be installed
             console.log('Use modprobe to load the Pi Camera V4L2 driver');
             console.log('e.g.   sudo modprobe bcm2835-v4l2');
@@ -99,21 +114,21 @@ class Camera {
 
     v4l2ctl.ReadControls();
 
-    utils.cleanup(() => {
+    Utils.cleanup(() => {
       this.stopRtsp();
       var stop = new Date().getTime() + 2000;
       while (new Date().getTime() < stop) {
         //wait for rtsp server to stop
         ;
       }
-//      this.unloadDriver();
+      //      this.unloadDriver();
     });
 
-    if (this.config.RTSPServer == 1 )fs.chmodSync("./bin/rtspServer", "0755");
+    if (this.config.RTSPServer == 1) fs.chmodSync("./bin/rtspServer", "0755");
   }
 
   setupWebserver() {
-    utils.log.info("Starting camera settings webserver on http://%s:%s/", utils.getIpAddress(), this.config.ServicePort);
+    Utils.log.info("Starting camera settings webserver on http://%s:%s/", Utils.getIpAddress(), this.config.ServicePort);
     this.webserver.use(parser.urlencoded({ extended: true }));
     this.webserver.engine('ntl', (filePath, options, callback) => {
       this.getSettingsPage(filePath, callback);
@@ -134,7 +149,7 @@ class Camera {
             val = (<any[]>val).pop();
           prop.value = val;
           if (prop.isDirty) {
-            utils.log.debug("Property %s changed to %s", par, prop.value);
+            Utils.log.debug("Property %s changed to %s", par, prop.value);
           }
         }
       }
@@ -191,15 +206,15 @@ class Camera {
   }
 
   loadDriver() {
-      try {
-          utils.execSync("sudo modprobe bcm2835-v4l2"); // only on PI, and not needed with USB Camera
-      } catch (err) {}
+    try {
+      Utils.execSync("sudo modprobe bcm2835-v4l2"); // only on PI, and not needed with USB Camera
+    } catch (err) { }
   }
-  
-  unloadDriver(){
-      try {
-          utils.execSync("sudo modprobe -r bcm2835-v4l2");
-      } catch (err) {}
+
+  unloadDriver() {
+    try {
+      Utils.execSync("sudo modprobe -r bcm2835-v4l2");
+    } catch (err) { }
   }
 
   setupCamera() {
@@ -223,39 +238,37 @@ class Camera {
 
   startRtsp() {
     if (this.rtspServer) {
-      utils.log.warn("Cannot start rtspServer, already running");
+      Utils.log.warn("Cannot start rtspServer, already running");
       return;
     }
-    utils.log.info("Starting rtsp server");
+    Utils.log.info("Starting rtsp server");
 
     if (this.config.MulticastEnabled) {
-        this.rtspServer = utils.spawn("v4l2rtspserver", ["-P", this.config.RTSPPort.toString(), "-u" , this.config.RTSPName.toString(), "-m", this.config.RTSPMulticastName, "-M", this.config.MulticastAddress.toString() + ":" + this.config.MulticastPort.toString(), "-W",this.settings.resolution.Width.toString(), "-H", this.settings.resolution.Height.toString(), "/dev/video0"]);
+      this.rtspServer = Utils.spawn("v4l2rtspserver", ["-P", this.config.RTSPPort.toString(), "-u", this.config.RTSPName.toString(), "-m", this.config.RTSPMulticastName, "-M", this.config.MulticastAddress.toString() + ":" + this.config.MulticastPort.toString(), "-W", this.settings.resolution.Width.toString(), "-H", this.settings.resolution.Height.toString(), "/dev/video0"]);
     } else {
-        if (this.config.RTSPServer == 1) this.rtspServer = utils.spawn("./bin/rtspServer", ["/dev/video0", "2088960", this.config.RTSPPort.toString(), "0", this.config.RTSPName.toString()]);
-        if (this.config.RTSPServer == 2) this.rtspServer = utils.spawn("v4l2rtspserver", ["-P",this.config.RTSPPort.toString(), "-u" , this.config.RTSPName.toString(),"-W",this.settings.resolution.Width.toString(),"-H",this.settings.resolution.Height.toString(),"/dev/video0"]);
-        if (this.config.RTSPServer == 3) this.rtspServer = utils.spawn("./python/gst-rtsp-launch.sh", ["-P",this.config.RTSPPort.toString(), "-u" , this.config.RTSPName.toString(),"-W",this.settings.resolution.Width.toString(),"-H",this.settings.resolution.Height.toString(), "-t", this.config.CameraType, "-d", (this.config.CameraDevice == "" ? "auto" : this.config.CameraDevice)]);
+      if (this.config.RTSPServer == 1) this.rtspServer = Utils.spawn("./bin/rtspServer", ["/dev/video0", "2088960", this.config.RTSPPort.toString(), "0", this.config.RTSPName.toString()]);
+      if (this.config.RTSPServer == 2) this.rtspServer = Utils.spawn("v4l2rtspserver", ["-P", this.config.RTSPPort.toString(), "-u", this.config.RTSPName.toString(), "-W", this.settings.resolution.Width.toString(), "-H", this.settings.resolution.Height.toString(), "/dev/video0"]);
+      if (this.config.RTSPServer == 3) this.rtspServer = Utils.spawn("./python/gst-rtsp-launch.sh", ["-P", this.config.RTSPPort.toString(), "-u", this.config.RTSPName.toString(), "-W", this.settings.resolution.Width.toString(), "-H", this.settings.resolution.Height.toString(), "-t", this.config.CameraType, "-d", (this.config.CameraDevice == "" ? "auto" : this.config.CameraDevice)]);
     }
 
     if (this.rtspServer) {
-      this.rtspServer.stdout.on('data', data => utils.log.debug("rtspServer: %s", data));
-      this.rtspServer.stderr.on('data', data => utils.log.error("rtspServer: %s", data));
-      this.rtspServer.on('error', err=> utils.log.error("rtspServer error: %s", err));
+      this.rtspServer.stdout.on('data', data => Utils.log.debug("rtspServer: %s", data));
+      this.rtspServer.stderr.on('data', data => Utils.log.error("rtspServer: %s", data));
+      this.rtspServer.on('error', err => Utils.log.error("rtspServer error: %s", err));
       this.rtspServer.on('exit', (code, signal) => {
         if (code)
-          utils.log.error("rtspServer exited with code: %s", code);
+          Utils.log.error("rtspServer exited with code: %s", code);
         else
-          utils.log.debug("rtspServer exited")
+          Utils.log.debug("rtspServer exited")
       });
     }
   }
 
   stopRtsp() {
     if (this.rtspServer) {
-      utils.log.info("Stopping rtsp server");
+      Utils.log.info("Stopping rtsp server");
       this.rtspServer.kill();
       this.rtspServer = null;
     }
   }
 }
-
-export = Camera;

@@ -14,7 +14,7 @@ StandardError=syslog
 SyslogIdentifier=onvifcam
 User=pi
 WorkingDirectory=/home/pi/rpos
-ExecStart=/usr/bin/node rpos.js
+ExecStart=/usr/bin/npx ts-node ./src/rpos.ts
 
 [Install]
 WantedBy=multi-user.target

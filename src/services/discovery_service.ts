@@ -1,6 +1,4 @@
-﻿/// <reference path="../rpos.d.ts"/>
-
-/*
+﻿/*
 The MIT License(MIT)
 
 Copyright(c) 2016 Roger Hardiman
@@ -40,19 +38,15 @@ THE SOFTWARE.
  * 
  */
 
-import dgram = require('dgram');
-import uuid = require('node-uuid');
-import xml2js = require('xml2js');
+import * as dgram from "dgram";
+import * as uuid from "node-uuid";
+import * as xml2js from 'xml2js';
+import { RposConfig } from '../lib/config';
 import { Utils } from '../lib/utils';
-var utils = Utils.utils;
 
-class DiscoveryService {
+export class DiscoveryService {
 
-  config: rposConfig;
-
-  constructor(config: rposConfig) {
-    this.config = config;
-  }
+  constructor(private config: RposConfig) {}
 
 
   start() {
@@ -74,7 +68,7 @@ class DiscoveryService {
 
     discover_socket.on('message', (received_msg, rinfo) => {
 
-      utils.log.debug("Discovery received from " + rinfo.address);
+      Utils.log.debug("Discovery received from " + rinfo.address);
 
       // Filter xmlns namespaces from XML before calling XML2JS
       let filtered_msg = received_msg.toString().replace(/xmlns(.*?)=(".*?")/g, '');
@@ -105,7 +99,7 @@ class DiscoveryService {
               <d:ProbeMatches>
                 <d:ProbeMatch>
                   <wsa:EndpointReference>
-                    <wsa:Address>urn:uuid:${utils.uuid5(utils.getIpAddress() + this.config.ServicePort + this.config.RTSPPort)}</wsa:Address>
+                    <wsa:Address>urn:uuid:${Utils.uuid5(Utils.getIpAddress() + this.config.ServicePort + this.config.RTSPPort)}</wsa:Address>
                   </wsa:EndpointReference>
                   <d:Types>dn:NetworkVideoTransmitter</d:Types>
                   <d:Scopes>
@@ -115,14 +109,14 @@ class DiscoveryService {
                     onvif://www.onvif.org/name/${encodeURIComponent(this.config.DeviceInformation.Manufacturer + ' ' + this.config.DeviceInformation.Model)}
                     onvif://www.onvif.org/location/
                   </d:Scopes>
-                  <d:XAddrs>http://${utils.getIpAddress()}:${this.config.ServicePort}/onvif/device_service</d:XAddrs>
+                  <d:XAddrs>http://${Utils.getIpAddress()}:${this.config.ServicePort}/onvif/device_service</d:XAddrs>
                   <d:MetadataVersion>1</d:MetadataVersion>
               </d:ProbeMatch>
               </d:ProbeMatches>
             </SOAP-ENV:Body>
           </SOAP-ENV:Envelope>`;
 
-          let reply_bytes = new Buffer(reply);
+          let reply_bytes = Buffer.from(reply);
 
           // Mac needed replies from a different UDP socket (ie not the bounded socket)
           return reply_socket.send(reply_bytes, 0, reply_bytes.length, rinfo.port, rinfo.address);
@@ -134,10 +128,8 @@ class DiscoveryService {
       return discover_socket.addMembership('239.255.255.250');
     });
 
-    utils.log.info("discovery_service started");
+    Utils.log.info("discovery_service started");
 
   };
 
 } // end class Discovery
-
-export = DiscoveryService;

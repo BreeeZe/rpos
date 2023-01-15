@@ -1,43 +1,30 @@
-﻿///<reference path="../rpos.d.ts"/>
-
-import fs = require("fs");
+﻿import fs = require("fs");
 import { Utils }  from './utils';
 import { Server } from 'http';
+import { RposConfig } from "./config";
+import { NOT_AUTHORIZED } from "./faults";
 var soap = <any>require('soap');
-var utils = Utils.utils;
 
-var NOT_IMPLEMENTED = {
-  Fault: {
-    attributes: { // Add namespace here. Really wanted to put it in Envelope but this should be valid
-      'xmlns:ter' : 'http://www.onvif.org/ver10/error',
-    },
-    Code: {
-      Value: "soap:Sender",
-      Subcode: {
-        Value: "ter:NotAuthorized",  
-      },
-    },
-    Reason: {
-      Text: {
-        attributes: {
-          'xml:lang': 'en',
-        },
-        $value: 'Sender not Authorized',
-      }
-    }
-  }
-};
+export interface TypeConstructor extends Function {
+  name: string;
+}
 
-
-class SoapService {
+export type SoapServiceOptions = {
+  path: string,
+  services: any,
+  xml: any,
+  wsdlPath: string,
+  onReady: () => void;
+}
+export class SoapService {
   webserver: Server;
-  config: rposConfig;
+  config: RposConfig;
   serviceInstance: any;
   serviceOptions: SoapServiceOptions;
   startedCallbacks: (() => void)[];
   isStarted: boolean;
 
-  constructor(config: rposConfig, server: Server) {
+  constructor(config: RposConfig, server: Server) {
     this.webserver = server;
     this.config = config;
     this.serviceInstance = null;
@@ -61,7 +48,7 @@ class SoapService {
   start() {
     this.starting();
 
-    utils.log.info("Binding %s to http://%s:%s%s", (<TypeConstructor>this.constructor).name, utils.getIpAddress(), this.config.ServicePort, this.serviceOptions.path);
+    Utils.log.info("Binding %s to http://%s:%s%s", (<TypeConstructor>this.constructor).name, Utils.getIpAddress(), this.config.ServicePort, this.serviceOptions.path);
     var onReady = this.serviceOptions.onReady;
     this.serviceOptions.onReady = () => {
       this._started();
@@ -70,7 +57,7 @@ class SoapService {
     this.serviceInstance = soap.listen(this.webserver, this.serviceOptions);
 
     this.serviceInstance.on("request", (request: any, methodName: string) => {
-      utils.log.debug('%s received request %s', (<TypeConstructor>this.constructor).name, methodName);
+      Utils.log.debug('%s received request %s', (<TypeConstructor>this.constructor).name, methodName);
 
       // Use the '=>' notation so 'this' refers to the class we are in
       // ONVIF allows GetSystemDateAndTime to be sent with no authenticaton header
@@ -84,8 +71,8 @@ class SoapService {
         try {
           token = request.Header.Security.UsernameToken;
         } catch (err) {
-          utils.log.info('No Username/Password (ws-security) supplied for ' + methodName);
-          throw NOT_IMPLEMENTED;
+          Utils.log.info('No Username/Password (ws-security) supplied for ' + methodName);
+          throw NOT_AUTHORIZED;
         }
         var user = token.Username;
         var password = (token.Password.$value || token.Password);
@@ -107,15 +94,15 @@ class SoapService {
         var password_ok = (user === onvif_username && password === generated_password);
 
         if (password_ok == false) {
-          utils.log.info('Invalid username/password with ' + methodName);
-          throw NOT_IMPLEMENTED;
+          Utils.log.info('Invalid username/password with ' + methodName);
+          throw NOT_AUTHORIZED;
         }
       };
     });
 
     this.serviceInstance.log = (type: string, data: any) => {
       if (this.config.logSoapCalls)
-        utils.log.debug('%s - Calltype : %s, Data : %s', (<TypeConstructor>this.constructor).name, type, data);
+        Utils.log.debug('%s - Calltype : %s, Data : %s', (<TypeConstructor>this.constructor).name, type, data);
     };
   }
 
@@ -134,4 +121,3 @@ class SoapService {
     this.started();
   }
 }
-export = SoapService;

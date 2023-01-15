@@ -1,40 +1,34 @@
-///<reference path="../rpos.d.ts" />
-
-import fs = require("fs");
-import util = require("util");
-import SoapService = require('../lib/SoapService');
-import { Utils }  from '../lib/utils';
-import url = require('url');
+import { Utils } from '../lib/utils';
 import { Server } from 'http';
-import Camera = require('../lib/camera');
 import { v4l2ctl } from '../lib/v4l2ctl';
 import { exec } from 'child_process';
-import PTZService = require('./ptz_service');
-var utils = Utils.utils;
+import { SoapService } from "../lib/SoapService";
+import { Camera } from "../lib/camera";
+import { RposConfig } from "../lib/config";
+import { PTZService } from './ptz_service';
+import { readFileSync } from 'fs';
+import { parse as urlParse } from 'url';
 
-class MediaService extends SoapService {
+export class MediaService extends SoapService {
   media_service: any;
-  camera: Camera;
-  ptz_service: PTZService;
   ffmpeg_process: any = null;
   ffmpeg_responses: any[] = [];
 
-  constructor(config: rposConfig, server: Server, camera: Camera, ptz_service: PTZService) {
+  constructor(config: RposConfig, server: Server, private camera: Camera, private ptz_service: PTZService) {
     super(config, server);
-    this.media_service = require('./stubs/media_service.js').MediaService;
 
+    this.media_service = require('./stubs/media_service.js').MediaService;
     this.camera = camera;
-    this.ptz_service = ptz_service;
     this.serviceOptions = {
       path: '/onvif/media_service',
       services: this.media_service,
-      xml: fs.readFileSync('./wsdl/media_service.wsdl', 'utf8'),
+      xml: readFileSync('./wsdl/media_service.wsdl', 'utf8'),
       wsdlPath: 'wsdl/media_service.wsdl',
-      onReady: function() {
-        utils.log.info('media_service started');
+      onReady: function () {
+        Utils.log.info('media_service started');
       }
     };
-    
+
     this.extendService();
   }
 
@@ -42,25 +36,25 @@ class MediaService extends SoapService {
     var listeners = this.webserver.listeners('request').slice();
     this.webserver.removeAllListeners('request');
     this.webserver.addListener('request', (request, response, next) => {
-      utils.log.debug('web request received : %s', request.url);
+      Utils.log.debug('web request received : %s', request.url);
 
-      var uri = url.parse(request.url, true);
+      var uri = urlParse(request.url, true);
       var action = uri.pathname;
       if (action == '/web/snapshot.jpg') {
         try {
           if (this.ffmpeg_process != null) {
-            utils.log.info("ffmpeg - already running");
+            Utils.log.info("ffmpeg - already running");
             this.ffmpeg_responses.push(response);
           } else {
             var cmd = `ffmpeg -fflags nobuffer -probesize 256 -rtsp_transport tcp -i rtsp://127.0.0.1:${this.config.RTSPPort}/${this.config.RTSPName} -vframes 1  -r 1 -s 640x360 -y /dev/shm/snapshot.jpg`;
             var options = { timeout: 15000 };
-            utils.log.info("ffmpeg - starting");
+            Utils.log.info("ffmpeg - starting");
             this.ffmpeg_responses.push(response);
             this.ffmpeg_process = exec(cmd, options, (error, stdout, stderr) => {
               // callback
-              utils.log.info("ffmpeg - finished");
+              Utils.log.info("ffmpeg - finished");
               if (error) {
-                utils.log.warn('ffmpeg exec error: %s', error);
+                Utils.log.warn('ffmpeg exec error: %s', error);
               }
               // deliver the JPEG (or the logo jpeg file)
               for (let responseItem of this.ffmpeg_responses) {
@@ -72,7 +66,7 @@ class MediaService extends SoapService {
             });
           }
         } catch (err) {
-          utils.log.warn('Error ' + err);
+          Utils.log.warn('Error ' + err);
         }
       } else {
         for (var i = 0, len = listeners.length; i < len; i++) {
@@ -82,22 +76,22 @@ class MediaService extends SoapService {
     });
   }
 
-  deliver_jpg(response: any){
+  deliver_jpg(response: any) {
     try {
-      var img = fs.readFileSync('/dev/shm/snapshot.jpg');
+      var img = readFileSync('/dev/shm/snapshot.jpg');
       response.writeHead(200, { 'Content-Type': 'image/jpg' });
       response.end(img, 'binary');
       return;
     } catch (err) {
-      utils.log.debug("Error opening snapshot : %s", err);
+      Utils.log.debug("Error opening snapshot : %s", err);
     }
     try {
-      var img = fs.readFileSync('./web/snapshot.jpg');
+      var img = readFileSync('./web/snapshot.jpg');
       response.writeHead(200, { 'Content-Type': 'image/jpg' });
       response.end(img, 'binary');
       return;
     } catch (err) {
-      utils.log.debug("Error opening snapshot : %s", err);
+      Utils.log.debug("Error opening snapshot : %s", err);
     }
 
     // Return 400 error
@@ -116,7 +110,7 @@ class MediaService extends SoapService {
     var cameraSettings = this.camera.settings;
     var camera = this.camera;
 
-    var h264Profiles = v4l2ctl.Controls.CodecControls.h264_profile.getLookupSet().map(ls=>ls.desc);
+    var h264Profiles = v4l2ctl.Controls.CodecControls.h264_profile.getLookupSet().map(ls => ls.desc);
     h264Profiles.splice(1, 1);
 
     var videoConfigurationOptions = {
@@ -185,7 +179,7 @@ class MediaService extends SoapService {
           IPv4Address: "0.0.0.0"
         },
         Port: 0,
-        TTL:  1,
+        TTL: 1,
         AutoStart: false
       },
       SessionTimeout: "PT1000S"
@@ -260,14 +254,14 @@ class MediaService extends SoapService {
     //};
     port.GetStreamUri = (args /*, cb, headers*/) => {
 
-     // Usually RTSP server is on same IP Address as the ONVIF Service
-     // Setting RTSPAddress in the config file lets you to use another IP Address
-     let rtspAddress = utils.getIpAddress();
-     if (this.config.RTSPAddress.length > 0) rtspAddress = this.config.RTSPAddress;
+      // Usually RTSP server is on same IP Address as the ONVIF Service
+      // Setting RTSPAddress in the config file lets you to use another IP Address
+      let rtspAddress = Utils.getIpAddress();
+      if (this.config.RTSPAddress.length > 0) rtspAddress = this.config.RTSPAddress;
 
       var GetStreamUriResponse = {
         MediaUri: {
-          Uri: (args.StreamSetup.Stream == "RTP-Multicast" && this.config.MulticastEnabled ? 
+          Uri: (args.StreamSetup.Stream == "RTP-Multicast" && this.config.MulticastEnabled ?
             `rtsp://${rtspAddress}:${this.config.RTSPPort}/${this.config.RTSPMulticastName}` :
             `rtsp://${rtspAddress}:${this.config.RTSPPort}/${this.config.RTSPName}`),
           InvalidAfterConnect: false,
@@ -299,8 +293,8 @@ class MediaService extends SoapService {
     };
 
     port.GetVideoSources = (args) => {
-        var GetVideoSourcesResponse = { VideoSources: [videoSource] };
-        return GetVideoSourcesResponse;
+      var GetVideoSourcesResponse = { VideoSources: [videoSource] };
+      return GetVideoSourcesResponse;
     }
 
     port.GetVideoSourceConfigurations = (args) => {
@@ -309,8 +303,8 @@ class MediaService extends SoapService {
     };
 
     port.GetVideoSourceConfiguration = (args) => {
-        var GetVideoSourceConfigurationResponse = { Configurations: videoSourceConfiguration };
-        return GetVideoSourceConfigurationResponse;
+      var GetVideoSourceConfigurationResponse = { Configurations: videoSourceConfiguration };
+      return GetVideoSourceConfigurationResponse;
     };
 
     port.GetVideoEncoderConfigurations = (args) => {
@@ -353,11 +347,11 @@ class MediaService extends SoapService {
 
     port.GetSnapshotUri = (args) => {
       var GetSnapshotUriResponse = {
-        MediaUri : {
-          Uri : "http://" + utils.getIpAddress() + ":" + this.config.ServicePort + "/web/snapshot.jpg",
-          InvalidAfterConnect : false,
-          InvalidAfterReboot : false,
-          Timeout : "PT30S"
+        MediaUri: {
+          Uri: "http://" + Utils.getIpAddress() + ":" + this.config.ServicePort + "/web/snapshot.jpg",
+          InvalidAfterConnect: false,
+          InvalidAfterReboot: false,
+          Timeout: "PT30S"
         }
       };
       return GetSnapshotUriResponse;
@@ -369,4 +363,3 @@ class MediaService extends SoapService {
     };
   }
 }
-export = MediaService;
