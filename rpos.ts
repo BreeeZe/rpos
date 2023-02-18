@@ -79,13 +79,12 @@ if (typeof data == 'string' && data.charCodeAt(0) === 0xFEFF) {
 }
 
 // Pase config file, stripping out Comments in the config file
-let config = jsonStripComments.strip(data);
-
+let config: rposConfig = jsonStripComments.strip(data);
 
 // Summer 2022: Config Files now support multiple Cameras (and use a Camera Array)
 // Upgrade old config files that do not have a Camera Array in the configuration
-if (!("Cameras" in config)) {
-  const newItem = {
+if (("Cameras" in config) == false) {
+  const newItem: CameraSettings = {
     CameraName: "Camera 1",
     CameraType: config.CameraType,
     CameraDevice: config.CameraDevice,
@@ -97,11 +96,6 @@ if (!("Cameras" in config)) {
     MulticastAddress: config.MulticastAddress,
     MulticastPort: config.MulticastPort,
     RTSPServer: config.RTSPServer,
-    PTZDriver: config.PTZDriver,
-    PTZOutput: config.PTZOutput,
-    PTZSerialPort: config.PTZSerialPort,
-    PTZSerialPortSettings: config.PTZSerialPortSettings,
-    PTZOutputURL: config.PTZOutputURL,
     PTZCameraAddress: config.PTZCameraAddress
   }
   config.Cameras = [newItem];
@@ -111,7 +105,14 @@ utils.log.level = <Utils.logLevel>config.logLevel;
 
 // config.DeviceInformation has Manufacturer, Model, SerialNumer, FirmwareVersion, HardwareId
 // Probe hardware for values, unless they are given in rposConfig.json
-config.DeviceInformation = config.DeviceInformation || {};
+if (config.DeviceInformation == undefined)
+  config.DeviceInformation = {
+    Manufacturer: undefined,
+    Model: undefined,
+    HardwareId: undefined,
+    SerialNumber: undefined,
+    FirmwareVersion: undefined
+  }
 
 if (utils.isPi()) {
   var model = require('rpi-version')();
@@ -127,7 +128,7 @@ if (utils.isMac()) {
 
 if (utils.isWindows()) {
   if (config.DeviceInformation.Manufacturer == undefined) config.DeviceInformation.Manufacturer = 'RPOS Windows';
-  if (config.DeviceInformation.Model == undefined) config.DeviceInformation.Model = os.version;
+  if (config.DeviceInformation.Model == undefined) config.DeviceInformation.Model = os.version();
 }
 
 if (config.DeviceInformation.Manufacturer == undefined) config.DeviceInformation.Manufacturer = 'RPOS';
@@ -143,6 +144,7 @@ for (var i in config.DeviceInformation) {
   utils.log.info("%s : %s", i, config.DeviceInformation[i]);
 }
 
+utils.log.info("Configured for %d cameras", config.Cameras.length)
 
 // ONVIF Tokens
 // ONVIF uses tokens to identify Video Sources, Video Encoders, PTZ Nodes and PTZ Configurations

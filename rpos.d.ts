@@ -6,6 +6,7 @@ interface rposConfig {
   Username: string;
   Password: string;
   Cameras: CameraSettings[];
+  CameraName: string;
   CameraType: string;
   CameraDevice: string;
   RTSPAddress: string;
@@ -28,6 +29,7 @@ interface rposConfig {
 }
 
 interface CameraSettings {
+  CameraName: string;
   CameraType: string;
   CameraDevice: string;
   RTSPAddress: string;
