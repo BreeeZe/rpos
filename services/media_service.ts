@@ -121,7 +121,7 @@ class MediaService extends SoapService {
 
     var videoConfigurationOptions = {
       QualityRange: {
-        Min: 1,
+        Min: 0,
         Max: 1
       },
       H264: {
@@ -169,7 +169,7 @@ class MediaService extends SoapService {
         Width: cameraSettings.resolution.Width,
         Height: cameraSettings.resolution.Height
       },
-      Quality: v4l2ctl.Controls.CodecControls.video_bitrate.value ? 1 : 1,
+      Quality: v4l2ctl.Controls.CodecControls.video_bitrate.value ? 0 : 1,
       RateControl: {
         FrameRateLimit: cameraSettings.framerate,
         EncodingInterval: 1,
@@ -325,12 +325,11 @@ class MediaService extends SoapService {
 
     port.SetVideoEncoderConfiguration = (args) => {
       var settings = {
-        bitrate: args.Configuration.RateControl.BitrateLimit,
-        framerate: args.Configuration.RateControl.FrameRateLimit,
-        gop: args.Configuration.H264.GovLength,
-        profile: args.Configuration.H264.H264Profile,
-        quality: args.Configuration.Quality instanceof Object ? 1 : args.Configuration.Quality,
-        resolution: args.Configuration.Resolution
+        bitrate: (videoEncoderConfiguration.RateControl.BitrateLimit = args.Configuration.RateControl.BitrateLimit),
+        framerate: (videoEncoderConfiguration.RateControl.FrameRateLimit = args.Configuration.RateControl.FrameRateLimit),
+        gop: (videoEncoderConfiguration.H264.GovLength = args.Configuration.H264.GovLength),
+        quality: (videoEncoderConfiguration.Quality = args.Configuration.Quality instanceof Object ? 1 : args.Configuration.Quality),
+        resolution: (videoEncoderConfiguration.Resolution = args.Configuration.Resolution),
       };
       camera.setSettings(settings);
 

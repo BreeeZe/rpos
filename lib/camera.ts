@@ -3,10 +3,16 @@
 import { Utils }  from './utils';
 import fs = require('fs');
 import parser = require('body-parser');
-import { ChildProcess } from 'child_process';
+import { ChildProcess, exec } from 'child_process';
 import { v4l2ctl } from './v4l2ctl';
 
 var utils = Utils.utils;
+
+enum ServerState {
+  Running,
+  Restart,
+  Stopped,
+}
 
 class Camera {
   options = {
@@ -16,7 +22,6 @@ class Camera {
       { Width: 1024, Height: 768 },
       { Width: 1280, Height: 1024 },
       { Width: 1280, Height: 720 },
-      { Width: 1640, Height: 1232 },
       { Width: 1920, Height: 1080 }
     ],
     framerates: [2, 5, 10, 15, 25, 30],
@@ -34,19 +39,22 @@ class Camera {
     ]
   }
 
-  settings: CameraSettingsBase = {
-    forceGop: true,
+  settings: CameraSettings = {
+    gop: v4l2ctl.Controls.CodecControls.h264_i_frame_period.value,
+    quality: v4l2ctl.Controls.CodecControls.video_bitrate_mode.value == 0 ? 1 : 0,
+    bitrate: v4l2ctl.Controls.CodecControls.video_bitrate.value / 1000,
     resolution: <Resolution>{ Width: 1280, Height: 720 },
     framerate: 25,
   }
   
   config: rposConfig;
   rtspServer: ChildProcess;
+  rtspServerState: ServerState;
   webserver: any;
 
   constructor(config: rposConfig, webserver: any) {
     this.config = config;
-    this.rtspServer = null;
+    this.rtspServerState = ServerState.Stopped;
     if (this.config.RTSPServer != 0) {
       if (this.config.CameraType == 'usbcam') {
         if (this.config.RTSPServer != 3) {
@@ -81,7 +89,6 @@ class Camera {
       }
       if (this.config.CameraType == 'picam') {
         if (!fs.existsSync("/dev/video0")) {
-          // this.loadDriver();
           if (utils.isPi()) {
             // Needs a V4L2 Driver to be installed
             console.log('Use modprobe to load the Pi Camera V4L2 driver');
@@ -102,11 +109,6 @@ class Camera {
     utils.cleanup(() => {
       this.stopRtsp();
       var stop = new Date().getTime() + 2000;
-      while (new Date().getTime() < stop) {
-        //wait for rtsp server to stop
-        ;
-      }
-//      this.unloadDriver();
     });
 
     if (this.config.RTSPServer == 1 )fs.chmodSync("./bin/rtspServer", "0755");
@@ -190,53 +192,62 @@ class Camera {
     })
   }
 
-  loadDriver() {
-      try {
-          utils.execSync("sudo modprobe bcm2835-v4l2"); // only on PI, and not needed with USB Camera
-      } catch (err) {}
-  }
-  
-  unloadDriver(){
-      try {
-          utils.execSync("sudo modprobe -r bcm2835-v4l2");
-      } catch (err) {}
-  }
-
   setupCamera() {
     v4l2ctl.SetPixelFormat(v4l2ctl.Pixelformat.H264)
-    v4l2ctl.SetResolution(this.settings.resolution);
-    v4l2ctl.SetFrameRate(this.settings.framerate);
     v4l2ctl.SetPriority(v4l2ctl.ProcessPriority.record);
     v4l2ctl.ReadFromFile();
-    v4l2ctl.ApplyControls();
+    this.setSettings(this.settings);
   }
 
-  setSettings(newsettings: CameraSettingsParameter) {
-    v4l2ctl.SetResolution(newsettings.resolution);
-    v4l2ctl.SetFrameRate(newsettings.framerate);
+  setSettings(newsettings: CameraSettings) {
+    const requireRestartParams = [c => c.resolution.Height, c => c.resolution.Width, c => c.framerate];
+    const requiresRestart = requireRestartParams.some(f => f(this.settings) !== f(newsettings));
+    Object.assign(this.settings, newsettings);
 
     v4l2ctl.Controls.CodecControls.video_bitrate.value = newsettings.bitrate * 1000;
     v4l2ctl.Controls.CodecControls.video_bitrate_mode.value = newsettings.quality > 0 ? 0 : 1;
-    v4l2ctl.Controls.CodecControls.h264_i_frame_period.value = this.settings.forceGop ? v4l2ctl.Controls.CodecControls.h264_i_frame_period.value : newsettings.gop;
+    v4l2ctl.Controls.CodecControls.h264_i_frame_period.value = newsettings.gop;
     v4l2ctl.ApplyControls();
+
+    if (this.config.RTSPServer === 1) {
+      // If it's our RTSPServer, we should have sufficient access to change resolution.
+      v4l2ctl.SetResolution(newsettings.resolution);
+      v4l2ctl.SetFrameRate(newsettings.framerate);
+    } else {
+      // If not, we need to restart the server with appropriate parameters, but make sure it's actually necessary.
+      // It does seem to be possible to dynamically set the framerate, but since the servers in general
+      // expect to set it...
+      if (requiresRestart) {
+        this.restartRtsp();
+      }
+    }
+  }
+
+  restartRtsp() {
+    utils.log.info("Restarting RTSP server");
+    this.rtspServerState = ServerState.Restart;
+    this.killRtsp();
   }
 
   startRtsp() {
-    if (this.rtspServer) {
-      utils.log.warn("Cannot start rtspServer, already running");
-      return;
-    }
     utils.log.info("Starting rtsp server");
 
     if (this.config.MulticastEnabled) {
-        this.rtspServer = utils.spawn("v4l2rtspserver", ["-P", this.config.RTSPPort.toString(), "-u" , this.config.RTSPName.toString(), "-m", this.config.RTSPMulticastName, "-M", this.config.MulticastAddress.toString() + ":" + this.config.MulticastPort.toString(), "-W",this.settings.resolution.Width.toString(), "-H", this.settings.resolution.Height.toString(), "/dev/video0"]);
+      if (this.config.RTSPServer !== 2) {
+        utils.log.warn("Multicast enabled; forcing use of RTSPServer 2 (v4l2rtspserver) instead of %s", this.config.RTSPServer);
+        this.config.RTSPServer = 2;
+      }
+      this.rtspServer = utils.spawn("v4l2rtspserver", ["-P", this.config.RTSPPort.toString(), "-u" , this.config.RTSPName.toString(), "-m", this.config.RTSPMulticastName, "-M", this.config.MulticastAddress.toString() + ":" + this.config.MulticastPort.toString(), "-W",this.settings.resolution.Width.toString(), "-H", this.settings.resolution.Height.toString(), "/dev/video0"]);
     } else {
-        if (this.config.RTSPServer == 1) this.rtspServer = utils.spawn("./bin/rtspServer", ["/dev/video0", "2088960", this.config.RTSPPort.toString(), "0", this.config.RTSPName.toString()]);
-        if (this.config.RTSPServer == 2) this.rtspServer = utils.spawn("v4l2rtspserver", ["-P",this.config.RTSPPort.toString(), "-u" , this.config.RTSPName.toString(),"-W",this.settings.resolution.Width.toString(),"-H",this.settings.resolution.Height.toString(),"/dev/video0"]);
-        if (this.config.RTSPServer == 3) this.rtspServer = utils.spawn("./python/gst-rtsp-launch.sh", ["-P",this.config.RTSPPort.toString(), "-u" , this.config.RTSPName.toString(),"-W",this.settings.resolution.Width.toString(),"-H",this.settings.resolution.Height.toString(), "-t", this.config.CameraType, "-d", (this.config.CameraDevice == "" ? "auto" : this.config.CameraDevice)]);
+      if (this.config.RTSPServer == 1) this.rtspServer = utils.spawn("./bin/rtspServer", ["/dev/video0", "2088960", this.config.RTSPPort.toString(), "0", this.config.RTSPName.toString()]);
+      if (this.config.RTSPServer == 2) this.rtspServer = utils.spawn("v4l2rtspserver", ["-P",this.config.RTSPPort.toString(), "-u" , this.config.RTSPName.toString(),"-W",this.settings.resolution.Width.toString(),"-H",this.settings.resolution.Height.toString(),"-F",this.settings.framerate.toString(),"/dev/video0"]);
+      if (this.config.RTSPServer == 3) this.rtspServer = utils.spawn("./python/gst-rtsp-launch.sh", ["-P",this.config.RTSPPort.toString(), "-u" , this.config.RTSPName.toString(),"-W",this.settings.resolution.Width.toString(),"-H",this.settings.resolution.Height.toString(), "-t", this.config.CameraType, "-d", (this.config.CameraDevice == "" ? "auto" : this.config.CameraDevice)]);
     }
 
     if (this.rtspServer) {
+      this.rtspServerState = ServerState.Running;
+      const started = Date.now();
+
       this.rtspServer.stdout.on('data', data => utils.log.debug("rtspServer: %s", data));
       this.rtspServer.stderr.on('data', data => utils.log.error("rtspServer: %s", data));
       this.rtspServer.on('error', err=> utils.log.error("rtspServer error: %s", err));
@@ -245,16 +256,64 @@ class Camera {
           utils.log.error("rtspServer exited with code: %s", code);
         else
           utils.log.debug("rtspServer exited")
+
+        if (this.rtspServerState === ServerState.Stopped) {
+          return;  // Requested exit (see stopRtsp).
+        }
+
+        // Otherwise, we need to restart.
+
+        if (Date.now() - started > 3000 || this.rtspServerState === ServerState.Restart) {
+          this.startRtsp();
+        } else {
+          // We're probably having some startup issue, so should wait a bit.
+
+          // Nasty hack: We might be failing to start because an existing v4l2rtspserver is listening
+          // on our port (potentially left over from a crashed RPOS). Let's try to wipe that out.
+          if (this.config.RTSPServer == 2) {
+            exec(`
+              if ! PIDS="$(pgrep v4l2rtspserver)"; then
+                sleep 2
+                exit 0
+              fi
+              kill $PIDS
+              sleep 2
+              if ! PIDS="$(pgrep v4l2rtspserver)"; then
+                exit 0
+              fi
+              kill -s 9 $PIDS
+              sleep 1
+            `, {}, () => this.startRtsp());
+          } else {
+            setTimeout(() => {
+              this.startRtsp();
+            }, 2000);
+          }
+        }
       });
     }
   }
 
   stopRtsp() {
-    if (this.rtspServer) {
-      utils.log.info("Stopping rtsp server");
-      this.rtspServer.kill();
-      this.rtspServer = null;
-    }
+    this.rtspServerState = ServerState.Stopped;
+    this.killRtsp();
+  }
+
+  killRtsp() {
+    utils.log.info("Stopping rtsp server")
+
+    let dead = false;
+    this.rtspServer.on('exit', () => {
+      dead = true;
+    });
+
+    this.rtspServer.kill();
+    setTimeout(() => {
+      if (!dead) {
+        utils.log.error("Rtsp server didn't respond to SIGTERM within 2 seconds; sending SIGKILL");
+        this.rtspServer.kill('SIGKILL');
+      }
+    }, 2000);
   }
 }
 
