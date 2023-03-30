@@ -131,7 +131,7 @@ class DiscoveryService {
     });
 
     discover_socket.bind(3702, () => {
-      return discover_socket.addMembership('239.255.255.250');
+      return discover_socket.addMembership('239.255.255.250', utils.getIpAddress());
     });
 
     utils.log.info("discovery_service started");
