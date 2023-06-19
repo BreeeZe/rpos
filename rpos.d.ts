@@ -7,6 +7,7 @@ interface rposConfig {
   Password: string;
   CameraType: string;
   CameraDevice: string;
+  CameraSettingsFilename: string;
   RTSPAddress: string;
   RTSPPort: number;
   RTSPName: string;
@@ -87,4 +88,5 @@ interface CameraSettings {
   framerate: number;
   bitrate: number;
   quality: number;
+  h264Profile: string;
 }

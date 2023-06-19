@@ -112,12 +112,8 @@ class MediaService extends SoapService {
   extendService() {
     var port = this.media_service.MediaService.Media;
 
-    var cameraOptions = this.camera.options;
-    var cameraSettings = this.camera.settings;
+    var cameraOptions = this.camera.getOptions();
     var camera = this.camera;
-
-    var h264Profiles = v4l2ctl.Controls.CodecControls.h264_profile.getLookupSet().map(ls=>ls.desc);
-    h264Profiles.splice(1, 1);
 
     var videoConfigurationOptions = {
       QualityRange: {
@@ -126,39 +122,33 @@ class MediaService extends SoapService {
       },
       H264: {
         ResolutionsAvailable: cameraOptions.resolutions,
-        GovLengthRange: {
-          Min: v4l2ctl.Controls.CodecControls.h264_i_frame_period.getRange().min,
-          Max: v4l2ctl.Controls.CodecControls.h264_i_frame_period.getRange().max
-        },
+        GovLengthRange: cameraOptions.gop,
         FrameRateRange: {
-          Min: cameraOptions.framerates[0],
-          Max: cameraOptions.framerates[cameraOptions.framerates.length - 1]
+          Min: cameraOptions.framerate[0],
+          Max: cameraOptions.framerate[cameraOptions.framerate.length - 1]
         },
         EncodingIntervalRange: { Min: 1, Max: 1 },
-        H264ProfilesSupported: h264Profiles
+        H264ProfilesSupported: cameraOptions.h264Profiles
       },
       Extension: {
         H264: {
           ResolutionsAvailable: cameraOptions.resolutions,
-          GovLengthRange: {
-            Min: v4l2ctl.Controls.CodecControls.h264_i_frame_period.getRange().min,
-            Max: v4l2ctl.Controls.CodecControls.h264_i_frame_period.getRange().max
-          },
+          GovLengthRange: cameraOptions.gop,
           FrameRateRange: {
-            Min: cameraOptions.framerates[0],
-            Max: cameraOptions.framerates[cameraOptions.framerates.length - 1]
+            Min: cameraOptions.framerate[0],
+            Max: cameraOptions.framerate[cameraOptions.framerate.length - 1]
           },
           EncodingIntervalRange: { Min: 1, Max: 1 },
-          H264ProfilesSupported: h264Profiles,
+          H264ProfilesSupported: cameraOptions.h264Profiles,
           BitrateRange: {
-            Min: cameraOptions.bitrates[0],
-            Max: cameraOptions.bitrates[cameraOptions.bitrates.length - 1]
+            Min: cameraOptions.bitrate[0],
+            Max: cameraOptions.bitrate[cameraOptions.bitrate.length - 1]
           }
         }
       }
     };
 
-    var videoEncoderConfiguration = {
+    var _videoEncoderConfiguration = {
       attributes: {
         token: "encoder_config_token"
       },
@@ -166,18 +156,18 @@ class MediaService extends SoapService {
       UseCount: 0,
       Encoding: "H264",
       Resolution: {
-        Width: cameraSettings.resolution.Width,
-        Height: cameraSettings.resolution.Height
+        Width: this.camera.resolution.Width,
+        Height: this.camera.resolution.Height
       },
-      Quality: v4l2ctl.Controls.CodecControls.video_bitrate.value ? 0 : 1,
+      Quality: undefined,
       RateControl: {
-        FrameRateLimit: cameraSettings.framerate,
+        FrameRateLimit: this.camera.framerate,
         EncodingInterval: 1,
-        BitrateLimit: v4l2ctl.Controls.CodecControls.video_bitrate.value / 1000
+        BitrateLimit: undefined,
       },
       H264: {
-        GovLength: v4l2ctl.Controls.CodecControls.h264_i_frame_period.value,
-        H264Profile: v4l2ctl.Controls.CodecControls.h264_profile.desc
+        GovLength: undefined,
+        H264Profile: undefined,
       },
       Multicast: {
         Address: {
@@ -213,15 +203,32 @@ class MediaService extends SoapService {
       Options: []
     };
 
-    var profile = {
+    var _profile = {
       Name: "CurrentProfile",
       attributes: {
         token: "profile_token"
       },
       VideoSourceConfiguration: videoSourceConfiguration,
-      VideoEncoderConfiguration: videoEncoderConfiguration,
+      VideoEncoderConfiguration: undefined,
       PTZConfiguration: this.ptz_service.ptzConfiguration
     };
+
+    const getProfile = () => {
+      _profile.VideoEncoderConfiguration = getVideoEncoderConfiguration();
+      return _profile;
+    };
+
+    const getVideoEncoderConfiguration = () => {
+      const settings = camera.getSettings();
+      _videoEncoderConfiguration.RateControl.BitrateLimit = settings.bitrate;
+      _videoEncoderConfiguration.RateControl.FrameRateLimit = settings.framerate;
+      _videoEncoderConfiguration.H264.GovLength = settings.gop;
+      _videoEncoderConfiguration.Quality = settings.quality;
+      _videoEncoderConfiguration.Resolution = settings.resolution;
+      _videoEncoderConfiguration.H264.H264Profile = settings.h264Profile;
+
+      return _videoEncoderConfiguration;
+    }
 
     port.GetServiceCapabilities = (args /*, cb, headers*/) => {
       var GetServiceCapabilitiesResponse = {
@@ -279,17 +286,17 @@ class MediaService extends SoapService {
     };
 
     port.GetProfile = (args) => {
-      var GetProfileResponse = { Profile: profile };
+      var GetProfileResponse = { Profile: getProfile() };
       return GetProfileResponse;
     };
 
     port.GetProfiles = (args) => {
-      var GetProfilesResponse = { Profiles: [profile] };
+      var GetProfilesResponse = { Profiles: [getProfile()] };
       return GetProfilesResponse;
     };
 
     port.CreateProfile = (args) => {
-      var CreateProfileResponse = { Profile: profile };
+      var CreateProfileResponse = { Profile: getProfile() };
       return CreateProfileResponse;
     };
 
@@ -314,22 +321,23 @@ class MediaService extends SoapService {
     };
 
     port.GetVideoEncoderConfigurations = (args) => {
-      var GetVideoEncoderConfigurationsResponse = { Configurations: [videoEncoderConfiguration] };
+      var GetVideoEncoderConfigurationsResponse = { Configurations: [getVideoEncoderConfiguration()] };
       return GetVideoEncoderConfigurationsResponse;
     };
 
     port.GetVideoEncoderConfiguration = (args) => {
-      var GetVideoEncoderConfigurationResponse = { Configuration: videoEncoderConfiguration };
+      var GetVideoEncoderConfigurationResponse = { Configuration: getVideoEncoderConfiguration() };
       return GetVideoEncoderConfigurationResponse;
     };
 
     port.SetVideoEncoderConfiguration = (args) => {
       var settings = {
-        bitrate: (videoEncoderConfiguration.RateControl.BitrateLimit = args.Configuration.RateControl.BitrateLimit),
-        framerate: (videoEncoderConfiguration.RateControl.FrameRateLimit = args.Configuration.RateControl.FrameRateLimit),
-        gop: (videoEncoderConfiguration.H264.GovLength = args.Configuration.H264.GovLength),
-        quality: (videoEncoderConfiguration.Quality = args.Configuration.Quality instanceof Object ? 1 : args.Configuration.Quality),
-        resolution: (videoEncoderConfiguration.Resolution = args.Configuration.Resolution),
+        bitrate: args.Configuration.RateControl.BitrateLimit,
+        framerate: args.Configuration.RateControl.FrameRateLimit,
+        gop: args.Configuration.H264.GovLength,
+        quality: args.Configuration.Quality instanceof Object ? 1 : args.Configuration.Quality,
+        resolution: args.Configuration.Resolution,
+        h264Profile: args.Configuration.H264.H264Profile,
       };
       camera.setSettings(settings);
 
