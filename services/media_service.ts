@@ -367,6 +367,52 @@ class MediaService extends SoapService {
       var GetAudioEncoderConfigurationOptionsResponse = { Options: [{}] };
       return GetAudioEncoderConfigurationOptionsResponse;
     };
+
+    port.GetCompatibleVideoSourceConfigurations = (args) => {
+      // Args contains a ProfileToken
+      // We will return all Video Sources as being compatible
+
+      let GetCompatibleVideoSourceConfigurationsResponse = { Configurations: [videoSourceConfiguration] };
+      return GetCompatibleVideoSourceConfigurationsResponse;
+    }
+
+    port.GetVideoSourceConfigurationOptions = (Args) => {
+      // Args will contain a ConfigurationToken or ProfileToken
+      var GetVideoSourceConfigurationOptionsResponse = { 
+        Options : {
+          BoundsRange : { 
+            XRange : { 
+              Min : 0,
+              Max : 0
+            },
+            YRange : { 
+              Min : 0,
+              Max : 0
+            },
+            WidthRange : { 
+              Min : 1920,
+              Max : 1920
+            },
+            HeightRange : { 
+              Min : 1080,
+              Max : 1080
+            }
+          },
+          VideoSourceTokensAvailable : "video_src_token"
+          //Extension : { 
+            //Rotate : { 
+              //Mode : { xs:string},
+              //DegreeList : { 
+                //Items : [{ xs:int}]
+              //},
+              //Extension : { }
+            //},
+            //Extension : { }
+          //}
+        }
+      };
+        return GetVideoSourceConfigurationOptionsResponse;
+    }
   }
 }
 export = MediaService;
