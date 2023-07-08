@@ -2,11 +2,11 @@
 
 import fs = require("fs");
 import { Utils }  from './utils';
-import { Server } from 'http';
+import { IncomingMessage, Server } from 'http';
 var soap = <any>require('soap');
 var utils = Utils.utils;
 
-var NOT_IMPLEMENTED = {
+var NOT_AUTHORIZED = {
   Fault: {
     attributes: { // Add namespace here. Really wanted to put it in Envelope but this should be valid
       'xmlns:ter' : 'http://www.onvif.org/ver10/error',
@@ -69,24 +69,90 @@ class SoapService {
     };
     this.serviceInstance = soap.listen(this.webserver, this.serviceOptions);
 
-    this.serviceInstance.on("request", (request: any, methodName: string) => {
+    this.serviceInstance.on("request", (soapRequest: any, methodName: string, httpRequest: IncomingMessage) => {
+      // Use the '=>' notation so 'this' refers to the class we are in
+
       utils.log.debug('%s received request %s', (<TypeConstructor>this.constructor).name, methodName);
 
-      // Use the '=>' notation so 'this' refers to the class we are in
-      // ONVIF allows GetSystemDateAndTime to be sent with no authenticaton header
-      // So we check the header and check authentication in this function
+      // EITHER RETURN (which means user authentication is OK) OR WE THOW IF THE AUTHENTICATION IS INVALID
 
-      // utils.log.info('received soap header');
+
+      // If there is no username in the Configuration, we can return
+      if (this.config.Username == null || this.config.Username == '') return;
+
+      // ONVIF allows GetSystemDateAndTime to be sent with no authenticaton header
       if (methodName === "GetSystemDateAndTime") return;
 
-      if (this.config.Username) {
-        let token: any = null;
-        try {
-          token = request.Header.Security.UsernameToken;
-        } catch (err) {
-          utils.log.info('No Username/Password (ws-security) supplied for ' + methodName);
-          throw NOT_IMPLEMENTED;
+      let token: any = null;
+      try {
+        token = soapRequest.Header.Security.UsernameToken;
+      } catch (err) {
+        token = null;
+      }
+
+
+      // If there is no HTTP Digest and no WS-Security Header (in the SOAP) return a 401 error
+      if (httpRequest.headers['authorization'] == undefined && token == null) { // Allow Digest or WS-Security
+      // if (httpRequest.headers['authorization'] == undefined) { // Digest only
+        throw { "statusCode": 401,
+                "httpHeader": {
+                  "key": "WWW-Authenticate",
+                  "value": `Digest realm="rpos-realm", qop="auth", algorithm="MD5", nonce="dcd98b7102dd2f0e8b11d0f600bfb0c093"`
+                },
+                "httpContents": "401 Digest Authentication Required"
+              };
+      };
+
+      if (httpRequest.headers['authorization'] != undefined && httpRequest.headers['authorization'].startsWith("Digest")) {
+        // Check Digest Authentication
+        // Minimal checks currntly implemented
+        let username = null;
+        let realm = null;
+        let uri = null;
+        let nonce = null;
+        let cnonce = null;
+        let nc = null;
+        let qop = null;
+        let response = null;
+        for (let item of httpRequest.headers['authorization'].substr(7).split(',')) { // trim "Digest "
+          const keyValueSplit = item.split('=');
+          if (keyValueSplit.length == 2) {
+            const key = keyValueSplit[0].trim();
+            let value = keyValueSplit[1].trim();
+            if (value.startsWith('"')) value = value.substr(1,value.length-2); // remove quotes
+
+            if (key == "username") username = value;
+            else if (key == "realm") realm = value;
+            else if (key == "uri") uri = value;
+            else if (key == "nonce") nonce = value;
+            else if (key == "cnonce") cnonce = value;
+            else if (key == "nc") nc = value;
+            else if (key == "qop") qop = value;
+            else if (key == "response") response = value;
+          }
         }
+        let HA1 = utils.md5(username + ":" + realm + ":" + this.config.Password);
+        let HA2 = utils.md5(httpRequest.method + ":" + uri);
+        let computedResponse = null;
+        if (qop == null || qop == '') {
+            computedResponse = utils.md5(HA1 + ":" + nonce + ":" + HA2);
+        } else if (qop == "auth")
+        {
+          computedResponse = utils.md5(HA1 + ":" + nonce + ":" + nc + ":" + cnonce + ":" + qop + ":" + HA2);
+        }
+
+        if (response == computedResponse) {
+          // Digest Authentication has passed
+          return;
+        }
+      }
+
+      // Fall through to checking WS-Security authentication
+      if (token == null) {
+          utils.log.info('No Username/Password (ws-security) supplied for ' + methodName);
+          throw NOT_AUTHORIZED;
+      } else {
+
         var user = token.Username;
         var password = (token.Password.$value || token.Password);
         var nonce = (token.Nonce.$value || token.Nonce); // handle 2 ways to map XML to the javascript data structure
@@ -108,7 +174,7 @@ class SoapService {
 
         if (password_ok == false) {
           utils.log.info('Invalid username/password with ' + methodName);
-          throw NOT_IMPLEMENTED;
+          throw NOT_AUTHORIZED;
         }
       };
     });

@@ -216,5 +216,11 @@ export module Utils {
         hex.substring(20, 32)
       ].join("-");
     }
+
+    static md5(str: string) {
+      let out = crypto.createHash("md5").update(str).digest('hex');
+      return out;
+
+    }
   }
 }

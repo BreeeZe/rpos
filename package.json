@@ -21,6 +21,7 @@
     "body-parser": "1.19.0",
     "cli-color": "2.0.0",
     "express": "^4.17.1",
+    "http-auth": "^4.2.0",
     "ip": "^1.1.5",
     "macos-release": "~2.0.0",
     "node-pelcod": "^0.3.0",
@@ -28,7 +29,7 @@
     "pan-tilt-hat": "^1.2.1",
     "rpi-version": "^1.4.3",
     "serialport": "^9.1.0",
-    "soap": "https://github.com/BreeeZe/node-soap.git",
+    "soap": "https://github.com/rogerhardiman/node-soap.git#bc97ee9136f27c9b868289abe0a16102118bd8b7",
     "tenx-usb-missile-launcher-driver": "^0.2.0",
     "xml2js": "0.4.23"
   },
