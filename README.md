@@ -7,7 +7,6 @@ RPOS won an award in the 2018 ONVIF Open Source Challenge competition.
 ## History and Contributors
 
 The initial goal (by @BreeeZe) was to provide a ONVIF Media service which is compatible with Synology Surveillance Station to allow the Raspberry Pi to be used as a surveillance camera without the need for adding any custom camera files to your Synology NAS.
-First demo video @ https://youtu.be/ZcZbF4XOH7E
 
 This version uses a patched version of the "node-soap" v0.80 library (https://github.com/vpulim/node-soap/releases/tag/v0.8.0) located @ https://github.com/BreeeZe/node-soap
 
