@@ -151,17 +151,17 @@ If you only use USB cameras, some may not be needed but for simplicity I'll inst
 ```
 sudo apt install git gstreamer1.0-plugins-base \
  gstreamer1.0-plugins-bad  gstreamer1.0-plugins-good gstreamer1.0-plugins-ugly \
- gstreamer1.0-tools libgstreamer1.0-dev libgstreamer1.0-0-dbg \
- libgstreamer1.0-0 libgstrtspserver-1.0.0 \
+ gstreamer1.0-tools libgstreamer1.0-dev \
+ libgstreamer1.0-0 libgstrtspserver-1.0-dev libgstrtspserver-1.0-0 \
  libgstreamer-plugins-base1.0-dev gtk-doc-tools \
- gstreamer1.0-omx-rpi gstreamer1.0-omx
+ gstreamer1.0-omx-generic gstreamer1.0-omx-generic-config
 ```
 
 You can check it is verson 1.14 with ```gst-launch-1.0 --version```
 
 Then install Python Binding, GIR Files (GObjectIntrospection Repository - makes APIs from C libraries)
 ```
-sudo apt-get install python-gi gir1.2-gst-plugins-base-1.0 gir1.2-gst-rtsp-server-1.0
+sudo apt-get install python3-gi gir1.2-gst-plugins-base-1.0 gir1.2-gst-rtsp-server-1.0
 ```
 
 ##### 5.c.1b - INSTALL GST-RPICAMSRC FROM SOURCE
@@ -173,6 +173,9 @@ Currently Raspberry Pi OS installs GStreamer 1.14 which does not include the 'rp
 cd ..
 git clone https://github.com/thaytan/gst-rpicamsrc.git
 cd gst-rpicamsrc
+sudo apt install autoreconf
+sudo apt-get install libtool
+sudo apt install libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
 ./autogen.sh
 make
 sudo make install
