@@ -1,7 +1,6 @@
 ﻿///<reference path="../rpos.d.ts"/>
 
 import { Utils } from './utils';
-import { writeFileSync, readFileSync } from 'fs';
 var stringifyBool = (v: boolean) => { return v ? "1" : "0"; }
 var utils = Utils.utils;
 
@@ -206,37 +205,29 @@ export module v4l2ctl {
         }
     }
 
-    export function ApplyControls() {
-        var usercontrols = Controls.UserControls;
-        var codeccontrols = Controls.CodecControls;
-        var cameracontrols = Controls.CameraControls;
-        var jpgcontrols = Controls.JPEGCompressionControls;
-
-        var getChanges = function(controls: {}) {
-            var changes = [];
-            for (var c in controls) {
-                var control = <UserControl<any>>controls[c];
-                if (!control.isDirty)
-                    continue;
-
-                changes.push([c, "=", control].join(''));
-                control.reset();
-            }
-            return changes;
-        };
-
-        var changedcontrols = getChanges(usercontrols)
-            .concat(getChanges(codeccontrols))
-            .concat(getChanges(cameracontrols))
-            .concat(getChanges(jpgcontrols));
-
-        if (changedcontrols.length > 0) {
-            execV4l2(`--set-ctrl ${changedcontrols.join(',') }`);
-            WriteToFile();
+    export function *GetAllControls() {
+        for (const controlGroup of Object.values(Controls)) {
+            yield *Object.entries(controlGroup);
         }
     }
 
-    export function WriteToFile() {
+    export function GetDirtyControls() {
+        return Array.from(GetAllControls()).filter(([name, control]) => control.isDirty);
+    }
+
+    export function ApplyControls() {
+        const dirtyControls = GetDirtyControls();
+        if (dirtyControls.length == 0) {
+            return false;
+        }
+
+        const settingStrings = dirtyControls.map(([name, control]) => `${name}=${control}`);
+        execV4l2(`--set-ctrl ${settingStrings.join(',')}`);
+        dirtyControls.forEach(([name, control]) => control.reset())
+        return true;
+    }
+
+    export function ToJson() {
         var data = {};
         for (var ct in Controls) {
             data[ct] = {};
@@ -245,22 +236,15 @@ export module v4l2ctl {
                 data[ct][k] = uc.value;
             }
         }
-        var json = JSON.stringify(data);
-        json = json.replace(/{"/g,"{\n\"").replace(/:{/g, ":\n{").replace(/,"/g, ",\n\"").replace(/}/g,"}\n");
-        writeFileSync("v4l2ctl.json", json);
+        return data;
     }
 
-    export function ReadFromFile() {
-        try {
-            var data = JSON.parse(readFileSync("v4l2ctl.json").toString());
-            for (var ct in data) {
-                for (var k in data[ct]) {
-                    var uc = <UserControl<any>>Controls[ct][k];
-                    uc.value = data[ct][k];
-                }
+    export function FromJson(data) {
+        for (var ct in data) {
+            for (var k in data[ct]) {
+                var uc = <UserControl<any>>Controls[ct][k];
+                uc.value = data[ct][k];
             }
-        } catch (ex) {
-            utils.log.error("v4l2ctl.json does not exist yet or invalid.")
         }
     }
 
@@ -296,8 +280,6 @@ export module v4l2ctl {
         getControls(codeccontrols);
         getControls(cameracontrols);
         getControls(jpgcontrols);
-
-        WriteToFile();
     }
 
     export function SetFrameRate(framerate: number) {
@@ -314,9 +296,5 @@ export module v4l2ctl {
 
     export function SetPriority(priority: ProcessPriority) {
         execV4l2(`--set-priority=${priority}`);
-    }
-
-    export function SetBrightness(brightness: number) {
-        execV4l2(`--set-ctrl brightness=${brightness}`);
     }
 }

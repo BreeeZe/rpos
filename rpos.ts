@@ -122,7 +122,7 @@ let ptz_driver = new PTZDriver(config);
 let camera = new Camera(config, webserver);
 let device_service = new DeviceService(config, httpserver, ptz_driver.process_ptz_command);
 let ptz_service = new PTZService(config, httpserver, ptz_driver.process_ptz_command, ptz_driver);
-let imaging_service = new ImagingService(config, httpserver, ptz_driver.process_ptz_command);
+let imaging_service = new ImagingService(config, httpserver, camera, ptz_driver.process_ptz_command);
 let media_service = new MediaService(config, httpserver, camera, ptz_service); // note ptz_service dependency
 let discovery_service = new DiscoveryService(config);
 

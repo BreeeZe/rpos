@@ -512,11 +512,6 @@ class PTZDriver {
           this.panTiltHat.tilt(Math.round(new_tilt_angle));
       }
     }
-    else if (command==='brightness') {
-      console.log("Set Brightness "+ data.value);
-      if (this.rposAscii) this.stream.write(command + '\t' + data.value + '\n');
-      v4l2ctl.SetBrightness(data.value);
-    }
     else if (command==='focus') {
       console.log("Focus "+ data.value);
       if (this.rposAscii) this.stream.write(command + '\t' + data.value + '\n');

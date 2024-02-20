@@ -1,5 +1,6 @@
 ///<reference path="../rpos.d.ts" />
 
+import Camera = require('../lib/camera');
 import fs = require("fs");
 import util = require("util");
 import os = require('os');
@@ -11,17 +12,18 @@ var utils = Utils.utils;
 
 class ImagingService extends SoapService {
   imaging_service: any;
+  camera: Camera;
   callback: any;
 
-  brightness = 0;
   autoFocusMode = '';
   focusNearLimit = 0;
   focusFarLimit = 0;
   focusDefaultSpeed = 0;
 
-  constructor(config: rposConfig, server: Server, callback) {
+  constructor(config: rposConfig, server: Server, camera: Camera, callback) {
     super(config, server);
 
+    this.camera = camera;
     this.imaging_service = require('./stubs/imaging_service.js').ImagingService;
     this.callback = callback;
 
@@ -33,7 +35,6 @@ class ImagingService extends SoapService {
       onReady: () => console.log('imaging_service started')
     };
 
-    this.brightness = 50;  // range is 0..100
     this.autoFocusMode = "MANUAL"; // MANUAL or AUTO
     this.focusDefaultSpeed = 0.5; // range 0.1 to 1.0. See GetMoveOptions valid range
     this.focusNearLimit = 1.0;  // range 0.1 to 3.0 in Metres
@@ -220,7 +221,7 @@ class ImagingService extends SoapService {
     port.GetImagingSettings = (args /*, cb, headers*/) => {
       var GetImagingSettingsResponse = {
         ImagingSettings : {
-          Brightness : this.brightness,
+          Brightness : this.camera.getBrightness(),
           Focus : { 
             AutoFocusMode : this.autoFocusMode,
             DefaultSpeed : this.focusDefaultSpeed,
@@ -325,9 +326,7 @@ class ImagingService extends SoapService {
         // Check for Brightness value
         if (args.ImagingSettings) {
           if (args.ImagingSettings.Brightness) {
-            this.brightness = args.ImagingSettings.Brightness;
-            // emit the 'brightness' message to the parent
-            if (this.callback) this.callback('brightness', {value: this.brightness});
+            this.camera.setBrightness(args.ImagingSettings.Brightness);
           }
           if (args.ImagingSettings.Focus) {
             if (args.ImagingSettings.Focus.AutoFocusMode) {

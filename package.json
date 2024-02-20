@@ -28,6 +28,7 @@
     "pan-tilt-hat": "^1.2.1",
     "rpi-version": "^1.4.3",
     "serialport": "^9.1.0",
+    "signal-exit": "^4.0.2",
     "soap": "https://github.com/BreeeZe/node-soap.git",
     "tenx-usb-missile-launcher-driver": "^0.2.0",
     "xml2js": "0.4.23"

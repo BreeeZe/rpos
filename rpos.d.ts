@@ -7,6 +7,7 @@ interface rposConfig {
   Password: string;
   CameraType: string;
   CameraDevice: string;
+  CameraSettingsFilename: string;
   RTSPAddress: string;
   RTSPPort: number;
   RTSPName: string;
@@ -81,16 +82,11 @@ interface Resolution {
   Width: number;
   Height: number;
 }
-interface CameraSettingsParameter {
+interface CameraSettings {
   gop: number; //keyframe every X sec.
   resolution: Resolution;
   framerate: number;
   bitrate: number;
-  profile: string;
   quality: number;
-}
-interface CameraSettingsBase {
-  forceGop: boolean; // Use iframe interval setting from v4l2ctl.json instead of Onvif
-  resolution: Resolution;
-  framerate: number;
+  h264Profile: string;
 }

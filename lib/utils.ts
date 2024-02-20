@@ -176,30 +176,6 @@ export module Utils {
       }
     }
 
-    static cleanup(callback: () => void) {
-      // https://stackoverflow.com/questions/14031763/doing-a-cleanup-action-just-before-node-js-exits
-      // attach user callback to the process event emitter
-      // if no callback, it will still exit gracefully on Ctrl-C
-      callback = callback || (() => { });
-
-      // do app specific cleaning before exiting
-      process.on('exit', () => {
-        callback;
-      });
-
-      // catch ctrl+c event and exit normally
-      process.on('SIGINT', () => {
-        console.log('Ctrl-C...');
-        process.exit(2);
-      });
-
-      //catch uncaught exceptions, trace, then exit normally
-      process.on('uncaughtException', (e) => {
-        utils.log.error('Uncaught Exception... : %s', e.stack);
-        process.exit(99);
-      });
-    }
-    
     static uuid5(str: string) {
       var out = crypto.createHash("sha1").update(str).digest();
 
