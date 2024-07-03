@@ -6,6 +6,7 @@ import { EventEmitter} from "events";
 import { Writable, Readable } from "stream";
 import * as crypto from "crypto";
 
+import fs = require('fs');
 import clc = require('cli-color');
 
 export module Utils {
@@ -57,8 +58,14 @@ export module Utils {
       // Extract serial from cpuinfo file
       var cpuserial = "0000000000000000";
       try {
-        var f = utils.execSync('cat /proc/cpuinfo').toString();
-        cpuserial = f.match(/Serial[\t]*: ([0-9a-f]{16})/)[1];
+        const data = fs.readFileSync('/proc/cpuinfo', 'utf8');
+        var matches = data.match(/Serial[\t]*: ([0-9a-f]{16})/);
+        if(matches && Array.isArray(matches) && matches.length > 1){
+          cpuserial = matches[1];
+        } else {
+          this.log.error("No Serial found in '/proc/cpuinfo'");
+          cpuserial = "000000000";
+        }
       } catch (ex) {
         this.log.error("Failed to read serial : %s", ex.message);
         cpuserial = "000000000";
@@ -94,10 +101,14 @@ export module Utils {
       var interfaces = networkInterfaces();
       for (var inf of this.config.NetworkAdapters) {
         var ip = this.getAddress(interfaces[inf], type);
-        if (ip)
+        if (ip && ip != "127.0.0.1")
           return ip;
       }
-      return this.config.IpAddress;
+    
+      if(this.config.IpAddress){
+        return this.config.IpAddress;
+      }
+      return "127.0.0.1";
     }
 
     // Various methods to detect if this is a Pi
@@ -106,18 +117,21 @@ export module Utils {
 
     static isPi() {
       // Try Device-Tree. Only in kernels from 2017 onwards 
+      var ret = false;
       try {
-        var f = utils.execSync('cat /proc/device-tree/model').toString();
-        if (f.includes('Raspberry Pi')) return true;
-      } catch (ex) {
-        // Try /proc/cpuinfo and a valid Raspberry Pi Model ID
-        try {
-          var model = require('rpi-version')();
-          if (typeof model != "undefined") return true;
-        } catch (ex) {
+        const data = fs.readFileSync('/proc/device-tree/model', 'utf8');
+        if (data) {
+          if (data.includes('Raspberry Pi')) ret = true;
+        } else {
+            try {
+              var model = require('rpi-version')();
+              if (typeof model != "undefined") ret = true;
+            } catch (ex) {}
         }
-      }
-      return false;
+      } catch (err) { } //e.g. FileNotFound
+
+      if(!ret) utils.log.warn('Device isn\'t a Raspberry Pi');
+      return ret;
     }
       
 
