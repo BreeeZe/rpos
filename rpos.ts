@@ -3,7 +3,8 @@
 /*
 The MIT License(MIT)
 
-Copyright(c) 2015 Jeroen Versteege
+Copyright(c) 2015 Jeroen Versteege - Original Author
+Copyright(c) 2016-2022 Roger Hardiman - Project Updates and New Features
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal 
@@ -29,6 +30,7 @@ import http = require("http");
 import express = require("express");
 import fs = require('fs');
 import os = require('os');
+import jsonStripComments = require('json-easy-strip');
 import { Utils } from "./lib/utils";
 import Camera = require("./lib/camera");
 import PTZDriver = require("./lib/PTZDriver");
@@ -75,13 +77,42 @@ let data = fs.readFileSync(configFile, 'utf8');
 if (typeof data == 'string' && data.charCodeAt(0) === 0xFEFF) {
   data = data.slice(1); // strip off the utf8 BO marker bytes
 }
-let config = JSON.parse(data);
+
+// Pase config file, stripping out Comments in the config file
+let config: rposConfig = jsonStripComments.strip(data);
+
+// Summer 2022: Config Files now support multiple Cameras (and use a Camera Array)
+// Upgrade old config files that do not have a Camera Array in the configuration
+if (("Cameras" in config) == false) {
+  const newItem: CameraSettings = {
+    CameraName: "Camera 1",
+    CameraType: config.CameraType,
+    CameraDevice: config.CameraDevice,
+    RTSPAddress: config.RTSPAddress,
+    RTSPPort: config.RTSPPort,
+    RTSPName: config.RTSPName,
+    MulticastEnabled: config.MulticastEnabled,
+    RTSPMulticastName: config.RTSPMulticastName,
+    MulticastAddress: config.MulticastAddress,
+    MulticastPort: config.MulticastPort,
+    RTSPServer: config.RTSPServer,
+    PTZCameraAddress: config.PTZCameraAddress
+  }
+  config.Cameras = [newItem];
+}
 
 utils.log.level = <Utils.logLevel>config.logLevel;
 
 // config.DeviceInformation has Manufacturer, Model, SerialNumer, FirmwareVersion, HardwareId
 // Probe hardware for values, unless they are given in rposConfig.json
-config.DeviceInformation = config.DeviceInformation || {};
+if (config.DeviceInformation == undefined)
+  config.DeviceInformation = {
+    Manufacturer: undefined,
+    Model: undefined,
+    HardwareId: undefined,
+    SerialNumber: undefined,
+    FirmwareVersion: undefined
+  }
 
 if (utils.isPi()) {
   var model = require('rpi-version')();
@@ -97,7 +128,7 @@ if (utils.isMac()) {
 
 if (utils.isWindows()) {
   if (config.DeviceInformation.Manufacturer == undefined) config.DeviceInformation.Manufacturer = 'RPOS Windows';
-  if (config.DeviceInformation.Model == undefined) config.DeviceInformation.Model = os.version;
+  if (config.DeviceInformation.Model == undefined) config.DeviceInformation.Model = os.version();
 }
 
 if (config.DeviceInformation.Manufacturer == undefined) config.DeviceInformation.Manufacturer = 'RPOS';
@@ -113,6 +144,15 @@ for (var i in config.DeviceInformation) {
   utils.log.info("%s : %s", i, config.DeviceInformation[i]);
 }
 
+utils.log.info("Configured for %d cameras", config.Cameras.length)
+
+// ONVIF Tokens
+// ONVIF uses tokens to identify Video Sources, Video Encoders, PTZ Nodes and PTZ Configurations
+// ONVIF then uses Profile Tokens to link these all together as a single entity
+
+let profilesArray: Profile[] = [];
+
+
 let webserver = express();
 let httpserver = http.createServer(webserver);
 httpserver.listen(config.ServicePort);
@@ -121,9 +161,9 @@ let ptz_driver = new PTZDriver(config);
 
 let camera = new Camera(config, webserver);
 let device_service = new DeviceService(config, httpserver, ptz_driver.process_ptz_command);
-let ptz_service = new PTZService(config, httpserver, ptz_driver.process_ptz_command, ptz_driver);
+let ptz_service = new PTZService(config, httpserver, ptz_driver.process_ptz_command, ptz_driver, profilesArray);
 let imaging_service = new ImagingService(config, httpserver, ptz_driver.process_ptz_command);
-let media_service = new MediaService(config, httpserver, camera, ptz_service); // note ptz_service dependency
+let media_service = new MediaService(config, httpserver, camera, ptz_service, profilesArray); // note ptz_service dependency
 let discovery_service = new DiscoveryService(config);
 
 device_service.start();

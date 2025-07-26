@@ -90,42 +90,65 @@ class DeviceService extends SoapService {
     };
 
     port.GetServices = (args /*, cb, headers*/) => {
-      // ToDo. Check value of args.IncludeCapability
+      // ToDo. Check value of args.IncludeCapability.
+      // Should only include Capanilities if requested. We always return them.
 
       var GetServicesResponse = {
-        Service : [
-        {
-          Namespace : "http://www.onvif.org/ver10/device/wsdl",
-          XAddr : `http://${utils.getIpAddress() }:${this.config.ServicePort}/onvif/device_service`,
-          Version : { 
-            Major : 2,
-            Minor : 5,
-          }
-        },
-        { 
-          Namespace : "http://www.onvif.org/ver20/imaging/wsdl",
-          XAddr : `http://${utils.getIpAddress() }:${this.config.ServicePort}/onvif/imaging_service`,
-          Version : { 
-            Major : 2,
-            Minor : 5,
-          }
-        },
-        { 
-          Namespace : "http://www.onvif.org/ver10/media/wsdl",
-          XAddr : `http://${utils.getIpAddress() }:${this.config.ServicePort}/onvif/media_service`,
-          Version : { 
-            Major : 2,
-            Minor : 5,
-          }
-        },
-        { 
-          Namespace : "http://www.onvif.org/ver20/ptz/wsdl",
-          XAddr : `http://${utils.getIpAddress() }:${this.config.ServicePort}/onvif/ptz_service`,
-          Version : { 
-            Major : 2,
-            Minor : 5,
+        Service: [
+          {
+            Namespace: "http://www.onvif.org/ver10/device/wsdl",
+            XAddr: `http://${utils.getIpAddress()}:${this.config.ServicePort}/onvif/device_service`,
+            Version: {
+              Major: 2,
+              Minor: 5,
+            },
+            Capabilities: { Capabilities: {} } // nested Capabilities is already in the tds: namespace
           },
-        }]
+          {
+            Namespace: "http://www.onvif.org/ver20/imaging/wsdl",
+            XAddr: `http://${utils.getIpAddress()}:${this.config.ServicePort}/onvif/imaging_service`,
+            Version: {
+              Major: 2,
+              Minor: 5,
+            },
+            Capabilities: {
+              "timg:Capabilities": { // Uses Node-Soap Override Namespace feature
+                attributes: { // Add namespace here. Really wanted to put it in Envelope but this is also valid
+                  'xmlns:timg': 'http://www.onvif.org/ver20/imaging/wsdl',
+                },
+              }
+            }
+          },
+          {
+            Namespace: "http://www.onvif.org/ver10/media/wsdl",
+            XAddr: `http://${utils.getIpAddress()}:${this.config.ServicePort}/onvif/media_service`,
+            Version: {
+              Major: 2,
+              Minor: 5,
+            },
+            Capabilities: {
+              "trt:Capabilities": {
+                attributes: { // Uses Node-Soap Override Namespace feature
+                  'xmlns:trt': 'http://www.onvif.org/ver10/media/wsdl',
+                },
+              }
+            }
+          },
+          {
+            Namespace: "http://www.onvif.org/ver20/ptz/wsdl",
+            XAddr: `http://${utils.getIpAddress()}:${this.config.ServicePort}/onvif/ptz_service`,
+            Version: {
+              Major: 2,
+              Minor: 5,
+            },
+            Capabilities: {
+              "tptz:Capabilities": { // Uses Node-Soap Override Namespace feature
+                attributes: { // Add namespace here. Really wanted to put it in Envelope but this is be valid
+                  'xmlns:tptz': 'http://www.onvif.org/ver20/ptz/wsdl',
+                },
+              }
+            }
+          }]
       };
 
       return GetServicesResponse;
