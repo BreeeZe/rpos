@@ -127,7 +127,7 @@ class MediaService extends SoapService {
 
         let cmd = `ffmpeg -fflags nobuffer -probesize 256 -rtsp_transport tcp -i ${rtspAddress} -vframes 1  -r 1 -s 640x360 -y /tmp/snapshot${camID.toString().padStart(2, '0')}.jpg`;
         let options = { timeout: 15000 };
-        utils.log.info("ffmpeg - starting for camera " + (camID).toString());
+        utils.log.info("ffmpeg - starting for camera " + (camID).toString() + " to " + rtspAddress);
         this.ffmpeg_responses.push({ camID, response });
         this.ffmpeg_process[camID] = exec(cmd, options, (error, stdout, stderr) => {
           // callback
