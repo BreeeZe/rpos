@@ -629,8 +629,7 @@ class MediaService extends SoapService {
     port.GetCompatibleVideoSourceConfigurations = (args) => {
       // Args contains a ProfileToken
       // We will return all Video Sources as being compatible
-
-      let GetCompatibleVideoSourceConfigurationsResponse = { Configurations: [videoSourceConfiguration] };
+      let GetCompatibleVideoSourceConfigurationsResponse = { Configurations: videoSourceConfigurationsArray };
       return GetCompatibleVideoSourceConfigurationsResponse;
     }
 
@@ -669,7 +668,8 @@ class MediaService extends SoapService {
           //}
         }
       };
-        return GetVideoSourceConfigurationOptionsResponse;
+      return GetVideoSourceConfigurationOptionsResponse;
+    }
 
     port.AddVideoSourceConfiguration = (args) => {
       // pass in ProfileToken and ConfigurationToken
