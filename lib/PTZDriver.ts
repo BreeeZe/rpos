@@ -3,6 +3,7 @@
 import { Stream } from "stream";
 import { v4l2ctl } from "./v4l2ctl";
 import net = require('net');
+import dgram = require('dgram');
 import { setImmediate } from "timers";
 import events = require("events");
 
@@ -91,6 +92,10 @@ PTZOutput
     PTZOutput: "tcp"
     PTZOutputURL: "127.0.0.1:9999"
 
+  Example 3
+    UDP output, to a hostname and port
+    PTZOutput: "udp"
+    PTZOutputURL: "127.0.0.1:9999"
 
 ONVIF Imaging Service
   For Imaging Service commands (eg Brightness), commands are sent through to the V4L2 interface
@@ -122,6 +127,7 @@ class ReconnectingStream extends events.EventEmitter {
     })
     this.stream.on('data', (data) => {  
         console.log('PTZ Driver received socket data ' + data);
+        // TODO - emit the data
     });
     this.stream.on('close', () => {
       console.log('PTZ Driver - Socket closed');
@@ -149,6 +155,55 @@ class ReconnectingStream extends events.EventEmitter {
       this.stream.write(data);
     } catch (err) {
       console.log('PTZ Driver - Data thrown away')
+    }
+  }
+}
+
+
+class UDPStream extends events.EventEmitter {
+  hostname: string;
+  port: number|string;
+  socket: any = null; // the currently open network socket
+
+  constructor() {
+    super();
+  }
+
+  connect(hostname: string, port: number|string) {
+    this.hostname = hostname;
+    this.port = port;
+
+    this.socket = dgram.createSocket('udp4');
+    
+    this.socket.on('listening', function() {
+      console.log('PTZ Driver - UDP Socket ready');
+    })
+    this.socket.on('message', (data) => {  
+        console.log('PTZ Driver received socket data ' + data);
+        // TODO - emit the message
+    });
+    this.socket.on('close', () => {
+      console.log('PTZ Driver - UDP Socket closed');
+    });
+    this.socket.on('error', () => {
+      console.log('PTZ Driver - UDP Socket error');
+    });
+
+    console.log('PTZ Driver connecting to ' + this.hostname + ':' + this.port);
+
+    // Note - we could do a .connect() here that will bind this UDP socket to a hostname and port, which simplifies the .send() command
+    // we get a "connected" event when the UDP socket is ready
+
+    this.socket.bind(0); // let the OS pick the lock source port
+  }
+
+
+  write(data: string|Buffer) {
+    // pass the Write through to the socket. If the socket is null, we throw away the data
+    try {
+      this.socket.send(data, this.port, this.hostname);
+    } catch (err) {
+      console.log('PTZ Driver - UDP Data thrown away')
     }
   }
 }
@@ -221,6 +276,19 @@ class PTZDriver {
       this.stream.connect(host, port);
     }
 
+    if (PTZOutput === 'udp') {
+      let host = config.PTZOutputURL.split(':')[0];
+      let port = config.PTZOutputURL.split(':')[1];      
+
+      this.stream = new UDPStream();
+      this.stream.on('message', function(data) {  // USES MESSAGE (tcp uses 'data')
+          console.log('PTZ Driver received UDP socket data ' + data);
+      });
+
+      console.log('PTZ Driver connecting to UDP ' + host + ':' + port);
+
+      this.stream.connect(host, port);
+    }
 
     // Initialise specific drivers, map them onto a STREAM
 
