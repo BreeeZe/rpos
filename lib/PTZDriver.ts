@@ -222,6 +222,7 @@ class PTZDriver {
   supportsContinuousPTZ: boolean = false;
   supportsGoToHome: boolean = false;
   hasFixedHomePosition: boolean = true;
+  numPresets: number = 255;
 
   constructor(config: rposConfig) {
 
@@ -329,6 +330,8 @@ class PTZDriver {
       this.visca = true;
       this.supportsContinuousPTZ = true;
       this.supportsGoToHome = true;
+      this.hasFixedHomePosition = true; // cannot see a way to set the Home Position in VISCA, only Goto Home available.
+      this.numPresets = 64; // stored as Preset 0 to Preset 63 on a Sony VISCA camera
     }
   }
 
@@ -358,9 +361,10 @@ class PTZDriver {
         this.pelcod.sendGotoPreset(1); // use preset 1 for Home
       }
       if (this.visca) {
-        let data: number[] = [];
-        data.push(0x81,0x01,0x06,0x04,0xff);
-        this.stream.write(new Buffer(data));
+        const viscaDestinationByte = 0x80 + (data.cameraAddress & 0x07); // Encodes Sending from Device #0 as a normal (not broadcast) packet. Cammera Address is 3 bits long
+        let viscaData: number[] = [];
+        viscaData.push(viscaDestinationByte,0x01,0x06,0x04,0xff);
+        this.stream.write(new Buffer(viscaData));
       }
       if (this.panTiltHat) {
         this.panTiltHat.goto_home();
@@ -382,6 +386,13 @@ class PTZDriver {
         this.pelcod.setAddress(data.cameraAddress);
         this.pelcod.sendGotoPreset(parseInt(data.value));
       }
+      if (this.visca) {
+        const viscaDestinationByte = 0x80 + (data.cameraAddress & 0x07); // Encodes Sending from Device #0 as a normal (not broadcast) packet. Cammera Address is 3 bits long
+        const viscaPresetNumber = parseInt(data.value) -1; // values are 00..63
+        let viscaData: number[] = [];
+        viscaData.push(viscaDestinationByte,0x01,0x04,0x3f,0x02,viscaPresetNumber, 0xff);
+        this.stream.write(new Buffer(viscaData));
+      }
     }
     else if (command==='setpreset') {
       console.log("Set Preset "+ data.name + ' / ' + data.value);
@@ -390,6 +401,14 @@ class PTZDriver {
         this.pelcod.setAddress(data.cameraAddress);
         this.pelcod.sendSetPreset(parseInt(data.value));
       }
+      if (this.visca) {
+        const viscaDestinationByte = 0x80 + (data.cameraAddress & 0x07); // Encodes Sending from Device #0 as a normal (not broadcast) packet. Cammera Address is 3 bits long
+        const viscaPresetNumber = parseInt(data.value) -1; // values are 00..63
+        let viscaData: number[] = [];
+        viscaData.push(viscaDestinationByte,0x01,0x04,0x3f,0x01,viscaPresetNumber, 0xff);
+        this.stream.write(new Buffer(viscaData));
+      }
+
     }
     else if (command==='clearpreset') {
       console.log("Clear Preset "+ data.name + ' / ' + data.value);
@@ -502,47 +521,49 @@ class PTZDriver {
         if (visca_pan_speed === 0) visca_pan_speed = 1;
         if (visca_tilt_speed === 0) visca_tilt_speed = 1;
 
+        const viscaDestinationByte = 0x80 + (data.cameraAddress & 0x07) // Encodes Sending from Device #0 as a normal (not broadcast) packet. Cammera Address is 3 bits long
+
         if (this.config.PTZDriver === 'visca') {
-          let data: number[] = [];
+          let viscaData: number[] = [];
           if      (p < 0 && t > 0) { // upleft
-            data.push(0x81,0x01,0x06,0x01,visca_pan_speed,visca_zoom_speed,0x01,0x01,0xff);
+            viscaData.push(viscaDestinationByte,0x01,0x06,0x01,visca_pan_speed,visca_zoom_speed,0x01,0x01,0xff);
           }
           else if (p > 0 && t > 0) { // upright
-            data.push(0x81,0x01,0x06,0x01,visca_pan_speed,visca_zoom_speed,0x02,0x01,0xff);
+            viscaData.push(viscaDestinationByte,0x01,0x06,0x01,visca_pan_speed,visca_zoom_speed,0x02,0x01,0xff);
           }
           else if (p < 0 && t < 0) { // downleft;
-            data.push(0x81,0x01,0x06,0x01,visca_pan_speed,visca_zoom_speed,0x01,0x02,0xff);
+            viscaData.push(viscaDestinationByte,0x01,0x06,0x01,visca_pan_speed,visca_zoom_speed,0x01,0x02,0xff);
           }
           else if (p >  0 && t < 0) { // downright;
-            data.push(0x81,0x01,0x06,0x01,visca_pan_speed,visca_zoom_speed,0x02,0x02,0xff);
+            viscaData.push(viscaDestinationByte,0x01,0x06,0x01,visca_pan_speed,visca_zoom_speed,0x02,0x02,0xff);
           }
           else if (p > 0) { // right
-            data.push(0x81,0x01,0x06,0x01,visca_pan_speed,0x00,0x02,0x03,0xff);
+            viscaData.push(viscaDestinationByte,0x01,0x06,0x01,visca_pan_speed,0x00,0x02,0x03,0xff);
           }
           else if (p < 0) { // left
-            data.push(0x81,0x01,0x06,0x01,visca_pan_speed,0x00,0x01,0x03,0xff);
+            viscaData.push(viscaDestinationByte,0x01,0x06,0x01,visca_pan_speed,0x00,0x01,0x03,0xff);
           }
           else if (t > 0) { // up
-            data.push(0x81,0x01,0x06,0x01,0x00,visca_tilt_speed,0x03,0x01,0xff);
+            viscaData.push(viscaDestinationByte,0x01,0x06,0x01,0x00,visca_tilt_speed,0x03,0x01,0xff);
           }
           else if (t < 0) { // down
-            data.push(0x81,0x01,0x06,0x01,0x00,visca_tilt_speed,0x03,0x02,0xff);
+            viscaData.push(viscaDestinationByte,0x01,0x06,0x01,0x00,visca_tilt_speed,0x03,0x02,0xff);
           }
           else { // stop 
-            data.push(0x81,0x01,0x06,0x01,0x00,0x00,0x03,0x03,0xff);
+            viscaData.push(viscaDestinationByte,0x01,0x06,0x01,0x00,0x00,0x03,0x03,0xff);
           }
 
           // Zoom
           if (z < 0) { // zoom out
-            data.push(0x81,0x01,0x04,0x07,(0x30 + visca_zoom_speed),0xff);
+            viscaData.push(viscaDestinationByte,0x01,0x04,0x07,(0x30 + visca_zoom_speed),0xff);
           }
           else if (z > 0) { // zoom in
-            data.push(0x81,0x01,0x04,0x07,(0x20 + visca_zoom_speed),0xff);
+            viscaData.push(viscaDestinationByte,0x01,0x04,0x07,(0x20 + visca_zoom_speed),0xff);
           } else { // zoom stop
-            data.push(0x81,0x01,0x04,0x07,0x00,0xff);
+            viscaData.push(viscaDestinationByte,0x01,0x04,0x07,0x00,0xff);
           }
 
-          this.stream.write(new Buffer(data));
+          this.stream.write(new Buffer(viscaData));
         }
       }
       if (this.panTiltHat) {

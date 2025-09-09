@@ -16,6 +16,8 @@ class PTZService extends SoapService {
   ptz_driver: PTZDriver;
   profilesArray: Profile[];
 
+  presetsFilename = "presets.json";
+
   presetArray = [];
 
   public ptzConfigurationsArray: any[] = [];
@@ -37,11 +39,48 @@ class PTZService extends SoapService {
       onReady: () => console.log('ptz_service started')
     };
 
-    // TODO Fix Presets. Need one for each PTZ Node
-    for (var i = 1; i <=  255; i++) {
-      this.presetArray.push({profileToken: 'profile_token', presetName: '', presetToken: i.toString(), used: false});
-    }  
+    // Load presets, or Create empty presets
+    
+    let presetsLoaded = false;
+    if (fs.existsSync(this.presetsFilename)) {
+      try {
+        let buffer = fs.readFileSync(this.presetsFilename);
+        this.presetArray = JSON.parse(buffer.toString());
+        presetsLoaded = true;
+      } catch (err) {
+        presetsLoaded = false;
+      }
+    }
 
+    if (presetsLoaded == false) {
+
+      // Create all the Presets, with used: set to false
+      for (let i = 1; i <= this.config.Cameras.length; i++) {
+
+        // Create all the presets
+        // There is a PTZ Node for each camera
+        for (let p = 1; p <=  (this.ptz_driver.numPresets); p++) {
+          this.presetArray.push(
+            {
+              ptzNodeToken: 'ptz_node_token_' + i.toString().padStart(2,'0'),
+              presetName: '', // Preset ' + i.toString(),
+              presetToken: i.toString(),
+              used: false,
+              fixed: false // RPOS uses fixed to make a preset that cannot be deleted - eg for Wipe, or Camera Menu Preset 95 on Pelco
+            }
+          );
+        }  
+      }
+      // create the presets file
+      try {
+        fs.writeFileSync(this.presetsFilename, JSON.stringify(this.presetArray, null, 4));
+      } catch (err) {
+        // failed to write
+        console.log("failed to write presets file");
+      }
+
+    }
+    
     this.extendService();
   }
 
@@ -58,6 +97,8 @@ class PTZService extends SoapService {
     
     let nodesArray = [];
 
+    // PTZ Node is the lowest level in the PTZ system
+
     for (let i = 1; i <= this.config.Cameras.length; i++) {
       let newNode = { 
       attributes : {
@@ -66,8 +107,8 @@ class PTZService extends SoapService {
         GeoMove: false
       },
         Name: `PTZ Node ${i}`,
-      SupportedPTZSpaces : {},
-      MaximumNumberOfPresets : 255,
+      SupportedPTZSpaces : {}, // filled in with code below
+      MaximumNumberOfPresets : this.ptz_driver.numPresets, // eg 64 for Visca. 255 for Pelco
       HomeSupported : this.ptz_driver.supportsGoToHome,
       AuxiliaryCommands : ['AUX1on','AUX1off','AUX2on','AUX2off',
       'AUX3on','AUX3off','AUX4on','AUX4off',
@@ -139,6 +180,9 @@ class PTZService extends SoapService {
     }
       nodesArray.push(newNode);
     }
+
+
+    // PTZ Configuration takes a PTZ Node and adds some Defaults like the Default Space and the Default Speed
 
     for (let i = 1; i <= this.config.Cameras.length; i++) {
 
@@ -359,14 +403,14 @@ class PTZService extends SoapService {
 
     port.GetPresets = (args) => {
 
-
-      // TODO - look at the Profile Token and return the relevent list of presets
+      // Take the Media Profile Token (passed in) and get the PTZ Node and then return the relevent list of presets for that Node
+      const profile = this.profilesArray.find(item => item.attributes.token == args.ProfileToken);
+      const ptz_node_token = profile.PTZConfiguration.NodeToken; // eg ptz_node_token_01
 
       var GetPresetsResponse = { Preset: [] };
-      var matching_profileToken = args.ProfileToken;
 
-      for (var i = 0 ; i < this.presetArray.length; i++) {
-        if (this.presetArray[i].profileToken === matching_profileToken
+      for (let i = 0 ; i < this.presetArray.length; i++) {
+        if (this.presetArray[i].ptzNodeToken === ptz_node_token
         && this.presetArray[i].used == true) {
           var p = {
             attributes: {
@@ -382,20 +426,22 @@ class PTZService extends SoapService {
 
 
     port.GotoPreset = (args) => {
+      const arg_presetToken = args.PresetToken;
+      
       const profile = this.profilesArray.find(item => item.attributes.token == args.ProfileToken);
-      const camID = Number(profile.PTZConfiguration.NodeToken.substring(15));// Strip "ptz_node_token_" and we can use this to index into the config.Cameras Array
-      const cameraAddress = Number(this.config.Cameras[camID - 1].PTZCameraAddress) || 1; // array starts from Index 0. Default camera address is '1'
+      const ptzNodeToken = profile.PTZConfiguration.NodeToken;
+      const camID = Number(ptzNodeToken.substring(15));// Strip "ptz_node_token_" and we can use this to index into the config.Cameras Array
+      const cameraPTZAddress = Number(this.config.Cameras[camID - 1].PTZCameraAddress) || 1; // array starts from Index 0. Default camera address is '1'
 
-      var GotoPresetResponse = { };
-      var matching_profileToken = args.ProfileToken;
-      var matching_presetToken = args.PresetToken;
+      // Args has a PresetToken and a ProfileToken
+      let GotoPresetResponse = { };
 
-      for (var i = 0 ; i < this.presetArray.length; i++) {
-        if (matching_profileToken === this.presetArray[i].profileToken
-        && matching_presetToken === this.presetArray[i].presetToken
+      for (let i = 0 ; i < this.presetArray.length; i++) {
+        if (ptzNodeToken === this.presetArray[i].ptzNodeToken
+        && arg_presetToken === this.presetArray[i].presetToken
         && this.presetArray[i].used == true) {
           if (this.callback) this.callback('gotopreset', { name: this.presetArray[i].presetName,
-            value: this.presetArray[i].presetToken, cameraAddress: cameraAddress
+            value: this.presetArray[i].presetToken, cameraAddress: cameraPTZAddress
           });
           break;
         }
@@ -404,22 +450,32 @@ class PTZService extends SoapService {
     };
 
     port.RemovePreset = (args) => {
+      // find the preset in the array of presets and set "used" to false
       const profile = this.profilesArray.find(item => item.attributes.token == args.ProfileToken);
-      const camID = Number(profile.PTZConfiguration.NodeToken.substring(15));// Strip "ptz_node_token_" and we can use this to index into the config.Cameras Array
+      const ptzNodeToken = profile.PTZConfiguration.NodeToken;
+      const camID = Number(ptzNodeToken.substring(15));// Strip "ptz_node_token_" and we can use this to index into the config.Cameras Array
       const cameraAddress = Number(this.config.Cameras[camID - 1].PTZCameraAddress) || 1; // array starts from Index 0. Default camera address is '1'
 
-      var RemovePresetResponse = { };
+      let RemovePresetResponse = { };
 
-      var matching_profileToken = args.ProfileToken;
-      var matching_presetToken = args.PresetToken;
+      let matching_presetToken = args.PresetToken;
 
-      for (var i = 0 ; i < this.presetArray.length; i++) {
-        if (matching_profileToken === this.presetArray[i].profileToken
-        && matching_presetToken === this.presetArray[i].presetToken) {
-          this.presetArray[i].used = false;
+      for (let i = 0 ; i < this.presetArray.length; i++) {
+        if (ptzNodeToken === this.presetArray[i].ptzNodeToken
+        && matching_presetToken === this.presetArray[i].presetToken
+        && this.presetArray[i].fixed == false) {
+          // update the array, then schedule a save to disk
+          this.presetArray[i].used = false; // set used to false
+          this.presetArray[i].name = ""; // clear the name
           if (this.callback) this.callback('clearpreset', { name: this.presetArray[i].presetName,
             value: this.presetArray[i].presetToken, cameraAddress: cameraAddress
           });
+          try {
+            fs.writeFileSync(this.presetsFilename, JSON.stringify(this.presetArray, null, 4));
+          } catch (err) {
+            // failed to write
+            console.log("failed to write presets file");
+          }
           break;
         }
       }
@@ -428,67 +484,76 @@ class PTZService extends SoapService {
     };
 
     port.SetPreset = (args) => {
+      // Find the first preset slot that is unused
       const profile = this.profilesArray.find(item => item.attributes.token == args.ProfileToken);
-      const camID = Number(profile.PTZConfiguration.NodeToken.substring(15));// Strip "ptz_node_token_" and we can use this to index into the config.Cameras Array
+      const ptzNodeToken = profile.PTZConfiguration.NodeToken;
+      const camID = Number(ptzNodeToken.substring(15));// Strip "ptz_node_token_" and we can use this to index into the config.Cameras Array
       const cameraAddress = Number(this.config.Cameras[camID - 1].PTZCameraAddress) || 1; // array starts from Index 0. Default camera address is '1'
 
 
-      var SetPresetResponse;
+      let SetPresetResponse;
 
-      var profileToken = args.ProfileToken;
-      var presetName = args.PresetName;   // used when creating a preset 
-      var presetToken = args.PresetToken; // used when updating an existing preset
+      let presetName = args.PresetName;   // used when creating a preset 
+      let presetToken = args.PresetToken; // used when updating an existing preset
+                                          // Note ODM's Create Preset supplies a Preset Token, but we ignore it
+
+      let existingPreset = null;
+      if ('PresetToken' in args && args.PresetToken.length > 0) {
+        // check for existing preset
+        existingPreset = this.presetArray.find(item => item.ptz_node_token == ptzNodeToken && item.PresetToken == args.PresetToken);
+      }
 
 
-      if (presetToken) {
-        for (var i = 0; i < this.presetArray.length; i++) {
-          if (profileToken === this.presetArray[i]
-          && presetToken === this.presetArray[i]) {
-            this.presetArray[i].presetName = presetName;
-            this.presetArray[i].used = true;
-           if (this.callback) this.callback('setpreset', { name: presetName,
-             value: presetToken, cameraAddress: cameraAddress
-           });
-          break;
+      // If the ONVIF command contains no Preset Token, this is a NEW Preset and we return the new Preset Token in our reply.
+      // If the ONVIF command contains a Preset Token, and that Preset Token already existins in our array of Presets, then this is an UPDATE. We may have to UPDATE the Name too.
+      // If the ONVIF command contains an Unknown Preset Token (like ODM does) we treat this as a NEW Preset and ignore the unknown Preset Token. We return the actual new Preset Token in the reply.
+
+      // CHECK FOR UPDATE
+      if (existingPreset != null && existingPreset != undefined) {
+        // Optional update of the name
+        if ('PresetName' in args && existingPreset.PresetName != args.PresetName) {
+          existingPreset.PresetName = args.PresetName;
+          try {
+            fs.writeFileSync(this.presetsFilename, JSON.stringify(this.presetArray, null, 4));
+          } catch (err) {
+            // failed to write
+            console.log("failed to write presets file");
           }
+        }
+        // Send to the physical camera device
+        if (this.callback) this.callback('setpreset', { name: presetName,
+          value: presetToken, cameraAddress: cameraAddress
+          });
+
         SetPresetResponse = { PresetToken : presetToken};
 
         return SetPresetResponse;
-        }
       } else {
-        // Check if the preset name is a number (special case)
-        var special_case_name = false;
+        // New Preset
+        // Find the first unused token and use it
+        let new_presetToken = '';
+        for (let i = 0; i < this.presetArray.length; i++) {
+          if (ptzNodeToken === this.presetArray[i].ptzNodeToken
+          && this.presetArray[i].used == false) {
+            this.presetArray[i].presetName = presetName;
+            this.presetArray[i].used = true;
+            new_presetToken = this.presetArray[i].presetToken;
+            if (this.callback) this.callback('setpreset', { name: presetName,
+              value: new_presetToken, cameraAddress: cameraAddress
+            });
+            break;
+          }
+        }
+
         try {
-          var preset_name_value = parseInt(presetName);
-          if (preset_name_value > 0 && preset_name_value < 255) {
-            special_case_name = true;
-          }
+          fs.writeFileSync(this.presetsFilename, JSON.stringify(this.presetArray, null, 4));
         } catch (err) {
+          // failed to write
+          console.log("failed to write presets file");
         }
-        if (special_case_name) {
-          if (this.callback) this.callback('setpreset', { name: presetName,
-            value: presetName, cameraAddress: cameraAddress
-          });
-          SetPresetResponse = { PresetToken : presetName};
-          return SetPresetResponse;
-        } else {
-          // Find the first unused token and use it
-          var new_presetToken = '';
-          for (var i = 0; i < this.presetArray.length; i++) {
-            if (profileToken === this.presetArray[i].profileToken
-            && this.presetArray[i].used == false) {
-              this.presetArray[i].presetName = presetName;
-              this.presetArray[i].used = true;
-              new_presetToken = this.presetArray[i].presetToken;
-              if (this.callback) this.callback('setpreset', { name: presetName,
-                value: new_presetToken, cameraAddress: cameraAddress
-              });
-              break;
-            }
-          }
-          SetPresetResponse = { PresetToken : new_presetToken};
-          return SetPresetResponse;
-        }
+
+        SetPresetResponse = { PresetToken : new_presetToken};
+        return SetPresetResponse;
       }
     };
   }
