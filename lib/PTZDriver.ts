@@ -639,6 +639,14 @@ class PTZDriver {
         }
         this.pelcod.send();
       }
+      if (this.visca) {
+        const viscaDestinationByte = 0x80 + (data.cameraAddress & 0x07); // Encodes Sending from Device #0 as a normal (not broadcast) packet. Cammera Address is 3 bits long
+        let viscaData: number[] = [];
+        if (data.value < 0) viscaData.push(viscaDestinationByte,0x01,0x04,0x08,0x03,0xff); // focus Near
+        else if (data.value > 0) viscaData.push(viscaDestinationByte,0x01,0x04,0x08,0x02,0xff); // focus Far
+        else viscaData.push(viscaDestinationByte,0x01,0x04,0x08,0x00,0xff); // stop
+        this.stream.write(new Buffer(viscaData));
+      }
     }
     else if (command==='focusstop') {
       console.log("Focus Stop");
@@ -649,9 +657,33 @@ class PTZDriver {
         this.pelcod.focusFar(false);
         this.pelcod.send();
       }
+      if (this.visca) {
+        const viscaDestinationByte = 0x80 + (data.cameraAddress & 0x07); // Encodes Sending from Device #0 as a normal (not broadcast) packet. Cammera Address is 3 bits long
+        let viscaData: number[] = [];
+        viscaData.push(viscaDestinationByte,0x01,0x04,0x08,0x00,0xff);
+        this.stream.write(new Buffer(viscaData));
+      }
+    }
+    else if (command==='focusmode') {
+      console.log("Focus Mode");
+      if (this.rposAscii) this.stream.write(command + '\n');
+      if (this.visca) {
+        const valueUpper = data.value.toString().toUpperCase();
+        const viscaDestinationByte = 0x80 + (data.cameraAddress & 0x07); // Encodes Sending from Device #0 as a normal (not broadcast) packet. Cammera Address is 3 bits long
+        let viscaData: number[] = [];
+        if (valueUpper == "AUTO") {
+          viscaData.push(viscaDestinationByte,0x01,0x04,0x38,0x02,0xff);
+        }
+        if (valueUpper == "MANUAL") {
+          viscaData.push(viscaDestinationByte,0x01,0x04,0x38,0x03,0xff);
+        }
+
+        // Note there is also a VISCA Command to toggle between Auto and Manual 8x 01 04 38 10 FF
+        this.stream.write(new Buffer(viscaData));
+      }
     }
     else {
-      if (!data.value) {
+      if ('value' in data == false) {
         console.log("Unhandled PTZ/Imaging Command Received: " + command);
       } else {
         console.log("Unhandled PTZ/Imaging Command Received: " + command + ' Value:' + data.value);
