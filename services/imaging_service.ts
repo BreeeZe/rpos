@@ -13,11 +13,7 @@ class ImagingService extends SoapService {
   imaging_service: any;
   callback: any;
 
-  brightness = 0;
-  autoFocusMode = '';
-  focusNearLimit = 0;
-  focusFarLimit = 0;
-  focusDefaultSpeed = 0;
+  imagingArray: ImagingArrayItem[] = [];
 
   constructor(config: rposConfig, server: Server, callback) {
     super(config, server);
@@ -33,11 +29,19 @@ class ImagingService extends SoapService {
       onReady: () => console.log('imaging_service started')
     };
 
-    this.brightness = 50;  // range is 0..100
-    this.autoFocusMode = "MANUAL"; // MANUAL or AUTO
-    this.focusDefaultSpeed = 0.5; // range 0.1 to 1.0. See GetMoveOptions valid range
-    this.focusNearLimit = 1.0;  // range 0.1 to 3.0 in Metres
-    this.focusFarLimit = 0.0; // range 0.0 to 0.0.  0=Infinity
+    // Add defailts for each Camera
+    for (let i = 1; i <= config.Cameras.length; i++) {
+      let newItem = {
+        videoSourceToken: "video_src_token_" + i.toString().padStart(2,"0"),
+        brightness: 50,  // range is 0..100
+        autoFocusMode: "AUTO", // MANUAL or AUTO
+        focusDefaultSpeed: 0.5, // range 0.1 to 1.0. See GetMoveOptions valid range
+        focusNearLimit: 1.0,  // range 0.1 to 3.0 in Metres
+        focusFarLimit: 0.0 // range 0.0 to 0.0.  0=Infinity
+      };
+
+      this.imagingArray.push(newItem);
+    }
 
     this.extendService();
   }
@@ -218,14 +222,23 @@ class ImagingService extends SoapService {
 
 
     port.GetImagingSettings = (args /*, cb, headers*/) => {
-      var GetImagingSettingsResponse = {
+
+      const videoSourceToken = args.VideoSourceToken; // eg video_src_token_01
+
+      let imageSettings = this.imagingArray.find(item => item.videoSourceToken == videoSourceToken);
+
+      if (imageSettings == null || imageSettings == undefined) {
+        throw ("Invalid Video Source Token");
+      }
+      
+      let GetImagingSettingsResponse = {
         ImagingSettings : {
-          Brightness : this.brightness,
+          Brightness : imageSettings.brightness,
           Focus : { 
-            AutoFocusMode : this.autoFocusMode,
-            DefaultSpeed : this.focusDefaultSpeed,
-            NearLimit : this.focusNearLimit,
-            FarLimit : this.focusFarLimit, // Infinity
+            AutoFocusMode : imageSettings.autoFocusMode,
+            DefaultSpeed : imageSettings.focusDefaultSpeed,
+            NearLimit : imageSettings.focusNearLimit,
+            FarLimit : imageSettings.focusFarLimit, // Infinity
             //Extension : { }
             },
         }
@@ -320,31 +333,42 @@ class ImagingService extends SoapService {
       //};
 
       port.SetImagingSettings = (args) => {
-        var SetImagingSettingsResponse = { };
+
+        const videoSourceToken = args.VideoSourceToken; // eg video_src_token_01
+        const camID = Number(videoSourceToken.substring(16));// Strip "video_src_token_" and we can use this to index into the config.Cameras Array
+        const cameraAddress = Number(this.config.Cameras[camID - 1].PTZCameraAddress) || 1; // array starts from Index 0. Default camera address is '1'
+
+        let imageSettings = this.imagingArray.find(item => item.videoSourceToken == videoSourceToken);
+
+        if (imageSettings == null || imageSettings == undefined) {
+          throw ("Invalid Video Source Token");
+        }
+
+        let SetImagingSettingsResponse = { };
 
         // Check for Brightness value
         if (args.ImagingSettings) {
           if (args.ImagingSettings.Brightness) {
-            this.brightness = args.ImagingSettings.Brightness;
+            imageSettings.brightness = args.ImagingSettings.Brightness;
             // emit the 'brightness' message to the parent
-            if (this.callback) this.callback('brightness', {value: this.brightness});
+            if (this.callback) this.callback('brightness', {value: imageSettings.brightness, cameraAddress: cameraAddress});
           }
           if (args.ImagingSettings.Focus) {
             if (args.ImagingSettings.Focus.AutoFocusMode) {
-              this.autoFocusMode = args.ImagingSettings.Focus.AutoFocusMode;
-              if (this.callback) this.callback('focusmode', {value: this.autoFocusMode});
+              imageSettings.autoFocusMode = args.ImagingSettings.Focus.AutoFocusMode;
+              if (this.callback) this.callback('focusmode', {value: imageSettings.autoFocusMode, cameraAddress: cameraAddress});
             }
             if (args.ImagingSettings.Focus.DefaultSpeed) {
-              this.focusDefaultSpeed = args.ImagingSettings.Focus.DefaultSpeed;
-              if (this.callback) this.callback('focusdefaultspeed', {value: this.focusDefaultSpeed});
+              imageSettings.focusDefaultSpeed = args.ImagingSettings.Focus.DefaultSpeed;
+              if (this.callback) this.callback('focusdefaultspeed', {value: imageSettings.focusDefaultSpeed, cameraAddress: cameraAddress});
             }
             if (args.ImagingSettings.Focus.NearLimit) {
-              this.focusNearLimit = args.ImagingSettings.Focus.NearLimit;
-              if (this.callback) this.callback('focusnearlimit', {value: this.focusNearLimit});
+              imageSettings.focusNearLimit = args.ImagingSettings.Focus.NearLimit;
+              if (this.callback) this.callback('focusnearlimit', {value: imageSettings.focusNearLimit, cameraAddress: cameraAddress});
             }
             if (args.ImagingSettings.Focus.FarLimit) {
-              this.focusFarLimit = args.ImagingSettings.Focus.FarLimit;
-              if (this.callback) this.callback('focusfarlimit', {value: this.focusFarLimit});
+              imageSettings.focusFarLimit = args.ImagingSettings.Focus.FarLimit;
+              if (this.callback) this.callback('focusfarlimit', {value: imageSettings.focusFarLimit, cameraAddress: cameraAddress});
             }
           }
         }
@@ -370,11 +394,22 @@ class ImagingService extends SoapService {
       //
       //};
       port.Move = (args) => {
+
+        const videoSourceToken = args.VideoSourceToken; // eg video_src_token_01
+        const camID = Number(videoSourceToken.substring(16));// Strip "video_src_token_" and we can use this to index into the config.Cameras Array
+        const cameraAddress = Number(this.config.Cameras[camID - 1].PTZCameraAddress) || 1; // array starts from Index 0. Default camera address is '1'
+
+        let imageSettings = this.imagingArray.find(item => item.videoSourceToken == videoSourceToken);
+
+        if (imageSettings == null || imageSettings == undefined) {
+          throw ("Invalid Video Source Token");
+        }
+
         var MoveResponse = { };
 
         if (args.Focus) {
           if (args.Focus.Continuous) {
-            if (this.callback) this.callback('focus', {value: args.Focus.Continuous.Speed});
+            if (this.callback) this.callback('focus', {value: args.Focus.Continuous.Speed, cameraAddress: cameraAddress});
           }
         }
 
@@ -424,9 +459,20 @@ class ImagingService extends SoapService {
       //
       //};
       port.Stop = (args) => {
+
+        const videoSourceToken = args.VideoSourceToken; // eg video_src_token_01
+        const camID = Number(videoSourceToken.substring(16));// Strip "video_src_token_" and we can use this to index into the config.Cameras Array
+        const cameraAddress = Number(this.config.Cameras[camID - 1].PTZCameraAddress) || 1; // array starts from Index 0. Default camera address is '1'
+
+        let imageSettings = this.imagingArray.find(item => item.videoSourceToken == videoSourceToken);
+
+        if (imageSettings == null || imageSettings == undefined) {
+          throw ("Invalid Video Source Token");
+        }
+
         var StopResponse = { };
 
-        if (this.callback) this.callback('focusstop', {});
+        if (this.callback) this.callback('focusstop', {cameraAddress: cameraAddress});
 
         return StopResponse;
       };
@@ -436,11 +482,12 @@ class ImagingService extends SoapService {
       //
       //};
       port.GetStatus = (args) => {
+        
         var GetStatusResponse = {
           Status : {
             FocusStatus20 : {
               Position : 5.0,     // Need to read current focus position
-              MoveStatus : 'UNKNOWN', // MOVING IDLE or UNKNOWN
+              MoveStatus : 'IDLE', // MOVING IDLE or UNKNOWN
               //Error : '',
               //Extension : { }
             },

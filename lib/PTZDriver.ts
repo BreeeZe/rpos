@@ -667,7 +667,7 @@ class PTZDriver {
       }
     }
     else if (command==='focusmode') {
-      console.log("Focus Mode");
+      console.log("Focus Mode " + data.value);
       if (this.rposAscii) this.stream.write(command + '\n');
       if (this.visca) {
         const valueUpper = data.value.toString().toUpperCase();

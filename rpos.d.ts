@@ -167,3 +167,12 @@ type PresetArrayItem = {
   used: boolean,
   fixed: boolean
 };
+
+type ImagingArrayItem = {
+  videoSourceToken: string,
+  brightness: number,
+  autoFocusMode: string,
+  focusDefaultSpeed: number,
+  focusNearLimit: number,
+  focusFarLimit: number
+};
