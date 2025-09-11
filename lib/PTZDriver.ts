@@ -324,6 +324,7 @@ class PTZDriver {
       this.supportsContinuousPTZ = true;
       this.supportsGoToHome = true;
       this.hasFixedHomePosition = false;
+      // numPrests - use default
     }
 
     if (config.PTZDriver === 'visca') {
@@ -331,7 +332,8 @@ class PTZDriver {
       this.supportsContinuousPTZ = true;
       this.supportsGoToHome = true;
       this.hasFixedHomePosition = true; // cannot see a way to set the Home Position in VISCA, only Goto Home available.
-      this.numPresets = 64; // stored as Preset 0 to Preset 63 on a Sony VISCA camera
+      this.numPresets = 6; // Old EVI-D70 has 6 presets. New models have 64 presets
+      if ('PTZNumPresets' in config) this.numPresets = Number(config.PTZNumPresets)
     }
   }
 
@@ -388,7 +390,7 @@ class PTZDriver {
       }
       if (this.visca) {
         const viscaDestinationByte = 0x80 + (data.cameraAddress & 0x07); // Encodes Sending from Device #0 as a normal (not broadcast) packet. Cammera Address is 3 bits long
-        const viscaPresetNumber = parseInt(data.value) -1; // values are 00..63
+        const viscaPresetNumber = parseInt(data.value) - 1; // values start at 0
         let viscaData: number[] = [];
         viscaData.push(viscaDestinationByte,0x01,0x04,0x3f,0x02,viscaPresetNumber, 0xff);
         this.stream.write(new Buffer(viscaData));
@@ -403,7 +405,7 @@ class PTZDriver {
       }
       if (this.visca) {
         const viscaDestinationByte = 0x80 + (data.cameraAddress & 0x07); // Encodes Sending from Device #0 as a normal (not broadcast) packet. Cammera Address is 3 bits long
-        const viscaPresetNumber = parseInt(data.value) -1; // values are 00..63
+        const viscaPresetNumber = parseInt(data.value) - 1; // values start at 0 for visca
         let viscaData: number[] = [];
         viscaData.push(viscaDestinationByte,0x01,0x04,0x3f,0x01,viscaPresetNumber, 0xff);
         this.stream.write(new Buffer(viscaData));

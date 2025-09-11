@@ -18,7 +18,7 @@ class PTZService extends SoapService {
 
   presetsFilename = "presets.json";
 
-  presetArray = [];
+  presetArray: PresetArrayItem[] = [];
 
   public ptzConfigurationsArray: any[] = [];
 
@@ -55,18 +55,20 @@ class PTZService extends SoapService {
     if (presetsLoaded == false) {
 
       // Create all the Presets, with used: set to false
-      for (let i = 1; i <= this.config.Cameras.length; i++) {
+      for (let cam_id = 1; cam_id <= this.config.Cameras.length; cam_id++) {
 
-        // Create all the presets
+        // Create all the presets.
+        // NOTE they are called Preset 1, 2, 3 etc.
+        // The actual PTZ driver may store these as Preset 0, 1, 2 on the device (eg VISCA starts at 0)
         // There is a PTZ Node for each camera
-        for (let p = 1; p <=  (this.ptz_driver.numPresets); p++) {
+        for (let preset_num = 1; preset_num <=  (this.ptz_driver.numPresets); preset_num++) {
           this.presetArray.push(
             {
-              ptzNodeToken: 'ptz_node_token_' + i.toString().padStart(2,'0'),
-              presetName: '', // Preset ' + i.toString(),
-              presetToken: i.toString(),
+              ptzNodeToken: 'ptz_node_token_' + cam_id.toString().padStart(2,'0'),
+              presetName: '', // Preset ' + preset_num.toString(),
+              presetToken: preset_num.toString(),
               used: false,
-              fixed: false // RPOS uses fixed to make a preset that cannot be deleted - eg for Wipe, or Camera Menu Preset 95 on Pelco
+              fixed: false // RPOS uses 'fixed' to make a preset that cannot be deleted - eg hard coded Preset for Wipe, or Camera Menu Preset 95 on Pelco
             }
           );
         }  
@@ -466,7 +468,7 @@ class PTZService extends SoapService {
         && this.presetArray[i].fixed == false) {
           // update the array, then schedule a save to disk
           this.presetArray[i].used = false; // set used to false
-          this.presetArray[i].name = ""; // clear the name
+          this.presetArray[i].presetName = ""; // clear the name
           if (this.callback) this.callback('clearpreset', { name: this.presetArray[i].presetName,
             value: this.presetArray[i].presetToken, cameraAddress: cameraAddress
           });
@@ -500,7 +502,7 @@ class PTZService extends SoapService {
       let existingPreset = null;
       if ('PresetToken' in args && args.PresetToken.length > 0) {
         // check for existing preset
-        existingPreset = this.presetArray.find(item => item.ptz_node_token == ptzNodeToken && item.PresetToken == args.PresetToken);
+        existingPreset = this.presetArray.find(item => item.ptzNodeToken == ptzNodeToken && item.presetToken == args.PresetToken);
       }
 
 

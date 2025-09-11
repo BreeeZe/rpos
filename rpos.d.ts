@@ -23,6 +23,7 @@ interface rposConfig {
   PTZSerialPortSettings: PTZSerialPortSettings;
   PTZOutputURL: string;
   PTZCameraAddress: number;
+  PTZNumPresets: number;
   DeviceInformation: DeviceInformation;
   logLevel: number;
   logSoapCalls: Boolean;
@@ -157,4 +158,12 @@ type Profile = {
   VideoSourceConfiguration?: VideoSourceConfiguration,
   VideoEncoderConfiguration?: any,
   PTZConfiguration?: any
+};
+
+type PresetArrayItem = {
+  ptzNodeToken: string,
+  presetName: string,
+  presetToken: string,
+  used: boolean,
+  fixed: boolean
 };
