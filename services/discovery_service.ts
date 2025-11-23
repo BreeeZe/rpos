@@ -90,7 +90,14 @@ class DiscoveryService {
           probe_type = ""; // For a VMS that does not send Types
         }
 
-        if (probe_type === "" || probe_type.indexOf("NetworkVideoTransmitter") > -1) {
+        const probe_types = probe_type ? probe_type.split(/\s+/) : [];
+        const normalized_types = probe_types.map(t => t.includes(":") ? t.split(":")[1] : t);
+        const matchesProbe =
+          probe_types.length === 0 ||
+          normalized_types.indexOf("NetworkVideoTransmitter") > -1 ||
+          normalized_types.indexOf("Device") > -1;
+
+        if (matchesProbe) {
           const scopeslist = [
             `onvif://www.onvif.org/type/video_encoder`,
             `onvif://www.onvif.org/type/ptz`,
