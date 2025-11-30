@@ -4,6 +4,9 @@
   "description": "rpos",
   "main": "rpos.js",
   "license": "MIT",
+  "scripts": {
+    "test": "ts-node test/soapService.test.ts"
+  },
   "author": {
     "name": "Jeroen Versteege",
     "email": "jeroen@versteege.com"
@@ -27,7 +30,7 @@
     "node-uuid": "1.4.8",
     "pan-tilt-hat": "^1.2.1",
     "rpi-version": "^1.4.3",
-    "serialport": "^9.1.0",
+    "serialport": "^12.0.0",
     "soap": "https://github.com/BreeeZe/node-soap.git",
     "tenx-usb-missile-launcher-driver": "^0.2.0",
     "xml2js": "0.4.23"
@@ -44,6 +47,7 @@
     "gulp-sourcemaps": "^3.0.0",
     "gulp-typescript": "^5.0.1",
     "gulp-zip": "^5.1.0",
+    "ts-node": "^10.9.2",
     "typescript": "^4.3.2"
   }
 }

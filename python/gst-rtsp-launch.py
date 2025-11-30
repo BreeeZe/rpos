@@ -10,8 +10,11 @@ parser.add_argument('-t', '--type', action='store', default="picam", help='picam
 parser.add_argument('-d', '--device', action='store', default="/dev/video0", help='Video Device eg /dev/video0 or File eg /home/pi/testimage.jpg')
 parser.add_argument('-P', '--rtspport', action='store', default=554, help='Set RTSP port')
 parser.add_argument('-u', '--rtspname', action='store', default="live", help='Set RTSP name')
-parser.add_argument('-W', '--rtspresolutionwidth', action='store', default=1280, help='Set RTSP resolution width')
-parser.add_argument('-H', '--rtspresolutionheight', action='store', default=720, help='Set RTSP resolution height')
+parser.add_argument('-W', '--rtspresolutionwidth', action='store', type=int, default=None, help='Set RTSP resolution width')
+parser.add_argument('-H', '--rtspresolutionheight', action='store', type=int, default=None, help='Set RTSP resolution height')
+parser.add_argument('-F', '--rtspframerate', action='store', type=int, default=None, help='Set RTSP framerate')
+parser.add_argument('-p', '--pattern', action='store', default=None, help='ball, colorbars, image or file')
+parser.add_argument('-S', '--preset', action='store', default=None, help='1080p, 720p or 480p')
 parser.add_argument('-M', '--mjpeg', action='store_true', help='Start with MJPEG codec')
 args = parser.parse_args()
 
@@ -54,7 +57,7 @@ cam_mutex = Lock()
 # -------------------
 
 class StreamServer:
-	def __init__(self, type, device, file, port, name, width, height, codec):
+	def __init__(self, type, device, file, port, name, width, height, codec, pattern=None, preset=None, framerate=None):
 		signal.signal(signal.SIGTERM, self.exit_gracefully)
 		Gst.init(None)
 		self.mainloop = GObject.MainLoop()
@@ -64,10 +67,13 @@ class StreamServer:
 		self.device = device
 		self.type = type
 		self.file = file
-		
+
 		self.port = port
 		self.name = name
-		
+
+		self.pattern = (pattern or "ball").lower()
+		self.preset = preset.lower() if preset else None
+
 		self.factory = GstRtspServer.RTSPMediaFactory()
 		# Factory must be shared to allow multiple connections
 		self.factory.set_shared(True)
@@ -132,7 +138,7 @@ class StreamServer:
 		##################################################################################################################################################################
 		# Frames per second
 		#	15 to 90: >30fps only available at 640x480
-		self.fps = 30
+		self.fps = int(framerate) if framerate else 30
 		self.fps_range = [15, 90]
 		
 		self.horizontal_mirroring 	= False
@@ -162,9 +168,12 @@ class StreamServer:
 		self.gain_blue = 1.0
 		
 		self.width_options = {0:640, 1:800, 2:1024, 3:1280, 4:1640, 5:1920}
+		self.default_width = 1280
 		self.width = width
 		self.height_options = {0:480, 1:600, 2:720, 3:768, 4:1024, 5:1232, 6:1080}
+		self.default_height = 720
 		self.height = height
+		self.apply_preset()
 		
 		self.rotation = 0
 		
@@ -176,10 +185,21 @@ class StreamServer:
 	
 	def check_range(self, value, value_range):
 		return value >= value_range[0] and value <= value_range[1]
-		
+
 	def check_option(self, option, options):
 		return options.has_key(option)
-	
+
+	def apply_preset(self):
+		preset_map = {"1080p": (1920, 1080), "720p": (1280, 720), "480p": (640, 480)}
+		preset_dims = preset_map.get(self.preset)
+		if preset_dims and (self.width is None or self.height is None):
+			self.width = self.width if self.width is not None else preset_dims[0]
+			self.height = self.height if self.height is not None else preset_dims[1]
+		if self.width is None:
+			self.width = self.default_width
+		if self.height is None:
+			self.height = self.default_height
+
 	def readConfig(self):
 		try:
 			with open(self.file, 'r') as file:
@@ -276,9 +296,9 @@ class StreamServer:
 			self.stop() # Need to stop any instances first
 		
 		if self.type == "picam":
-                        # This asks the Pi GPU to generate H264 video data which is then passed out via RTSP
-                        # Because the pipleline receives H264 video data (NALs) is not possible to add the clock overlay
-                        # To add a clock, we must get raw video from the GPU and then add the clock, and then pass into the GPU to encode (or use libx264 to encode in software)
+		        # This asks the Pi GPU to generate H264 video data which is then passed out via RTSP
+		        # Because the pipleline receives H264 video data (NALs) is not possible to add the clock overlay
+		        # To add a clock, we must get raw video from the GPU and then add the clock, and then pass into the GPU to encode (or use libx264 to encode in software)
 
 			launch_str = 	'( rpicamsrc preview=false bitrate='+str(self.bitrate)+' keyframe-interval='+str(self.h264_i_frame_period)+' drc='+str(self.drc)+ \
 								' image-effect=denoise shutter-speed='+str(self.shutter)+' iso='+str(self.iso)+ \
@@ -306,21 +326,37 @@ class StreamServer:
 
 			# Ignore most of the parameters
 			log.info("Test camera ignored most of the parameters")
-			launch_str = '( videotestsrc pattern=ball ! video/x-raw,width='+str(self.width)+',height='+str(self.height)+',framerate='+str(self.fps)+'/1 '
-			launch_str = launch_str + ' ! clockoverlay '
+			selected_pattern = self.pattern
+			source_path = self.device if self.device and self.device != "auto" else None
+			if selected_pattern == "file" and not source_path:
+				log.warning("File pattern selected but no file provided, using color bars instead")
+				selected_pattern = "colorbars"
+			pattern = selected_pattern
+			if pattern == "colorbars":
+				pattern = "smpte"
+
+			if selected_pattern == "file":
+				launch_str = "( filesrc location=\"" + source_path + "\" ! decodebin ! videoconvert ! videoscale ! video/x-raw,width="+str(self.width)+",height="+str(self.height)+",framerate="+str(self.fps)+"/1 "
+			elif selected_pattern == "image":
+				image_path = source_path if source_path else "sample_image.jpg"
+				launch_str = "( videotestsrc pattern=black is-live=true ! video/x-raw,width="+str(self.width)+",height="+str(self.height)+",framerate="+str(self.fps)+"/1 "
+				launch_str = launch_str + " ! gdkpixbufoverlay location=\"" + image_path + "\" overlay-width=" + str(self.width) + " overlay-height=" + str(self.height) + " "
+			else:
+				launch_str = "( videotestsrc pattern="+pattern+" is-live=true ! video/x-raw,width="+str(self.width)+",height="+str(self.height)+",framerate="+str(self.fps)+"/1 "
+			launch_str = launch_str + " ! clockoverlay "
 
 			# Completing the pipe
 			if self.codec == 0:
-				launch_str = launch_str + ' ! x264enc tune=zerolatency ! h264parse ! rtph264pay name=pay0 pt=96 )'
+				launch_str = launch_str + " ! x264enc tune=zerolatency ! h264parse ! rtph264pay name=pay0 pt=96 )"
 			elif self.codec == 1:
-				launch_str = launch_str + ' ! jpegenc ! jpegparse ! rtpjpegpay name=pay0 pt=96 )'
+				launch_str = launch_str + " ! jpegenc ! jpegparse ! rtpjpegpay name=pay0 pt=96 )"
 			else:
 				log.error("Illegal codec")
 
 		elif self.type == "filesrc":
 			# Generate a black test image and overlay a jpeg (scaling to fit the image). Encoded to H264 using libx264.
-                        # On a Pi this could have passed the raw image to the GPU (omxh264enc)
-                        # I did try the videomixer/compositor and a filesrc plus imagefreeze but the only thing I could get working real-time was gdkpixbuffer
+		        # On a Pi this could have passed the raw image to the GPU (omxh264enc)
+		        # I did try the videomixer/compositor and a filesrc plus imagefreeze but the only thing I could get working real-time was gdkpixbuffer
 
 			# Ignore most of the parameters
 			log.info("Test camera ignored most of the parameters")
@@ -405,7 +441,7 @@ if __name__ == '__main__':
 		codec = 1
 	streamServer = StreamServer(args.type, args.device, args.file, args.rtspport, args.rtspname, \
 								args.rtspresolutionwidth, args.rtspresolutionheight,\
-								codec)
+								codec, args.pattern, args.preset, args.rtspframerate)
 	streamServer.readConfig()
 	streamServer.launch()
 	streamServer.start()

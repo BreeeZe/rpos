@@ -215,8 +215,9 @@ The Configuation is split into several sections
 - Password - The Password used to connect to RPOS with
 #### Camera Source
 This section helps RPOS know where to get live video from
-- Camera Type - Used to help RPOS automatically configure itself. Valid optins are "picam", "usbcam", "filesrc", "testsrc".  'picam' will select the Raspberry Pi camera on the ribbon cable, 'usbcam' will select a USB camera, 'filesrc' will open a JPEG or PNG video file and 'testsrc' displays a bouncing ball with clock overlay
-- CameraDevice - Provides extra information to go with the Camera Type. For 'usbcam' use the Video4Linux address of the camera, eg /dev/video0.  For the 'filesrc' camera type, use the full path and filename of the jpeg or PNG file eg /home/pi/image.jpg
+- Camera Type - Used to help RPOS automatically configure itself. Valid optins are "picam", "usbcam", "filesrc", "testsrc".  'picam' will select the Raspberry Pi camera on the ribbon cable, 'usbcam' will select a USB camera, 'filesrc' will open a JPEG or PNG video file and 'testsrc' can generate video test patterns or render files based on the TestSrc options below
+- CameraDevice - Provides extra information to go with the Camera Type. For 'usbcam' use the Video4Linux address of the camera, eg /dev/video0.  For the 'filesrc' camera type, use the full path and filename of the jpeg or PNG file eg /home/pi/image.jpg. When using the TestSrc pattern "image" or "file", set this to the image or video file to be shown.
+- TestSrc - Extra options when Camera Type is "testsrc". Preset lets you pick 1080p, 720p or 480p resolutions, or you can provide explicit Width/Height values instead. Framerate is independent of other settings and Pattern can be "ball", "colorbars", "image" (overlay a still) or "file" (decode a video file). When not specified, the default resolution and framerate come from the main camera settings and the pattern defaults to "ball".
 #### RTSP Server
 This section helps RPOS know how to share the video via RTSP with viewers
 ...

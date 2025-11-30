@@ -66,7 +66,6 @@ class DiscoveryService {
       reuseAddr: true
     };
     var discover_socket = dgram.createSocket(opts);
-    var reply_socket    = dgram.createSocket('udp4');
 
     discover_socket.on('error', (err) => {
       throw err;
@@ -82,15 +81,27 @@ class DiscoveryService {
       var parseString = xml2js.parseString;
       var strip = xml2js['processors'].stripPrefix;
       parseString(filtered_msg, { tagNameProcessors: [strip] }, (err, result) => {
-        let probe_uuid = result['Envelope']['Header'][0]['MessageID'][0];
-        let probe_type = "";
-        try {
-          probe_type = result['Envelope']['Body'][0]['Probe'][0]['Types'][0];
-        } catch (err) {
-          probe_type = ""; // For a VMS that does not send Types
+        if (err || !result?.Envelope?.Body?.[0]) {
+          return;
         }
 
-        if (probe_type === "" || probe_type.indexOf("NetworkVideoTransmitter") > -1) {
+        const header = result.Envelope.Header?.[0];
+        const probe = result.Envelope.Body[0].Probe?.[0];
+        if (!probe) {
+          return;
+        }
+
+        const probe_uuid = header?.MessageID?.[0] || uuid.v1();
+        const probe_type = probe.Types?.[0] || ""; // For a VMS that does not send Types
+
+        const probe_types = probe_type ? probe_type.split(/\s+/).filter(Boolean) : [];
+        const normalized_types = probe_types.map(t => t.includes(":") ? t.split(":")[1] : t);
+        const matchesProbe =
+          probe_types.length === 0 ||
+          normalized_types.indexOf("NetworkVideoTransmitter") > -1 ||
+          normalized_types.indexOf("Device") > -1;
+
+        if (matchesProbe) {
 
           let reply = `<?xml version="1.0" encoding="UTF-8"?>
           <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://www.w3.org/2003/05/soap-envelope" xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/08/addressing" xmlns:d="http://schemas.xmlsoap.org/ws/2005/04/discovery" xmlns:dn="http://www.onvif.org/ver10/network/wsdl">
@@ -124,14 +135,22 @@ class DiscoveryService {
 
           let reply_bytes = new Buffer(reply);
 
-          // Mac needed replies from a different UDP socket (ie not the bounded socket)
-          return reply_socket.send(reply_bytes, 0, reply_bytes.length, rinfo.port, rinfo.address);
+          // Use the bound discovery socket so replies come from port 3702
+          return discover_socket.send(reply_bytes, 0, reply_bytes.length, rinfo.port, rinfo.address);
         }
       });
     });
 
     discover_socket.bind(3702, () => {
-      return discover_socket.addMembership('239.255.255.250', utils.getIpAddress());
+      const interfaceAddress = utils.getIpAddress();
+      try {
+        discover_socket.addMembership('239.255.255.250', interfaceAddress);
+      } catch (err: any) {
+        // If the requested interface is not available (eg. ENODEV), fall back to the
+        // default interface instead of crashing.
+        utils.log.warn(`Failed to join multicast group on ${interfaceAddress}: ${err?.message || err}`);
+        discover_socket.addMembership('239.255.255.250');
+      }
     });
 
     utils.log.info("discovery_service started");

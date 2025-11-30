@@ -158,6 +158,11 @@ class MediaService extends SoapService {
       }
     };
 
+    const getBitrateLimitKbps = () => {
+      const bitrate = v4l2ctl.Controls.CodecControls.video_bitrate.value;
+      return typeof bitrate === 'number' ? bitrate / 1000 : 0;
+    };
+
     var videoEncoderConfiguration = {
       attributes: {
         token: "encoder_config_token"
@@ -173,7 +178,7 @@ class MediaService extends SoapService {
       RateControl: {
         FrameRateLimit: cameraSettings.framerate,
         EncodingInterval: 1,
-        BitrateLimit: v4l2ctl.Controls.CodecControls.video_bitrate.value / 1000
+        BitrateLimit: getBitrateLimitKbps()
       },
       H264: {
         GovLength: v4l2ctl.Controls.CodecControls.h264_i_frame_period.value,
@@ -195,8 +200,8 @@ class MediaService extends SoapService {
       attributes: {
         token: "video_src_token"
       },
-      Framerate: 25,
-      Resolution: { Width: 1920, Height: 1280 }
+      Framerate: cameraSettings.framerate,
+      Resolution: { Width: cameraSettings.resolution.Width, Height: cameraSettings.resolution.Height }
     };
 
     var videoSourceConfiguration = {
@@ -206,8 +211,33 @@ class MediaService extends SoapService {
         token: "video_src_config_token"
       },
       SourceToken: "video_src_token",
-      Bounds: { attributes: { x: 0, y: 0, width: 1920, height: 1080 } }
+      Bounds: { attributes: { x: 0, y: 0, width: cameraSettings.resolution.Width, height: cameraSettings.resolution.Height } }
     };
+
+    const syncConfigurationsFromCamera = () => {
+      videoEncoderConfiguration.Resolution.Width = camera.settings.resolution.Width;
+      videoEncoderConfiguration.Resolution.Height = camera.settings.resolution.Height;
+      videoEncoderConfiguration.RateControl.FrameRateLimit = camera.settings.framerate;
+
+      videoEncoderConfiguration.RateControl.BitrateLimit = getBitrateLimitKbps();
+
+      const gop = v4l2ctl.Controls.CodecControls.h264_i_frame_period.value;
+      videoEncoderConfiguration.H264.GovLength = typeof gop === 'number' ? gop : videoEncoderConfiguration.H264.GovLength;
+
+      const profileDesc = v4l2ctl.Controls.CodecControls.h264_profile.desc;
+      if (profileDesc) {
+        videoEncoderConfiguration.H264.H264Profile = profileDesc;
+      }
+
+      videoSource.Framerate = camera.settings.framerate;
+      videoSource.Resolution.Width = camera.settings.resolution.Width;
+      videoSource.Resolution.Height = camera.settings.resolution.Height;
+
+      videoSourceConfiguration.Bounds.attributes.width = camera.settings.resolution.Width;
+      videoSourceConfiguration.Bounds.attributes.height = camera.settings.resolution.Height;
+    };
+
+    syncConfigurationsFromCamera();
 
     var audioEncoderConfigurationOptions = {
       Options: []
@@ -279,11 +309,13 @@ class MediaService extends SoapService {
     };
 
     port.GetProfile = (args) => {
+      syncConfigurationsFromCamera();
       var GetProfileResponse = { Profile: profile };
       return GetProfileResponse;
     };
 
     port.GetProfiles = (args) => {
+      syncConfigurationsFromCamera();
       var GetProfilesResponse = { Profiles: [profile] };
       return GetProfilesResponse;
     };
@@ -299,26 +331,31 @@ class MediaService extends SoapService {
     };
 
     port.GetVideoSources = (args) => {
+        syncConfigurationsFromCamera();
         var GetVideoSourcesResponse = { VideoSources: [videoSource] };
         return GetVideoSourcesResponse;
     }
 
     port.GetVideoSourceConfigurations = (args) => {
+      syncConfigurationsFromCamera();
       var GetVideoSourceConfigurationsResponse = { Configurations: [videoSourceConfiguration] };
       return GetVideoSourceConfigurationsResponse;
     };
 
     port.GetVideoSourceConfiguration = (args) => {
+        syncConfigurationsFromCamera();
         var GetVideoSourceConfigurationResponse = { Configurations: videoSourceConfiguration };
         return GetVideoSourceConfigurationResponse;
     };
 
     port.GetVideoEncoderConfigurations = (args) => {
+      syncConfigurationsFromCamera();
       var GetVideoEncoderConfigurationsResponse = { Configurations: [videoEncoderConfiguration] };
       return GetVideoEncoderConfigurationsResponse;
     };
 
     port.GetVideoEncoderConfiguration = (args) => {
+      syncConfigurationsFromCamera();
       var GetVideoEncoderConfigurationResponse = { Configuration: videoEncoderConfiguration };
       return GetVideoEncoderConfigurationResponse;
     };
@@ -333,6 +370,7 @@ class MediaService extends SoapService {
         resolution: args.Configuration.Resolution
       };
       camera.setSettings(settings);
+      syncConfigurationsFromCamera();
 
       var SetVideoEncoderConfigurationResponse = {};
       return SetVideoEncoderConfigurationResponse;

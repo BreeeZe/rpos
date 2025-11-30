@@ -5,7 +5,12 @@
   "Username" : "admin",
   "Password" : "admin",
   "CameraType" : "testsrc",
-  "CameraDevice" : "",
+  "CameraDevice" : "./sample_image.jpg",
+  "TestSrc": {
+    "Preset": "720p",
+    "Framerate": 25,
+    "Pattern": "image"
+  },
   "RTSPAddress" : "", "//":"Normally left blank. Used to set RTSP Server Address",
   "RTSPPort" : 8554,
   "RTSPName" : "h264",
@@ -26,5 +31,6 @@
     "HardwareId" : ""
   },
   "logLevel" : 3, "logLevelComment": "## LogLevels are > 1:Error 2:Warning 3:Info 4:Debug",
-  "logSoapCalls" : false
+  "logSoapCalls" : false,
+  "AuthDebug": false, "AuthDebugComment": "## Set to true to enable [AuthDebug] authentication logs"
 }

@@ -7,9 +7,9 @@ echo $@
 FILE=/usr/bin/python3
 if test -f "$FILE"; then
     echo "Found /usr/bin/python3"
-    /usr/bin/python3 ./python/gst-rtsp-launch.py $@ -v
+    exec /usr/bin/python3 ./python/gst-rtsp-launch.py $@ -v
 else
     echo "using /usr/bin/python"
-    /usr/bin/python ./python/gst-rtsp-launch.py $@ -v
+    exec /usr/bin/python ./python/gst-rtsp-launch.py $@ -v
 fi
 

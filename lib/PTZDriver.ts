@@ -186,22 +186,24 @@ class PTZDriver {
 
     // Open the OUTPUT STREAM
     if (PTZOutput === 'serial') {
-      var SerialPort = require('serialport');
-      this.serialPort = new SerialPort(config.PTZSerialPort, 
-        {
+      const { SerialPort } = require('serialport');
+      this.serialPort = new SerialPort({
+        path: config.PTZSerialPort,
         baudRate: config.PTZSerialPortSettings.baudRate,
         parity:   config.PTZSerialPortSettings.parity,
         dataBits: config.PTZSerialPortSettings.dataBits,
         stopBits: config.PTZSerialPortSettings.stopBits,
-        }
-      );
- 
-      this.stream = this.serialPort.on("open", function(err){
-          if (err) {
-            console.log('Error: '+err);
-            return;
-          }
       });
+
+      this.serialPort.on("open", function(){
+          console.log('Serial port opened');
+      });
+
+      this.serialPort.on("error", function(err: Error){
+          console.log('Error: '+err);
+      });
+
+      this.stream = this.serialPort;
     }
 
     if (PTZOutput === 'tcp') {

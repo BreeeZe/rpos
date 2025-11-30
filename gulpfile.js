@@ -2,8 +2,24 @@ var gulp = require('gulp'),
     rename = require('gulp-rename'),
     zip = require('gulp-zip'),
     pkg = require('./package.json'),
-    ts = require('gulp-typescript'),
-    sourcemaps = require('gulp-sourcemaps')
+    // Temporarily disable fetch so source-map falls back to its Node.js reader.
+    preservedFetch = global.fetch,
+    ts = (delete global.fetch, require('gulp-typescript')),
+    sourceMap = require('gulp-typescript/node_modules/source-map'),
+    pathToFileURL = require('url').pathToFileURL,
+    sourcemaps = require('gulp-sourcemaps');
+
+// Restore fetch after loading gulp-typescript and source-map.
+if (preservedFetch) {
+    global.fetch = preservedFetch;
+}
+
+// Configure source-map's WASM helper for Node.js 20+. The gulp-typescript dependency
+// pulls in source-map@0.8, which requires an explicit path to its WASM file.
+// Using the nested dependency keeps the initializer aligned with gulp-typescript's version.
+sourceMap.SourceMapConsumer.initialize({
+    'lib/mappings.wasm': pathToFileURL(require.resolve('gulp-typescript/node_modules/source-map/lib/mappings.wasm')).href
+});
 
 var version = 'rpos-' + pkg.version;
 var releaseDir = 'release/' + version;
