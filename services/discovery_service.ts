@@ -131,7 +131,15 @@ class DiscoveryService {
     });
 
     discover_socket.bind(3702, () => {
-      return discover_socket.addMembership('239.255.255.250', utils.getIpAddress());
+      const interfaceAddress = utils.getIpAddress();
+      try {
+        discover_socket.addMembership('239.255.255.250', interfaceAddress);
+      } catch (err: any) {
+        // If the requested interface is not available (eg. ENODEV), fall back to the
+        // default interface instead of crashing.
+        utils.log.warn(`Failed to join multicast group on ${interfaceAddress}: ${err?.message || err}`);
+        discover_socket.addMembership('239.255.255.250');
+      }
     });
 
     utils.log.info("discovery_service started");
