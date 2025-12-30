@@ -122,7 +122,7 @@ class DiscoveryService {
             </SOAP-ENV:Body>
           </SOAP-ENV:Envelope>`;
 
-          let reply_bytes = new Buffer(reply);
+          let reply_bytes = Buffer.from(reply);
 
           // Mac needed replies from a different UDP socket (ie not the bounded socket)
           return reply_socket.send(reply_bytes, 0, reply_bytes.length, rinfo.port, rinfo.address);

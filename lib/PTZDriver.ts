@@ -366,7 +366,7 @@ class PTZDriver {
         const viscaDestinationByte = 0x80 + (data.cameraAddress & 0x07); // Encodes Sending from Device #0 as a normal (not broadcast) packet. Cammera Address is 3 bits long
         let viscaData: number[] = [];
         viscaData.push(viscaDestinationByte,0x01,0x06,0x04,0xff);
-        this.stream.write(new Buffer(viscaData));
+        this.stream.write(Buffer.from(viscaData));
       }
       if (this.panTiltHat) {
         this.panTiltHat.goto_home();
@@ -393,7 +393,7 @@ class PTZDriver {
         const viscaPresetNumber = parseInt(data.value) - 1; // values start at 0
         let viscaData: number[] = [];
         viscaData.push(viscaDestinationByte,0x01,0x04,0x3f,0x02,viscaPresetNumber, 0xff);
-        this.stream.write(new Buffer(viscaData));
+        this.stream.write(Buffer.from(viscaData));
       }
     }
     else if (command==='setpreset') {
@@ -408,7 +408,7 @@ class PTZDriver {
         const viscaPresetNumber = parseInt(data.value) - 1; // values start at 0 for visca
         let viscaData: number[] = [];
         viscaData.push(viscaDestinationByte,0x01,0x04,0x3f,0x01,viscaPresetNumber, 0xff);
-        this.stream.write(new Buffer(viscaData));
+        this.stream.write(Buffer.from(viscaData));
       }
 
     }
@@ -565,7 +565,7 @@ class PTZDriver {
             viscaData.push(viscaDestinationByte,0x01,0x04,0x07,0x00,0xff);
           }
 
-          this.stream.write(new Buffer(viscaData));
+          this.stream.write(Buffer.from(viscaData));
         }
       }
       if (this.panTiltHat) {
@@ -647,7 +647,7 @@ class PTZDriver {
         if (data.value < 0) viscaData.push(viscaDestinationByte,0x01,0x04,0x08,0x03,0xff); // focus Near
         else if (data.value > 0) viscaData.push(viscaDestinationByte,0x01,0x04,0x08,0x02,0xff); // focus Far
         else viscaData.push(viscaDestinationByte,0x01,0x04,0x08,0x00,0xff); // stop
-        this.stream.write(new Buffer(viscaData));
+        this.stream.write(Buffer.from(viscaData));
       }
     }
     else if (command==='focusstop') {
@@ -663,7 +663,7 @@ class PTZDriver {
         const viscaDestinationByte = 0x80 + (data.cameraAddress & 0x07); // Encodes Sending from Device #0 as a normal (not broadcast) packet. Cammera Address is 3 bits long
         let viscaData: number[] = [];
         viscaData.push(viscaDestinationByte,0x01,0x04,0x08,0x00,0xff);
-        this.stream.write(new Buffer(viscaData));
+        this.stream.write(Buffer.from(viscaData));
       }
     }
     else if (command==='focusmode') {
@@ -681,7 +681,7 @@ class PTZDriver {
         }
 
         // Note there is also a VISCA Command to toggle between Auto and Manual 8x 01 04 38 10 FF
-        this.stream.write(new Buffer(viscaData));
+        this.stream.write(Buffer.from(viscaData));
       }
     }
     else {
