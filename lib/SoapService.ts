@@ -98,7 +98,7 @@ class SoapService {
         // digest = base64 ( sha1 ( nonce + created + onvif_password ) )
         var crypto = require('crypto');
         var pwHash = crypto.createHash('sha1');
-        var rawNonce = new Buffer(nonce || '', 'base64')
+        var rawNonce = Buffer.from(nonce || '', 'base64')
         var combined_data = Buffer.concat([rawNonce,
           Buffer.from(created, 'ascii'), Buffer.from(onvif_password, 'ascii')]);
         pwHash.update(combined_data);
