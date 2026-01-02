@@ -91,6 +91,14 @@ class DiscoveryService {
         }
 
         if (probe_type === "" || probe_type.indexOf("NetworkVideoTransmitter") > -1) {
+          const scopeslist = [
+            `onvif://www.onvif.org/type/video_encoder`,
+            `onvif://www.onvif.org/type/ptz`,
+            `onvif://www.onvif.org/hardware/${encodeURIComponent(this.config.DeviceInformation.Model)}`,
+            `onvif://www.onvif.org/name/${encodeURIComponent(this.config.DeviceInformation.Manufacturer + ' ' + this.config.DeviceInformation.Model)}`,
+            `onvif://www.onvif.org/location/unspecified`
+          ];
+          const scopes = scopeslist.join(' ');
 
           let reply = `<?xml version="1.0" encoding="UTF-8"?>
           <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://www.w3.org/2003/05/soap-envelope" xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/08/addressing" xmlns:d="http://schemas.xmlsoap.org/ws/2005/04/discovery" xmlns:dn="http://www.onvif.org/ver10/network/wsdl">
@@ -108,16 +116,10 @@ class DiscoveryService {
                     <wsa:Address>urn:uuid:${utils.uuid5(utils.getIpAddress() + this.config.ServicePort + this.config.RTSPPort)}</wsa:Address>
                   </wsa:EndpointReference>
                   <d:Types>dn:NetworkVideoTransmitter</d:Types>
-                  <d:Scopes>
-                    onvif://www.onvif.org/type/video_encoder
-                    onvif://www.onvif.org/type/ptz
-                    onvif://www.onvif.org/hardware/${encodeURIComponent(this.config.DeviceInformation.Model)}
-                    onvif://www.onvif.org/name/${encodeURIComponent(this.config.DeviceInformation.Manufacturer + ' ' + this.config.DeviceInformation.Model)}
-                    onvif://www.onvif.org/location/
-                  </d:Scopes>
+                  <d:Scopes>${scopes}</d:Scopes>
                   <d:XAddrs>http://${utils.getIpAddress()}:${this.config.ServicePort}/onvif/device_service</d:XAddrs>
                   <d:MetadataVersion>1</d:MetadataVersion>
-              </d:ProbeMatch>
+                </d:ProbeMatch>
               </d:ProbeMatches>
             </SOAP-ENV:Body>
           </SOAP-ENV:Envelope>`;
