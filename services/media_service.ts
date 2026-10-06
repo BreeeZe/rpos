@@ -10,6 +10,7 @@ import Camera = require('../lib/camera');
 import { v4l2ctl } from '../lib/v4l2ctl';
 import { exec } from 'child_process';
 import PTZService = require('./ptz_service');
+import HttpAuth = require('../lib/HttpAuth');
 var utils = Utils.utils;
 
 class MediaService extends SoapService {
@@ -18,6 +19,7 @@ class MediaService extends SoapService {
   ptz_service: PTZService;
   ffmpeg_process: any = null;
   ffmpeg_responses: any[] = [];
+  http_auth: HttpAuth;
 
   constructor(config: rposConfig, server: Server, camera: Camera, ptz_service: PTZService) {
     super(config, server);
@@ -25,6 +27,7 @@ class MediaService extends SoapService {
 
     this.camera = camera;
     this.ptz_service = ptz_service;
+    this.http_auth = new HttpAuth(config);
     this.serviceOptions = {
       path: '/onvif/media_service',
       services: this.media_service,
@@ -47,6 +50,14 @@ class MediaService extends SoapService {
       var uri = url.parse(request.url, true);
       var action = uri.pathname;
       if (action == '/web/snapshot.jpg') {
+        // This handler answers the snapshot URI itself and does not pass the
+        // request on to the listeners installed by SoapService, so the
+        // WS-Security check in SoapService never sees it. The snapshot URI is
+        // therefore authenticated here, with the same credentials.
+        if (!this.http_auth.authorizeRequest(request, response)) {
+          utils.log.info('Unauthorized snapshot request rejected');
+          return;
+        }
         try {
           if (this.ffmpeg_process != null) {
             utils.log.info("ffmpeg - already running");

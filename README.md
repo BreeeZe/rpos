@@ -213,6 +213,16 @@ The Configuation is split into several sections
 - Service Port - This is the TCP Port that RPOS listens on for ONVIF Connections
 - Username - The username used to connect to RPOS with
 - Password - The Password used to connect to RPOS with
+
+When Username is set, it protects both the ONVIF SOAP services (through the
+WS-Security UsernameToken) and the Snapshot URI `/web/snapshot.jpg` (through
+HTTP Digest authentication, RFC 7616, offered with both the SHA-256 and the MD5
+algorithms). When Username is left empty, authentication is disabled and both
+remain open, which is the historical behaviour.
+
+- HttpAuthRealm - The realm presented in the HTTP authentication challenge. Optional, defaults to "RPOS"
+- HttpBasicAuthEnabled - Accept HTTP Basic authentication in addition to HTTP Digest. Optional, defaults to false. Leave it off unless a client cannot do Digest: Basic sends the password in a reversible encoding and RPOS serves plain HTTP
+- HttpDigestNonceLifetime - Lifetime in seconds of a server nonce issued in an HTTP Digest challenge. Optional, defaults to 300. After it expires the server answers with `stale=true` so a client re-authenticates without prompting the user again
 #### Camera Source
 This section helps RPOS know where to get live video from
 - Camera Type - Used to help RPOS automatically configure itself. Valid optins are "picam", "usbcam", "filesrc", "testsrc".  'picam' will select the Raspberry Pi camera on the ribbon cable, 'usbcam' will select a USB camera, 'filesrc' will open a JPEG or PNG video file and 'testsrc' displays a bouncing ball with clock overlay

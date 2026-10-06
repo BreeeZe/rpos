@@ -5,6 +5,9 @@ interface rposConfig {
   ServicePort: number;
   Username: string;
   Password: string;
+  HttpAuthRealm?: string;
+  HttpBasicAuthEnabled?: boolean;
+  HttpDigestNonceLifetime?: number;
   CameraType: string;
   CameraDevice: string;
   RTSPAddress: string;
